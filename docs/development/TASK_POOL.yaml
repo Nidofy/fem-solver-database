@@ -1,0 +1,43 @@
+# Live task pool for continuous development. Source-of-truth statuses live here;
+# docs/08_TASK_POOL.yaml is the frozen planning input imported at R0.01.
+# Statuses: PLANNED / READY / IN_PROGRESS / IMPLEMENTED_SELF_TESTED / BLOCKED_ENV /
+#           NEEDS_DESIGN_REVIEW / FROZEN_FOR_BATCH_REVIEW / REVIEW_CHANGES_REQUIRED /
+#           REPAIRED_PENDING_GATE / ACCEPTED / DEFERRED
+schema_version: 2
+program: fem-solver-database-v2
+current_batch: B01
+batch_base_sha: aaa74afb3c264bbd7ca43555a7445c77994ccaa2
+tasks:
+  - id: R0.01
+    title: Freeze repository baseline and inspect source reality
+    status: IMPLEMENTED_SELF_TESTED
+    commit: bef76e3
+    evidence: verification/reviews/B01/task-evidence/R0.01.md
+  - id: R0.02
+    title: Reproducible CPU build and test matrix
+    status: IMPLEMENTED_SELF_TESTED
+    commit: a3779f0
+    evidence: verification/reviews/B01/task-evidence/R0.02.md
+  - id: R0.03
+    title: Task ledger, status notes and ADR tracking
+    status: IN_PROGRESS
+  - id: R0.04
+    title: Separate cold, steady-state, and IO benchmarks
+    status: PLANNED
+  - id: R0.05
+    title: CUDA compiler and device readiness probe
+    status: PLANNED
+  - id: R1.01
+    title: Avoid redundant force evaluation on non-output timesteps
+    status: PLANNED
+  - id: R1.02
+    title: Physical time-layer and read-only output publication contract
+    status: PLANNED
+  # Tasks below are imported from docs/08_TASK_POOL.yaml and are not yet started.
+  - id: R1.03
+    title: Bounded result output queue and backpressure contract
+    status: PLANNED
+  - id: R1.04
+    title: Result and restart failure injection
+    status: PLANNED
+next_ready: [R0.03, R1.01]
