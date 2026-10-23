@@ -44,5 +44,5 @@
 |---|---|
 | MinGW g++ 15.2.0, Release, OpenMP | 8/8 PASS |
 | MinGW g++ 15.2.0, Release, serial | 8/8 PASS |
-| MSVC 14.44, RelWithDebInfo, ASan+UBSan, serial | 8/8 PASS, no findings |
+| MSVC 14.44, RelWithDebInfo, AddressSanitizer only, serial | 8/8 PASS, no ASan findings (UBSan not executed — see build-test.md correction) |
 | CUDA (any) | BLOCKED_ENV — untested, unclaimed |

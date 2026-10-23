@@ -29,7 +29,8 @@ Updated after every task. Cross-session handoff details: SESSION_HANDOFF.md.
 
 - build-b01 (MinGW Release+OMP): CTest 8/8 PASS.
 - build-b01-serial: CTest 8/8 PASS.
-- build-b01-asan (MSVC ASan/UBSan): CTest 8/8 PASS, no findings.
+- build-b01-asan (MSVC, AddressSanitizer only; UBSan not executed on this
+  host): CTest 8/8 PASS, no ASan findings.
 - sdb_run byte-outputs identical to pre-change binaries (double/float/U-only;
   restart at stop 700 and 733).
 

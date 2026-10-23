@@ -30,11 +30,20 @@ database_contracts, explicit_numerics. `lifecycle_contracts` reports
 Same as above with `-DSDB_OPENMP=OFF`. Build exit 0; CTest
 `100% tests passed, 0 tests failed out of 8`, exit 0.
 
-### MSVC 14.44 — RelWithDebInfo, ASan+UBSan, serial (build-b01-asan)
+### MSVC 14.44 — RelWithDebInfo, AddressSanitizer only, serial (build-b01-asan)
+
+Corrected (B01-A-003 / B01-O-003): the CMake MSVC sanitizer branch adds
+`/fsanitize=address` **only** (`CMakeLists.txt` MSVC path); the
+`-fsanitize=address,undefined` flag exists solely in the non-MSVC branch.
+The original text here wrongly claimed "ASan+UBSan". **UBSan was not
+executed and no UB coverage is claimed**: this host has no GCC/Clang UBSan
+runtime (MinGW toolchain ships neither libasan nor libubsan) and MSVC has no
+UBSan mode. Any future UBSan claim requires a real supported runtime with
+flags and logs retained.
 
 Script (`vcvars64 -vcvars_ver=14.44` then cmake configure with
 `-DSDB_SANITIZE=ON -DSDB_OPENMP=OFF`, build `-j 6`, ctest): exit 0,
-`100% tests passed, 0 tests failed out of 8`, no sanitizer diagnostics.
+`100% tests passed, 0 tests failed out of 8`, no ASan diagnostics.
 
 ### Byte-compatibility checks (final HEAD binaries)
 
