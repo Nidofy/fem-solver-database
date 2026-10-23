@@ -5,6 +5,7 @@ Updated after every task. Cross-session handoff details: SESSION_HANDOFF.md.
 - Current batch: **B01** — **FROZEN_FOR_BATCH_REVIEW** (2026-10-24)
 - Batch base SHA: `aaa74afb3c264bbd7ca43555a7445c77994ccaa2`
 - Batch content HEAD (all code/tests/benchmarks): `719c3fb`
+- Freeze/packet commit: `b58dfff`
 - Working branch: `dev/glm-b01` (freeze commit adds only packet/ledger files)
 - Review packet: `verification/reviews/B01/` (manifest, review-packet,
   build-test, numerical-validation, compat-matrix, open-risks, task evidence,
