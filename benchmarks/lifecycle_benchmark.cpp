@@ -84,12 +84,28 @@ int main(int argc, char **argv) {
         // default CpuPolicy::Serial, so every timing below is serial execution
         // regardless of OMP_NUM_THREADS. Reported explicitly (B01-A-001/O-002):
         // no parallel-efficiency conclusion may be drawn from this benchmark.
+        // Setup phases kept distinct (B01-A-004): compile_ms above covers IR
+        // compilation only; run_setup_ms covers StateDB+TetPlan+plan build;
+        // initialize_ms covers the first force pass + half-step velocity setup.
+        double run_setup_ms = timed([&] {
+            CpuRun<double> probe(model); // same construction work; discarded
+            (void)probe;
+        });
         CpuRun<double> run(model);
-        run.initialize();
+        double initialize_ms = timed([&] { run.initialize(); });
         auto enforce = [&] {
             if (peak() > budget)
                 throw std::length_error("measured peak exceeded memory budget");
         };
+        enforce();
+        // True kernel-only region: one serial forces() (element loop +
+        // assembly) on a twin state prepared outside the timed region.
+        double kernel_only_ms = 0;
+        {
+            StateDB<double> twin(model.mesh);
+            CpuExplicit<double> kernel(model.mesh, twin);
+            kernel_only_ms = timed([&] { kernel.forces(twin); });
+        }
         enforce();
         double kernel_ms = timed([&] { run.advance(); }); // increment 1: non-due
         ResultFrame frame;
@@ -102,6 +118,11 @@ int main(int argc, char **argv) {
         });
         run.advance(); // increment 10: due, pure-U frame
         double snapshot_ms = timed([&] { frame = run.snapshot(); });
+        std::uint64_t plan_increments = 0;
+        for (auto &p : run.plans())
+            plan_increments += p.increments;
+        const auto executed_increments = run.state().data().step; // advances performed
+        constexpr std::uint64_t frames_written = 1;               // single due-U frame below
         enforce();
         auto result = dir / "million.sdbres", restart = dir / "million.sdbrst";
         if (std::filesystem::exists(result))
@@ -135,9 +156,14 @@ int main(int argc, char **argv) {
                   << ",\"omp_max_threads\":0"
 #endif
                   << ",\"omp_env\":" << (omp_env ? "\"" + std::string(omp_env) + "\"" : "\"\"")
-                  << ",\"nodes\":" << nn << ",\"elements\":" << ne << ",\"budget_bytes\":" << budget
-                  << ",\"peak_process_bytes\":" << peak() << ",\"compile_ms\":" << compile_ms
-                  << ",\"kernel_ms\":" << kernel_ms << ",\"nondue_snapshot_ms\":" << nondue_snapshot_ms
+                  << ",\"nodes\":" << nn << ",\"elements\":" << ne
+                  << ",\"plan_increments\":" << plan_increments
+                  << ",\"executed_increments\":" << executed_increments
+                  << ",\"frames_written\":" << frames_written << ",\"run_setup_ms\":" << run_setup_ms
+                  << ",\"initialize_ms\":" << initialize_ms << ",\"kernel_only_ms\":" << kernel_only_ms
+                  << ",\"budget_bytes\":" << budget << ",\"peak_process_bytes\":" << peak()
+                  << ",\"compile_ms\":" << compile_ms << ",\"kernel_ms\":" << kernel_ms
+                  << ",\"nondue_snapshot_ms\":" << nondue_snapshot_ms
                   << ",\"steady_kernel_ms\":" << steady_kernel_ms
                   << ",\"steady_kernel_per_increment_ms\":" << steady_kernel_ms / 8
                   << ",\"force_evaluations\":" << run.force_evaluations()

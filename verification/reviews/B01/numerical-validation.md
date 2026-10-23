@@ -21,8 +21,9 @@ a(t) = 24·cos 20t; ω=20 from m=ρ/24, k=E/6. dt=1e-4 (DIRECT), 2000 increments
 ## New with B01 (R1.01/R1.02 tests; all in `tests/lifecycle_tests.cpp`)
 
 1. Publication laziness counters (exact integer expectations, no tolerance):
-   2002-step run → 2022 evaluations with every-increment publication (21 due);
-   U-only output → 2001; no-output → 1 (initialize only). Trajectory
+   the 2000-increment run → 2022 evaluations with every-increment publication
+   (2000 step evaluations + 1 initialize + 21 due publications); U-only output
+   → 2001; no-output → 1 (initialize only). Trajectory
    bit-identical (`==`) between full-request and U-only runs.
 2. Read-only/repeatability: trajectory signature (u, v, a, ext, contact,
    history, step, time, dt) bit-equal before/after two snapshots at **every**
@@ -49,5 +50,6 @@ a(t) = 24·cos 20t; ω=20 from m=ρ/24, k=E/6. dt=1e-4 (DIRECT), 2000 increments
 
 Analytic-reference tolerances match or exceed the pre-existing ones for the
 same quantities; A (1e-4) accounts for error propagation 400·δu with δu ≤
-3e-8 accumulated; released-A (2e-3) covers 1500 post-transition increments.
+3e-8 accumulated; released-A (2e-3) covers the released segment's 500
+increments (t=0.1→0.2 at dt=2e-4) plus the step-0 accumulated error.
 All comparisons are against closed-form solutions, not self-consistency.
