@@ -435,6 +435,113 @@ int main(int argc, char **argv) {
                       lazy.state().data().displacement.read()(3, 0),
                   "publication laziness leaves trajectory bit-identical");
         }
+        // R1.02: publication is read-only, repeatable and reports one coherent
+        // physical time layer (U/V/A/S at t[n] via current-displacement evaluation).
+        {
+            auto m =
+                ModelCompiler{}.compile<double>(ReaderRegistry{}.read(fixtures / "forced_tet.inp").model);
+            CpuRun<double> run(m);
+            run.initialize();
+            auto gather = [](auto view, unsigned comps, std::vector<double> &out) {
+                for (std::size_t i = 0; i < view.count; ++i)
+                    for (unsigned c = 0; c < comps; ++c)
+                        out.push_back(double(view(i, c)));
+            };
+            auto trajectory = [&]() {
+                std::vector<double> sig;
+                auto &d = run.state().data();
+                gather(d.displacement.read(), 3, sig);
+                gather(d.velocity.read(), 3, sig);
+                gather(d.acceleration.read(), 3, sig);
+                gather(d.external_force.read(), 3, sig);
+                gather(d.contact_force.read(), 3, sig);
+                gather(d.history.read(), 1, sig);
+                sig.push_back(double(d.step));
+                sig.push_back(d.time);
+                sig.push_back(d.dt);
+                return sig;
+            };
+            double published_frames = 0;
+            for (std::uint64_t n = 0; n <= 2000; ++n) {
+                if (n) {
+                    if (!run.advance())
+                        throw std::runtime_error("unexpected end of run");
+                    // loads() ran twice inside advance; a late re-application must not
+                    // change the published layer either way.
+                }
+                bool due = n % 100 == 0;
+                auto before = trajectory();
+                check(!run.state().in_trial(), "publication outside trial state");
+                auto f1 = run.snapshot();
+                auto f2 = run.snapshot();
+                check(trajectory() == before, "publication leaves trajectory untouched");
+                check(native::pack(f1) == native::pack(f2), "publication is repeatable");
+                check(f1.fields.empty() != due, "due increments publish fields");
+                if (due) {
+                    ++published_frames;
+                    double t = f1.info.time;
+                    check(t == run.state().data().time, "frame time equals state time");
+                    auto field = [&](const char *name) -> const ResultField & {
+                        for (auto &v : f1.fields)
+                            if (v.descriptor.name == name && !v.descriptor.history)
+                                return v;
+                        throw std::runtime_error(std::string("missing field ") + name);
+                    };
+                    auto &u = field("U"), &vel = field("V"), &acc = field("A"), &str = field("S");
+                    double un = u.values[3 * 3]; // free node index 3, component X
+                    check(std::abs(un - .06 * (1 - std::cos(20 * t))) < 1e-7, "published U layer");
+                    check(std::abs(vel.values[3 * 3] - 1.2 * std::sin(20 * t)) < 2e-5,
+                          "published V reconstructed to full time");
+                    check(std::abs(acc.values[3 * 3] - 24 * std::cos(20 * t)) < 1e-4, "published A layer");
+                    check(std::abs(str.values[0] - 100 * un) < 1e-11, "published S coherent with U");
+                }
+            }
+            check(published_frames == 21, "contract run frame count");
+            // Cross-step dt change: publication stays coherent across the rephase
+            // boundary (load release at t=0.1, dt 0.0001 -> 0.0002).
+            auto multi =
+                ModelCompiler{}.compile<double>(parse(replaced(source, "0.0001,0.2", "0.0001,0.1") +
+                                                      "*Step,name=RELEASE,nlgeom=NO\n*Dynamic,Explicit,"
+                                                      "Direct User Control\n0.0002,0.1\n*Cload,op=NEW\n*"
+                                                      "End Step\n")
+                                                    .model);
+            CpuRun<double> released(multi);
+            released.initialize();
+            double u1 = .06 * (1 - std::cos(2.)), v1 = 1.2 * std::sin(2.);
+            auto released_ref = [&](double t) {
+                double tau = 20 * (t - .1);
+                return std::array<double, 3>{u1 * std::cos(tau) + v1 / 20 * std::sin(tau),
+                                             -20 * u1 * std::sin(tau) + v1 * std::cos(tau), 0.};
+            };
+            while (released.advance()) {
+                auto inc = released.increment();
+                auto step = released.step_index();
+                if (step != 1 || inc % 100 != 0)
+                    continue;
+                auto frame = released.snapshot();
+                double t = frame.info.time;
+                auto [ur, vr, ar] = released_ref(t);
+                ar = -400 * ur; // released oscillator: a = -k u / m
+                const ResultField *u = nullptr, *vel = nullptr, *acc = nullptr;
+                for (auto &v : frame.fields) {
+                    if (v.descriptor.history)
+                        continue; // history requests carry regional subsets; use full fields
+                    if (v.descriptor.name == "U")
+                        u = &v;
+                    else if (v.descriptor.name == "V")
+                        vel = &v;
+                    else if (v.descriptor.name == "A")
+                        acc = &v;
+                }
+                check(u && vel && acc, "released-step fields present");
+                check(std::abs(u->values[3 * 3] - ur) < 2e-6, "released-step U layer");
+                check(std::abs(vel->values[3 * 3] - vr) < 3e-5, "released-step V layer across dt change");
+                check(std::abs(acc->values[3 * 3] - ar) < 2e-3, "released-step A layer across dt change");
+            }
+            // Restart publication equivalence at a mid-step cursor is already proven
+            // byte-for-byte by the split/restart append checks in numerical<T>();
+            // the read-only contract above guarantees no history commit happened.
+        }
         std::cout << "lifecycle checks=" << checks << " PASS\n";
         return 0;
     } catch (const std::exception &e) {
