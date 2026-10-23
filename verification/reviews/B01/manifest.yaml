@@ -1,0 +1,46 @@
+# B01 review packet manifest
+batch_id: B01
+name: Reproducible baseline and output publication correctness
+repository: https://github.com/Nidofy/fem-solver-database
+local_path: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2
+development_branch: dev/glm-b01
+batch_base_sha: aaa74afb3c264bbd7ca43555a7445c77994ccaa2
+# All code/test/benchmark content ends at 719c3fb; the freeze commit that adds
+# this packet (and only packet/ledger files) follows it and is recorded in
+# CONTINUOUS_STATUS.md after committing. Review the code diff BASE..719c3fb.
+batch_content_head_sha: 719c3fb2a5cd3f6d8a8b13eec1b8a7c1d59dd1a4
+frozen_date: 2026-10-24
+build_environment:
+  os: Windows 10.0.26200 x64 (16 logical cores)
+  cmake: 4.3.1-msvc1 (Ninja generator)
+  primary: MinGW-w64 g++ 15.2.0 x86_64-win32-seh-ucrt (Release, OpenMP 4.5)
+  secondary: [MinGW serial, MSVC 14.44 RelWithDebInfo ASan+UBSan serial]
+  cuda: BLOCKED_ENV (no NVIDIA device/toolkit; see task-evidence/R0.05.md)
+tasks:
+  - {id: R0.01, status: IMPLEMENTED_SELF_TESTED, commit: bef76e3}
+  - {id: R0.02, status: IMPLEMENTED_SELF_TESTED, commit: a3779f0}
+  - {id: R0.03, status: IMPLEMENTED_SELF_TESTED, commit: 12ffe5b}
+  - {id: R1.01, status: IMPLEMENTED_SELF_TESTED, commit: fcc3c80}
+  - {id: R1.02, status: IMPLEMENTED_SELF_TESTED, commit: 0447789}
+  - {id: R0.04, status: IMPLEMENTED_SELF_TESTED, commit: d83ee85}
+  - {id: R0.05, status: BLOCKED_ENV, commit: 719c3fb}
+changed_files:
+  - include/sdb/dynamics.hpp          # force-evaluation counter (additive)
+  - include/sdb/lifecycle.hpp         # force_evaluations() forward; save() consistency eval
+  - include/sdb/results/results.hpp   # lazy due-first publication (core change)
+  - tests/lifecycle_tests.cpp         # R1.01/R1.02 contract tests
+  - benchmarks/lifecycle_benchmark.cpp# segmented steady/nondue/due timings (additive)
+  - .gitignore                        # allow verification/reviews/ packet
+  - docs/development/*                # ledger (task pool, status, ADRs, handoff, history)
+  - docs/*.md                         # user planning documents (imported at R0.01)
+  - verification/reviews/B01/**       # evidence + this packet
+feature_flags: none (no runtime flags introduced; single default path, revert-safe)
+breaking_changes: none
+  # Byte-level outputs (.sdbres/.sdbrst/.sdbmodel) verified identical pre/post change.
+out_of_scope:
+  - CUDA anything (G0.01 blocked, no device)
+  - reader full-scan rework (R4.x), output queue/backpressure (R1.03),
+    failure injection (R1.04), any physics/kernel/schema addition
+reviewers:
+  astra: {prompt: docs/03_ASTRA_BATCH_REVIEW_PROMPT.md, report: astra-review.md, status: pending}
+  opus: {prompt: docs/04_OPUS_BATCH_REVIEW_PROMPT.md, report: opus-review.md, status: pending}

@@ -2,26 +2,41 @@
 
 Updated after every task. Cross-session handoff details: SESSION_HANDOFF.md.
 
-- Current batch: **B01** (reproducible baseline + output publication correctness)
+- Current batch: **B01** — **FROZEN_FOR_BATCH_REVIEW** (2026-10-24)
 - Batch base SHA: `aaa74afb3c264bbd7ca43555a7445c77994ccaa2`
-- Working branch: `dev/glm-b01`
-- Batch state: IN_PROGRESS (not yet FROZEN_FOR_BATCH_REVIEW)
-- Latest commit: see `git log dev/glm-b01 -1`
+- Batch content HEAD (all code/tests/benchmarks): `719c3fb`
+- Working branch: `dev/glm-b01` (freeze commit adds only packet/ledger files)
+- Review packet: `verification/reviews/B01/` (manifest, review-packet,
+  build-test, numerical-validation, compat-matrix, open-risks, task evidence,
+  benchmark raw JSONL + summary)
+- Astra/Opus reports: **pending** (to be provided externally; GLM must not
+  author them)
 
 ## Task states (summary; authoritative list in TASK_POOL.yaml)
 
 | Task | Status | Commit | Notes |
 |---|---|---|---|
-| R0.01 baseline | IMPLEMENTED_SELF_TESTED | bef76e3 | inventory + anchors verified from source |
-| R0.02 build matrix | IMPLEMENTED_SELF_TESTED | a3779f0 | MinGW OMP/serial + MSVC ASan, 8/8 each |
-| R0.03 ledger | IN_PROGRESS | — | this file + TASK_POOL.yaml scaffold |
-| R0.04 benchmarks | PLANNED | — | |
-| R0.05 CUDA probe | PLANNED | — | nvcc/nvidia-smi absent → expect BLOCKED_ENV |
-| R1.01 lazy publish | PLANNED | — | anchor: ResultPublisher::publish forces-before-due |
-| R1.02 time-layer contract | PLANNED | — | |
+| R0.01 baseline | FROZEN_FOR_BATCH_REVIEW | bef76e3 | inventory + anchors |
+| R0.02 build matrix | FROZEN_FOR_BATCH_REVIEW | a3779f0 | 3 configs × 8/8 |
+| R0.03 ledger | FROZEN_FOR_BATCH_REVIEW | 12ffe5b | |
+| R1.01 lazy publish | FROZEN_FOR_BATCH_REVIEW | fcc3c80 | 4002→2022 evals; bytes identical |
+| R1.02 time-layer contract | FROZEN_FOR_BATCH_REVIEW | 0447789 | 14284 checks |
+| R0.04 benchmarks | FROZEN_FOR_BATCH_REVIEW | d83ee85 | eager/lazy A/B |
+| R0.05 CUDA probe | BLOCKED_ENV | 719c3fb | no NVIDIA device/toolkit |
 
-## Last full regression
+## Last full regression (at content HEAD 719c3fb, 2026-10-24)
 
-- 2026-10-24, commit a3779f0: CTest 8/8 PASS on build-b01 (MinGW Release+OMP),
-  build-b01-serial (serial), build-b01-asan (MSVC ASan). See
-  verification/reviews/B01/task-evidence/R0.02.md.
+- build-b01 (MinGW Release+OMP): CTest 8/8 PASS.
+- build-b01-serial: CTest 8/8 PASS.
+- build-b01-asan (MSVC ASan/UBSan): CTest 8/8 PASS, no findings.
+- sdb_run byte-outputs identical to pre-change binaries (double/float/U-only;
+  restart at stop 700 and 733).
+
+## Next steps (external)
+
+1. User sends `03_ASTRA_BATCH_REVIEW_PROMPT.md` and
+   `04_OPUS_BATCH_REVIEW_PROMPT.md` against frozen range
+   `aaa74af..719c3fb` (+ packet commit) to both reviewers independently.
+2. Reports returned → GLM runs `05_GLM53_REVIEW_FIX_PROMPT.md` flow
+   (findings ledger, C0/C1 first, targeted re-review).
+3. Accepted → merge to stable, open B02 (R1.03/R1.04/R2.04).
