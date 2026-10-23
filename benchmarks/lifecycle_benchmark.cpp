@@ -65,10 +65,12 @@ int main(int argc, char **argv) {
         ir.sections.push_back({"", "ALL", "M", "SOLID SECTION", {}, {"generated", 1, 1}});
         IRStep step;
         step.name = "BENCH";
-        step.period = .0002;
+        step.period = .0021;
         step.increment = .0001;
         step.direct = true;
-        step.outputs.push_back({false, 1, 0, "", {"U"}, {"generated", 1, 1}});
+        // 21 increments; due at 0, 10, 20, 21. Measures both a non-due and a
+        // due (pure-U) publication per run.
+        step.outputs.push_back({false, 10, 0, "", {"U"}, {"generated", 1, 1}});
         ir.steps.push_back(step);
         auto start = std::chrono::steady_clock::now();
         auto model = ModelCompiler{}.compile<double>(std::move(ir));
@@ -81,8 +83,16 @@ int main(int argc, char **argv) {
                 throw std::length_error("measured peak exceeded memory budget");
         };
         enforce();
-        double kernel_ms = timed([&] { run.advance(); });
+        double kernel_ms = timed([&] { run.advance(); }); // increment 1: non-due
         ResultFrame frame;
+        // Publication cost on a non-output increment (R1.01 lazy path).
+        double nondue_snapshot_ms = timed([&] { (void)run.snapshot(); });
+        // Steady-state stepping: increments 2..9, away from first-touch effects.
+        double steady_kernel_ms = timed([&] {
+            for (int i = 0; i != 8; ++i)
+                run.advance();
+        });
+        run.advance(); // increment 10: due, pure-U frame
         double snapshot_ms = timed([&] { frame = run.snapshot(); });
         enforce();
         auto result = dir / "million.sdbres", restart = dir / "million.sdbrst";
@@ -109,6 +119,10 @@ int main(int argc, char **argv) {
         std::cout << std::setprecision(9) << "{\"nodes\":" << nn << ",\"elements\":" << ne
                   << ",\"budget_bytes\":" << budget << ",\"peak_process_bytes\":" << peak()
                   << ",\"compile_ms\":" << compile_ms << ",\"kernel_ms\":" << kernel_ms
+                  << ",\"nondue_snapshot_ms\":" << nondue_snapshot_ms
+                  << ",\"steady_kernel_ms\":" << steady_kernel_ms
+                  << ",\"steady_kernel_per_increment_ms\":" << steady_kernel_ms / 8
+                  << ",\"force_evaluations\":" << run.force_evaluations()
                   << ",\"snapshot_ms\":" << snapshot_ms << ",\"native_write_ms\":" << write_ms
                   << ",\"reader_scan_query_ms\":" << read_ms << ",\"restart_write_ms\":" << restart_write_ms
                   << ",\"restart_restore_ms\":" << restore_ms

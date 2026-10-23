@@ -1,0 +1,15 @@
+nodes	samples	compile_ms	kernel_ms	nondue_snapshot_ms	steady_kernel_per_increment_ms	force_evaluations	snapshot_ms	native_write_ms	reader_scan_query_ms	restart_write_ms	restart_restore_ms	peak_process_bytes
+1000000	1	653.346	15.735	7.085	15.3596	14	15.891	1455.408	1834.05	1709.175	1667.288	1329545216
+1000000	1	660.105	15.485	7.459	15.3176	14	15.751	1483.27	1781.12	1719.493	1694.696	1328799744
+200000	3	129.457	2.823	1.434	2.6385	14	3.005	290.33	344.883	341.294	320.448	271679488
+200000	3	132.301	2.783	1.396	2.6874	14	3.045	285.011	345.484	334.872	317.935	271818752
+1000000	1	647.145	15.341	0.016	15.0519	12	8.81	1475.767	1780.471	1725.257	1647.861	1328852992
+1000000	1	648.36	15.014	0.015	15.2864	12	8.676	1475.124	1813.845	1746.42	1753.911	1328861184
+200000	3	128.503	2.76	0.015	2.5465	12	1.71	289.284	345.56	344.879	327.861	271646720
+200000	3	128.739	2.925	0.015	2.7832	12	1.726	285.236	350.851	336.979	324.945	271560704
+
+R1.01 eager->lazy publication cost delta (same conditions):
+200k-serial: nondue publication 1.396->0.015 ms (removed 1.381 ms = 51% of one step); due-U snapshot 3.045->1.726 ms (removed 1.319 ms); steady step unchanged (2.687 vs 2.783 ms)
+200k-omp4: nondue publication 1.434->0.015 ms (removed 1.419 ms = 54% of one step); due-U snapshot 3.005->1.710 ms (removed 1.295 ms); steady step unchanged (2.639 vs 2.546 ms)
+1m-serial: nondue publication 7.459->0.015 ms (removed 7.444 ms = 49% of one step); due-U snapshot 15.751->8.676 ms (removed 7.075 ms); steady step unchanged (15.318 vs 15.286 ms)
+1m-omp4: nondue publication 7.085->0.016 ms (removed 7.069 ms = 46% of one step); due-U snapshot 15.891->8.810 ms (removed 7.081 ms); steady step unchanged (15.360 vs 15.052 ms)
