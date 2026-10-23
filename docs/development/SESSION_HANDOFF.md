@@ -1,35 +1,44 @@
 # Session handoff (minimal trusted context for a fresh GLM thread)
 
 A fresh session MUST re-verify against real Git state before trusting this
-file: `git status --porcelain=v1 -b`, `git log --oneline -8`, task pool.
+file: `git status --porcelain=v1 -b`, `git log --oneline -12`, task pool.
 
-## Current position (2026-10-24, end of session)
+## Current position (2026-10-24, after B01 dual review + repair)
 
-- **B01 frozen for review** on `dev/glm-b01`: reviewed code range
-  `aaa74af..719c3fb`; packet/ledger commits after it (`b58dfff`+). Packet:
-  `verification/reviews/B01/` (start at manifest.yaml).
-- **B02c candidate frozen** on `dev/glm-b02-candidate` (worktree
-  `../sdb-b02c`), base `aaa74af`, head `b87fb53`: R2.04a view-vs-raw fair
-  statistics + layout correctness tests; zero file overlap with B01;
-  can be reviewed separately or dropped.
-- What is in B01: baseline/inventory (R0.01), 3-config test matrix (R0.02),
-  ledger (R0.03), lazy publication R1.01 (core change:
-  `include/sdb/results/results.hpp` + counter in `dynamics.hpp` + `save()`
-  consistency eval in `lifecycle.hpp`), time-layer contract tests R1.02,
-  segmented benchmarks + eager/lazy A/B (R0.04), CUDA BLOCKED_ENV (R0.05).
-- All evidence: `verification/reviews/B01/` (manifest.yaml first).
+- **B01 repaired, pending incremental re-review gate.** Branch `dev/glm-b01`.
+  Reviewed object (unchanged by repair): `719c3fb` (full
+  `719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5`); freeze packet `b58dfff`.
+- Repair series (no runtime solver code changed): `97b1b8a` identity
+  (A-002/O-001), `816fb8d` execution-policy/retraction (A-001/O-002),
+  `5f66b7c` sanitizer relabel (A-003/O-003), `d5cad6c` phase fields + errata
+  (A-004), `02e1ee4` findings/repair packet (= FIX_HEAD_SHA). Any commit
+  after `02e1ee4` on this branch is docs/ledger bookkeeping only.
+- Reviewers were two mutually isolated GPT-6 Astra instances (Reviewer B
+  user-authorized to substitute for unavailable Opus; `opus-review.md`
+  filename is workflow compatibility only, no Claude/Opus participation
+  claimed). Reports are verbatim copies in `verification/reviews/B01/` with
+  SHA-256 on record.
+- Gate status: **REPAIRED_PENDING_GATE** — awaiting the coordinators'
+  incremental re-review of `719c3fb..02e1ee4` (scope in
+  `verification/reviews/B01/repair-report.md`). Until accepted: no stable
+  merge, no B02 start on this branch.
+- **B02c candidate** remains frozen separately: `dev/glm-b02-candidate`
+  (worktree `../sdb-b02c`), base `aaa74af`, head `b87fb53`, zero overlap with
+  B01; optional independent review; droppable. Key result: View-vs-raw
+  overhead ≤1.3% serial / noise under OpenMP — no fast-path justified.
 
 ## What a resumed GLM should do (depends on what the user returns)
 
-- **If Astra/Opus findings exist**: follow `05_GLM53_REVIEW_FIX_PROMPT.md` —
-  build the findings ledger `findings.md`, fix C0/C1 first, atomic fix
-  commits, targeted regression, update `repair-report.md`, set
-  `REPAIRED_PENDING_GATE`.
-- **If batch accepted & merged to stable**: start B02 from new stable HEAD
-  per `06_GLM53_RESUME_PROMPT.md` — pool suggests R1.03 + R1.04 + R2.04.
-- **If granted EXTENDED_IDLE**: only independent, non-overlapping low-risk
-  tasks in a SEPARATE worktree from the last accepted SHA (never on top of
-  the frozen unreviewed tree). Candidate: R2.04 raw-vs-view benchmarks.
+- **Gate passes + user authorizes merge**: merge accepted B01 exactly per the
+  user's instructions (never push/merge protected branches without explicit
+  authorization), then start B02 per `06_GLM53_RESUME_PROMPT.md`
+  (pool: R1.03, R1.04, R2.04 — R2.04's fast-path half likely resolves to
+  "not justified" per B02c's measurement; confirm from that branch's
+  docs/development/b02c/ evidence).
+- **New findings from incremental re-review**: repeat the repair loop
+  (append to findings.md → minimal fix → regression → repair-report update).
+- **If granted EXTENDED_IDLE again**: only isolated, non-overlapping,
+  from-last-accepted work in a separate worktree (same rules as B02c).
 
 ## Environment facts (verified 2026-10-24)
 
@@ -45,17 +54,26 @@ NINJA="/c/Program Files/Microsoft Visual Studio/18/Professional/Common7/IDE/Comm
 "$NINJA" -C build-b01 && "$CMAKE" --build build-b01 --target test
 ```
 
-- MSVC ASan variant: `verification/reviews/B01/build-test.md` (vcvars64
-  -vcvars_ver=14.44, SDB_SANITIZE=ON, build-b01-asan).
+- MSVC variant: **AddressSanitizer only** (`SDB_SANITIZE=ON`; the MSVC branch
+  has no UBSan; MinGW ships no sanitizer runtimes at all). Build/test flow in
+  `verification/reviews/B01/build-test.md`.
+- Identity gate for every future packet:
+  `python verification/validate_batch_identity.py <manifest.yaml>`
+  (positive+negative controls proven 2026-10-24).
 - No NVIDIA GPU / CUDA toolkit on this host → CUDA tasks stay BLOCKED_ENV.
 - `AGENTS.md` does not exist in this repo. clang-format:
-  `"/c/Program Files/Microsoft Visual Studio/18/Professional/VC/Tools/Llvm/x64/bin/clang-format.exe" --style=file -i <files>`
+  `"/c/Program Files/Microsoft Visual Studio/18/Professional/VC/Tools/Llvm/x64/bin/clang-format.exe" --style=file -i <files>`.
+- The lifecycle benchmark always executes SERIAL (CpuRun has no policy
+  parameter) — never draw parallel conclusions from it; every JSON row now
+  carries `execution_policy:"serial"`.
 - Exact-count test conventions live in tests/lifecycle_tests.cpp blocks
   labeled "R1.01" and "R1.02" — read before changing `publish()`/`advance()`.
 
 ## Working agreements (unchanged)
 
-- Atomic commit per task; update `docs/development/*` and
-  `verification/reviews/<BATCH>/task-evidence/<ID>.md` after each task.
+- Atomic commit per task/fix; update `docs/development/*` and
+  `verification/reviews/<BATCH>/` after each unit.
 - Never mark ACCEPTED before external review; no force-push/reset --hard;
-  never author astra-review.md / opus-review.md; CUDA stays BLOCKED_ENV here.
+  reviewer report files are verbatim copies only; CUDA stays BLOCKED_ENV
+  here; no push/merge of protected branches without explicit user
+  authorization.
