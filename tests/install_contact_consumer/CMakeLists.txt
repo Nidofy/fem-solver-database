@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.24)
+project(ContactConsumer LANGUAGES CXX)
+find_package(SolverDatabaseV2 CONFIG REQUIRED)
+add_executable(contact_consumer main.cpp)
+target_link_libraries(contact_consumer PRIVATE sdb::sdb_general_contact)

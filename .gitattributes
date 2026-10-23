@@ -1,0 +1,2 @@
+# Keep source archives and fixtures independent of host core.autocrlf settings.
+* text=auto eol=lf

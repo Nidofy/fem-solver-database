@@ -1,0 +1,123 @@
+#include <sdb/lifecycle.hpp>
+#include <chrono>
+#include <iostream>
+#include <iomanip>
+#ifdef _WIN32
+#include <psapi.h>
+#else
+#include <sys/resource.h>
+#endif
+using namespace sdb;
+using namespace sdb::lifecycle;
+std::uint64_t peak() {
+#ifdef _WIN32
+    PROCESS_MEMORY_COUNTERS p{};
+    if (!K32GetProcessMemoryInfo(GetCurrentProcess(), &p, sizeof(p)))
+        throw std::runtime_error("peak memory unavailable");
+    return p.PeakWorkingSetSize;
+#else
+    rusage p{};
+    if (getrusage(RUSAGE_SELF, &p))
+        throw std::runtime_error("peak memory unavailable");
+    return std::uint64_t(p.ru_maxrss) * 1024;
+#endif
+}
+template <class F> double timed(F f) {
+    auto start = std::chrono::steady_clock::now();
+    f();
+    return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+}
+int main(int argc, char **argv) {
+    try {
+        if (argc != 4)
+            throw std::runtime_error(
+                "usage: sdb_lifecycle_benchmark node-count memory-budget-MiB output-directory");
+        auto requested = std::stoull(argv[1]), budget = std::stoull(argv[2]) * 1024 * 1024;
+        std::filesystem::path dir = argv[3];
+        std::filesystem::create_directories(dir);
+        auto ne = requested / 4;
+        if (ne == 0 || ne >= invalid_index / 4)
+            throw std::invalid_argument("node count");
+        auto nn = 4 * ne;
+        // Conservative preflight for IR, compiler maps, mesh, state/plan, header and one U frame.
+        if (nn > budget / 3000)
+            throw std::length_error("preflight memory budget: require 3000 bytes/node");
+        ModelIR ir;
+        ir.parts.push_back({"", {}, {}, {"generated", 1, 1}});
+        auto &p = ir.parts[0];
+        p.nodes.reserve(nn);
+        p.elements.reserve(ne);
+        ir.materials.push_back({"M", 1, 100, 0, {"generated", 1, 1}});
+        IRSet set{"", "ALL", "", false, {}, {"generated", 1, 1}};
+        set.members.reserve(ne);
+        for (Id e = 0; e < ne; ++e) {
+            Id base = 4 * e + 1;
+            double x = double(e) * 2;
+            p.nodes.push_back({base, {x, 0, 0}, {"generated", 1, 1}});
+            p.nodes.push_back({base + 1, {x + 1, 0, 0}, {"generated", 1, 1}});
+            p.nodes.push_back({base + 2, {x, 1, 0}, {"generated", 1, 1}});
+            p.nodes.push_back({base + 3, {x, 0, 1}, {"generated", 1, 1}});
+            p.elements.push_back(
+                {e + 1, descriptor("C3D4", {}), {base, base + 1, base + 2, base + 3}, {"generated", 1, 1}});
+            set.members.push_back(std::to_string(e + 1));
+        }
+        ir.sets.push_back(std::move(set));
+        ir.sections.push_back({"", "ALL", "M", "SOLID SECTION", {}, {"generated", 1, 1}});
+        IRStep step;
+        step.name = "BENCH";
+        step.period = .0002;
+        step.increment = .0001;
+        step.direct = true;
+        step.outputs.push_back({false, 1, 0, "", {"U"}, {"generated", 1, 1}});
+        ir.steps.push_back(step);
+        auto start = std::chrono::steady_clock::now();
+        auto model = ModelCompiler{}.compile<double>(std::move(ir));
+        double compile_ms =
+            std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+        CpuRun<double> run(model);
+        run.initialize();
+        auto enforce = [&] {
+            if (peak() > budget)
+                throw std::length_error("measured peak exceeded memory budget");
+        };
+        enforce();
+        double kernel_ms = timed([&] { run.advance(); });
+        ResultFrame frame;
+        double snapshot_ms = timed([&] { frame = run.snapshot(); });
+        enforce();
+        auto result = dir / "million.sdbres", restart = dir / "million.sdbrst";
+        if (std::filesystem::exists(result))
+            throw std::runtime_error("benchmark output exists; choose a fresh directory");
+        const auto io_limit = budget / 4;
+        auto rm = ResultModel::from(model, run.configuration());
+        double write_ms = timed([&] {
+            NativeResultStorage storage(result, std::move(rm), false, false, io_limit);
+            storage.append(frame);
+        });
+        enforce();
+        double restart_write_ms = timed([&] { run.save(restart); });
+        enforce();
+        double read_ms = timed([&] {
+            ResultReader reader(result, false, io_limit);
+            auto u = reader.field(0, "U");
+            if (u.ids.size() != nn || u.values.size() != 3 * nn)
+                throw std::runtime_error("benchmark result read mismatch");
+        });
+        enforce();
+        double restore_ms = timed([&] { run.restore(restart); });
+        enforce();
+        std::cout << std::setprecision(9) << "{\"nodes\":" << nn << ",\"elements\":" << ne
+                  << ",\"budget_bytes\":" << budget << ",\"peak_process_bytes\":" << peak()
+                  << ",\"compile_ms\":" << compile_ms << ",\"kernel_ms\":" << kernel_ms
+                  << ",\"snapshot_ms\":" << snapshot_ms << ",\"native_write_ms\":" << write_ms
+                  << ",\"reader_scan_query_ms\":" << read_ms << ",\"restart_write_ms\":" << restart_write_ms
+                  << ",\"restart_restore_ms\":" << restore_ms
+                  << ",\"result_bytes\":" << std::filesystem::file_size(result)
+                  << ",\"restart_bytes\":" << std::filesystem::file_size(restart)
+                  << ",\"hdf5\":\"unavailable\",\"gpu_transfer\":\"unverified\"}\n";
+        return 0;
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
+}

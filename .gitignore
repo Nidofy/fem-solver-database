@@ -1,0 +1,41 @@
+build*/
+*.checkpoint
+*.tmp
+
+# Local build/runtime output
+*.log
+*.exe
+*.dll
+*.lib
+*.obj
+*.pdb
+*.ilk
+*.a
+*.so
+*.dylib
+*.sdbres
+*.sdbmodel
+*.sdbrst
+*.sdbcb
+*.sdbcm
+*.sdbc
+*.sdbcr
+__pycache__/
+.vs/
+.idea/
+.env
+.env.*
+*-scratch/
+general-domain-output/
+
+# Parent-solver integration notes stay local; do not publish with this module.
+/docs/MIGRATION.md
+/docs/MODERNIZATION_ROADMAP.md
+
+# Historical host logs/manifests contain parent repository paths and references.
+# Publish only portable reproduction tools and the standalone verification summary.
+/verification/*
+!/verification/README.md
+!/verification/reproduce.ps1
+!/verification/reproduce_lifecycle.ps1
+!/verification/summarize_benchmarks.py

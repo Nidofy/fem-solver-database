@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.24)
+project(SolverDatabaseV2Consumer LANGUAGES CXX)
+find_package(SolverDatabaseV2 2 CONFIG REQUIRED)
+add_executable(installed_consumer main.cpp)
+target_link_libraries(installed_consumer PRIVATE sdb::sdb_lifecycle)
