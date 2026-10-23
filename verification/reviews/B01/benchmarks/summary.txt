@@ -1,15 +1,15 @@
-nodes	samples	compile_ms	kernel_ms	nondue_snapshot_ms	steady_kernel_per_increment_ms	force_evaluations	snapshot_ms	native_write_ms	reader_scan_query_ms	restart_write_ms	restart_restore_ms	peak_process_bytes
-1000000	1	653.346	15.735	7.085	15.3596	14	15.891	1455.408	1834.05	1709.175	1667.288	1329545216
-1000000	1	660.105	15.485	7.459	15.3176	14	15.751	1483.27	1781.12	1719.493	1694.696	1328799744
-200000	3	129.457	2.823	1.434	2.6385	14	3.005	290.33	344.883	341.294	320.448	271679488
-200000	3	132.301	2.783	1.396	2.6874	14	3.045	285.011	345.484	334.872	317.935	271818752
-1000000	1	647.145	15.341	0.016	15.0519	12	8.81	1475.767	1780.471	1725.257	1647.861	1328852992
-1000000	1	648.36	15.014	0.015	15.2864	12	8.676	1475.124	1813.845	1746.42	1753.911	1328861184
-200000	3	128.503	2.76	0.015	2.5465	12	1.71	289.284	345.56	344.879	327.861	271646720
-200000	3	128.739	2.925	0.015	2.7832	12	1.726	285.236	350.851	336.979	324.945	271560704
+nodes	samples	execution_policy	omp_env	compile_ms	kernel_ms	nondue_snapshot_ms	steady_kernel_per_increment_ms	force_evaluations	snapshot_ms	native_write_ms	reader_scan_query_ms	restart_write_ms	restart_restore_ms	peak_process_bytes
+1000000	1	serial	1	701.2	17.76	8.589	17.1409	14	17.909	1598.117	1836.985	1763.795	1740.479	1328906240
+1000000	1	serial	4	680.927	15.848	7.119	16.265	14	16.774	1563.261	1799.255	1761.132	1712.282	1328721920
+200000	3	serial	1	132.319	2.771	1.387	2.7951	14	3.336	306.559	349.383	355.574	344.68	271736832
+200000	3	serial	4	133.956	2.861	1.414	2.8289	14	3.218	303.215	349.394	359.526	342.731	271585280
+1000000	1	serial	1	686.799	16.426	0.015	17.1949	12	9.724	1538.78	1772.811	1755.019	1701.692	1328787456
+1000000	1	serial	4	679.508	17.088	0.018	16.3392	12	8.64	1579.488	1800.196	1757.045	1736.371	1328934912
+200000	3	serial	1	131.316	2.774	0.014	2.8305	12	1.706	295.759	350.916	350.494	343.678	271613952
+200000	3	serial	4	133.458	2.863	0.016	2.8251	12	1.717	300.8	349.419	360.42	343.018	271724544
 
-R1.01 eager->lazy publication cost delta (same conditions):
-200k-serial: nondue publication 1.396->0.015 ms (removed 1.381 ms = 51% of one step); due-U snapshot 3.045->1.726 ms (removed 1.319 ms); steady step unchanged (2.687 vs 2.783 ms)
-200k-omp4: nondue publication 1.434->0.015 ms (removed 1.419 ms = 54% of one step); due-U snapshot 3.005->1.710 ms (removed 1.295 ms); steady step unchanged (2.639 vs 2.546 ms)
-1m-serial: nondue publication 7.459->0.015 ms (removed 7.444 ms = 49% of one step); due-U snapshot 15.751->8.676 ms (removed 7.075 ms); steady step unchanged (15.318 vs 15.286 ms)
-1m-omp4: nondue publication 7.085->0.016 ms (removed 7.069 ms = 46% of one step); due-U snapshot 15.891->8.810 ms (removed 7.081 ms); steady step unchanged (15.360 vs 15.052 ms)
+R1.01 eager->lazy publication cost delta (same conditions, serial execution):
+200k-serial-env1: nondue publication 1.387->0.014 ms (removed 1.373 ms = 49% of one step); due-U snapshot 3.336->1.706 ms (removed 1.630 ms); steady step unchanged (2.795 vs 2.830 ms)
+200k-serial-env4: nondue publication 1.414->0.016 ms (removed 1.398 ms = 49% of one step); due-U snapshot 3.218->1.717 ms (removed 1.501 ms); steady step unchanged (2.829 vs 2.825 ms)
+1m-serial-env1: nondue publication 8.589->0.015 ms (removed 8.574 ms = 50% of one step); due-U snapshot 17.909->9.724 ms (removed 8.185 ms); steady step unchanged (17.141 vs 17.195 ms)
+1m-serial-env4: nondue publication 7.119->0.018 ms (removed 7.101 ms = 44% of one step); due-U snapshot 16.774->8.640 ms (removed 8.134 ms); steady step unchanged (16.265 vs 16.339 ms)

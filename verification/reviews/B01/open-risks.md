@@ -27,8 +27,18 @@
    across 3 runs. Medians reported; 1M rows are single samples. The eager/lazy
    deltas (−1.3/−7.1 ms) far exceed noise; the "steady unchanged" claim is
    within noise, stated as such.
-5. **OMP efficiency (~1.0x at 4 threads on this model)** is a known open
-   problem deferred to R2.01/R2.02 — not claimed fixed; recorded in R0.04.
+5. ~~OMP efficiency (~1.0x at 4 threads on this model) is a known open
+   problem deferred to R2.01/R2.02 — not claimed fixed; recorded in R0.04.~~
+   **RETRACTED (B01-A-001 / B01-O-002):** the lifecycle benchmark cannot
+   execute OpenMP — `CpuRun` hard-codes `CpuPolicy::Serial` and offers no
+   policy parameter, so the earlier "OMP4 ≈ serial" rows were two serial runs
+   under different `OMP_NUM_THREADS` values (reviewer link-probe:
+   `lifecycle_parallel_launches=0` vs explicit-control 1). **No parallel
+   efficiency or bandwidth data exists for the lifecycle path.** Establishing
+   one requires a deliberate public API change (R2 candidate, out of B01
+   repair scope). The low-level `sdb_benchmark` does select OpenMP explicitly;
+   historical `verification/benchmark_1m_omp4_*.jsonl` (previous host) used
+   that real path.
 
 ## Deviations from the planning documents
 

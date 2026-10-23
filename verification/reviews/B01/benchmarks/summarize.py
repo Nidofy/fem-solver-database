@@ -12,6 +12,9 @@ for path in sorted(root.glob("lifecycle_*.jsonl")):
         continue
     row = {key: statistics.median(s[key] for s in samples) if len(samples) > 1 else samples[0][key]
            for key in samples[0] if isinstance(samples[0][key], (int, float))}
+    for key in ("execution_policy", "omp_env"):
+        if key in samples[0]:
+            row[key] = samples[0][key]
     row["tag"] = tag
     row["samples"] = len(samples)
     rows.append(row)
@@ -19,16 +22,19 @@ for path in sorted(root.glob("lifecycle_*.jsonl")):
 out = root / "baseline.json"
 out.write_text(json.dumps(rows, indent=2) + "\n", encoding="utf-8")
 
-cols = ("nodes", "samples", "compile_ms", "kernel_ms", "nondue_snapshot_ms", "steady_kernel_per_increment_ms",
+cols = ("nodes", "samples", "execution_policy", "omp_env", "compile_ms", "kernel_ms",
+        "nondue_snapshot_ms", "steady_kernel_per_increment_ms",
         "force_evaluations", "snapshot_ms", "native_write_ms", "reader_scan_query_ms",
         "restart_write_ms", "restart_restore_ms", "peak_process_bytes")
 print("\t".join(cols))
 for row in rows:
-    print("\t".join(str(round(row[c], 4)) if isinstance(row[c], float) else str(row[c]) for c in cols))
+    print("\t".join(str(row.get(c, "")) if isinstance(row.get(c, ""), str)
+                    else (str(round(row[c], 4)) if isinstance(row.get(c), float) else str(row.get(c, "")))
+                    for c in cols))
 
-print("\nR1.01 eager->lazy publication cost delta (same conditions):")
+print("\nR1.01 eager->lazy publication cost delta (same conditions, serial execution):")
 for size in ("", "1m-"):
-    for backend in ("serial", "omp4"):
+    for backend in ("serial-env1", "serial-env4"):
         eager = next((r for r in rows if r["tag"] == f"eager-{size}{backend}"), None)
         lazy = next((r for r in rows if r["tag"] == f"lazy-{size}{backend}"), None)
         if not (eager and lazy):

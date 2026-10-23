@@ -1,7 +1,11 @@
 #include <sdb/lifecycle.hpp>
 #include <chrono>
+#include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #ifdef _WIN32
 #include <psapi.h>
 #else
@@ -76,6 +80,10 @@ int main(int argc, char **argv) {
         auto model = ModelCompiler{}.compile<double>(std::move(ir));
         double compile_ms =
             std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+        // CpuRun exposes no policy parameter: it constructs CpuExplicit with the
+        // default CpuPolicy::Serial, so every timing below is serial execution
+        // regardless of OMP_NUM_THREADS. Reported explicitly (B01-A-001/O-002):
+        // no parallel-efficiency conclusion may be drawn from this benchmark.
         CpuRun<double> run(model);
         run.initialize();
         auto enforce = [&] {
@@ -116,10 +124,20 @@ int main(int argc, char **argv) {
         enforce();
         double restore_ms = timed([&] { run.restore(restart); });
         enforce();
-        std::cout << std::setprecision(9) << "{\"nodes\":" << nn << ",\"elements\":" << ne
-                  << ",\"budget_bytes\":" << budget << ",\"peak_process_bytes\":" << peak()
-                  << ",\"compile_ms\":" << compile_ms << ",\"kernel_ms\":" << kernel_ms
-                  << ",\"nondue_snapshot_ms\":" << nondue_snapshot_ms
+        const char *omp_env = std::getenv("OMP_NUM_THREADS");
+        std::cout << std::setprecision(9) << "{\"execution_policy\":\"serial\""
+                  << ",\"execution_policy_note\":\"CpuRun default; lifecycle API has no OpenMP selection\""
+#ifdef _OPENMP
+                  << ",\"omp_compiled\":1"
+                  << ",\"omp_max_threads\":" << omp_get_max_threads()
+#else
+                  << ",\"omp_compiled\":0"
+                  << ",\"omp_max_threads\":0"
+#endif
+                  << ",\"omp_env\":" << (omp_env ? "\"" + std::string(omp_env) + "\"" : "\"\"")
+                  << ",\"nodes\":" << nn << ",\"elements\":" << ne << ",\"budget_bytes\":" << budget
+                  << ",\"peak_process_bytes\":" << peak() << ",\"compile_ms\":" << compile_ms
+                  << ",\"kernel_ms\":" << kernel_ms << ",\"nondue_snapshot_ms\":" << nondue_snapshot_ms
                   << ",\"steady_kernel_ms\":" << steady_kernel_ms
                   << ",\"steady_kernel_per_increment_ms\":" << steady_kernel_ms / 8
                   << ",\"force_evaluations\":" << run.force_evaluations()
