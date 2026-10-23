@@ -39,3 +39,5 @@ general-domain-output/
 !/verification/reproduce.ps1
 !/verification/reproduce_lifecycle.ps1
 !/verification/summarize_benchmarks.py
+# Curated batch-review packets are authored for publication (no host-local paths).
+!/verification/reviews/

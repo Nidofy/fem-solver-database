@@ -1,0 +1,449 @@
+schema_version: 2
+program: fem-solver-database-v2
+repository: https://github.com/Nidofy/fem-solver-database
+intent: idle_capacity_continuous_development_with_batch_review
+warning: Planning only; task completion and benchmarks must be checked against the actual local Git repository.
+baseline_branch_hint: codex/standalone-database
+roles:
+  main_developer: GLM-5.3
+  batch_review_architecture_performance: GPT-6 Astra
+  batch_review_numerical_reliability: Claude Opus 5.5
+protected_branch_policy:
+  allow_unreviewed_commits_on_development_branches: true
+  allow_unreviewed_commits_on_stable: false
+  block_c0_c1_on_acceptance: true
+  do_not_force_push_or_destroy_unrelated_work: true
+  review_source: immutable_git_sha
+  external_actions_and_dependencies: require_user_approval_where_needed
+continuous_development:
+  default_tasks_per_batch: [4, 8]
+  max_domains_per_batch_recommendation: 2
+  review_trigger:
+    - functional_slice_complete
+    - high_risk_schema_or_physics_or_cuda_change
+    - review_scope_too_large
+    - dependencies_blocked
+    - session_limit_or_context_limit
+  per_task:
+    - identify_code_anchor_and_invariants
+    - regression_or_reference_test_first
+    - minimal_implementation
+    - execute_appropriate_tests
+    - atomic_commit
+    - update_evidence_and_status
+    - proceed_to_next_ready_task
+  cross_task_regression_interval_tasks: [2, 3]
+  never_claim_background_execution_after_session_ends: true
+status_values:
+  - PLANNED
+  - READY
+  - IN_PROGRESS
+  - IMPLEMENTED_SELF_TESTED
+  - BLOCKED_ENV
+  - NEEDS_DESIGN_REVIEW
+  - FROZEN_FOR_BATCH_REVIEW
+  - REVIEW_CHANGES_REQUIRED
+  - REPAIRED_PENDING_GATE
+  - ACCEPTED
+  - DEFERRED
+batches:
+  - id: B01
+    name: Reproducible baseline and output publication correctness
+    suggested_tasks: [R0.01, R0.02, R0.03, R0.04, R0.05, R1.01, R1.02]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+  - id: B02
+    name: IO failure injection and CPU performance evidence
+    suggested_tasks: [R1.03, R1.04, R2.01, R2.02, R2.04, R2.05]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+  - id: B03
+    name: ResultDB indexed versioned reader
+    suggested_tasks: [R4.01, R4.02, R4.04]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+  - id: B04
+    name: ResultDB compressed transactional writer and exports
+    suggested_tasks: [R4.03, R4.05, R4.06, R4.07]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+  - id: B05
+    name: C3D8 explicit physics input and result vertical slice
+    suggested_tasks: [R5.01, R5.02, R5.04]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+  - id: B06
+    name: C3D8R hourglass controlled slice
+    suggested_tasks: [R5.03, R5.05]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+  - id: B07
+    name: SIMD and cache path with scalar reference
+    suggested_tasks: [R3.01, R3.02, R3.03, R3.04]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+  - id: B08
+    name: Material history contract and J2 plasticity
+    suggested_tasks: [R6.01, R6.02]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+  - id: B09
+    name: Finite-deformation and dynamic load extensions
+    suggested_tasks: [R6.03, R6.04, R6.05]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+  - id: B10
+    name: Contact search refit and state correctness
+    suggested_tasks: [R7.01, R7.02]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+  - id: B11
+    name: Contact physics, CCD, outputs
+    suggested_tasks: [R7.03, R7.04, R7.05]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+  - id: G00
+    name: CUDA readiness and actual-device TET4 acceptance
+    suggested_tasks: [G0.01]
+    primary_review: [Astra, Opus]
+    split_allowed: false
+  - id: G01
+    name: CUDA residency and HEX8 single-GPU backend
+    suggested_tasks: [G1.01, G1.02, G1.03]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+  - id: LONG_TERM
+    name: Shell beam MPI implicit and further input adapters
+    suggested_tasks: [R8.01, R9.01, R10.01, R11.01]
+    primary_review: [Astra, Opus]
+    split_allowed: true
+tasks:
+  - id: R0.01
+    title: Freeze repository baseline and inspect source reality
+    depends_on: []
+    status: READY
+    batch_hint: B01
+    risk: low
+    exit: Baseline SHA, change audit and current device/build inventory are captured.
+  - id: R0.02
+    title: Reproducible CPU build and test matrix
+    depends_on: [R0.01]
+    status: PLANNED
+    batch_hint: B01
+    risk: low
+    exit: Applicable CMake and CTest suites run with logs or explicit environment blockers.
+  - id: R0.03
+    title: Task ledger, status notes and ADR tracking
+    depends_on: [R0.01]
+    status: PLANNED
+    batch_hint: B01
+    risk: low
+    exit: Reproducible task states and cross-session handoffs.
+  - id: R0.04
+    title: Separate cold, steady-state, and IO benchmarks
+    depends_on: [R0.02]
+    status: PLANNED
+    batch_hint: B01
+    risk: performance
+    exit: Machine-readable same-conditions baseline with raw logs.
+  - id: R0.05
+    title: CUDA compiler and device readiness probe
+    depends_on: [R0.02]
+    status: PLANNED
+    batch_hint: B01
+    risk: gpu
+    exit: Verified device compiler readiness or honest BLOCKED_ENV status.
+  - id: R1.01
+    title: Avoid redundant force evaluation on non-output timesteps
+    depends_on: [R0.02]
+    status: PLANNED
+    batch_hint: B01
+    risk: numerical_performance
+    exit: No redundant output-time force on non-output steps; unchanged relevant numerical output.
+  - id: R1.02
+    title: Physical time-layer and read-only output publication contract
+    depends_on: [R1.01]
+    status: PLANNED
+    batch_hint: B01
+    risk: numerical
+    exit: Output remains consistent across steps, time-step changes and restart without history commit.
+  - id: R1.03
+    title: Bounded result output queue and backpressure contract
+    depends_on: [R1.02]
+    status: PLANNED
+    batch_hint: B02
+    risk: data_integrity_concurrency
+    exit: No silent user-requested frame drops or indefinite resource growth.
+  - id: R1.04
+    title: Result and restart failure injection
+    depends_on: [R1.02]
+    status: PLANNED
+    batch_hint: B02
+    risk: data_integrity
+    exit: Truncation, corruption and append recovery have explicit tested outcomes.
+  - id: R2.01
+    title: Hybrid core CPU affinity diagnostics and fair benchmark
+    depends_on: [R0.04]
+    status: PLANNED
+    batch_hint: B02
+    risk: performance
+    exit: Measured P/E and mixed-core comparison, not assumed root causes.
+  - id: R2.02
+    title: CPU hotspot and OpenMP scheduling breakdown
+    depends_on: [R2.01]
+    status: PLANNED
+    batch_hint: B02
+    risk: performance
+    exit: Profiling identifies real imbalance, bandwidth or cache constraints.
+  - id: R2.04
+    title: Raw vs View access overhead and specialized fast path
+    depends_on: [R0.04]
+    status: PLANNED
+    batch_hint: B02
+    risk: performance_memory
+    exit: Tested access correctness and statistically fair before/after latency.
+  - id: R2.05
+    title: TetPlan and finalize parallel build / amortized setup
+    depends_on: [R2.01]
+    status: PLANNED
+    batch_hint: B02
+    risk: architecture_performance
+    exit: Stable IDs and fingerprints, cold-start and long-run cost documented.
+  - id: R4.01
+    title: Versioned ResultDB v3 record and backward reader contract
+    depends_on: [R1.04]
+    status: PLANNED
+    batch_hint: B03
+    risk: high_schema
+    exit: Versioned read/write, v1 read compatibility, no silent data loss.
+  - id: R4.02
+    title: Persistent frame and direct history indexes
+    depends_on: [R4.01]
+    status: PLANNED
+    batch_hint: B03
+    risk: data_integrity_performance
+    exit: Query without full frame scan; corrupt index handled explicitly.
+  - id: R4.04
+    title: ResultReader streaming and out-of-core access
+    depends_on: [R4.02]
+    status: PLANNED
+    batch_hint: B03
+    risk: data_integrity_performance
+    exit: Bounded memory with large frame counts and tested selective reads.
+  - id: R4.03
+    title: Optional zstd blocks with checksums and atomic recovery
+    depends_on: [R4.01]
+    status: PLANNED
+    batch_hint: B04
+    risk: high_schema
+    exit: Lossless per-field checks and fault-tested compatibility.
+  - id: R4.05
+    title: Bounded asynchronous result staging and writer
+    depends_on: [R1.03, R4.01]
+    status: PLANNED
+    batch_hint: B04
+    risk: concurrency_data_integrity
+    exit: No unbounded queue, deadlock or silent frame loss.
+  - id: R4.06
+    title: Result and restart version/corruption compatibility suite
+    depends_on: [R4.03, R4.05]
+    status: PLANNED
+    batch_hint: B04
+    risk: data_integrity
+    exit: Round-trip, append and corruption tests across supported versions.
+  - id: R4.07
+    title: Efficient XDMF and VTK export against indexed result data
+    depends_on: [R4.02]
+    status: PLANNED
+    batch_hint: B04
+    risk: io
+    exit: Independent reader and visualization verification.
+  - id: R5.01
+    title: Executable ElementDescriptor and Section contract
+    depends_on: [R0.02]
+    status: PLANNED
+    batch_hint: B05
+    risk: high_abi_numerical
+    exit: Topology and formulation separated; source model compatibility retained.
+  - id: R5.02
+    title: C3D8 full integration CPU physics vertical slice
+    depends_on: [R5.01]
+    status: PLANNED
+    batch_hint: B05
+    risk: high_numerical
+    exit: Shape, Jacobian, forces, mass, time-step, stress and patch tests.
+  - id: R5.04
+    title: INP C3D8 section/load and end-to-end result path
+    depends_on: [R5.02]
+    status: PLANNED
+    batch_hint: B05
+    risk: numerical_input
+    exit: Real supported INP subset runs to verifiable ResultReader output.
+  - id: R5.03
+    title: C3D8R reduced integration and hourglass stabilization
+    depends_on: [R5.02]
+    status: PLANNED
+    batch_hint: B06
+    risk: high_numerical
+    exit: Hourglass modes, energy and reference cases verified separately from HEX8.
+  - id: R5.05
+    title: C3D8R complete source-to-result scientific tests
+    depends_on: [R5.03, R5.04]
+    status: PLANNED
+    batch_hint: B06
+    risk: high_numerical
+    exit: Physically grounded tests and stable result/restart outputs.
+  - id: R3.01
+    title: SIMD batch API with scalar oracle
+    depends_on: [R2.04]
+    status: PLANNED
+    batch_hint: B07
+    risk: performance_numerical
+    exit: Reproducible scalar equivalence and compiler fallback.
+  - id: R3.02
+    title: AoSoA TET4 vectorized kernels
+    depends_on: [R3.01]
+    status: PLANNED
+    batch_hint: B07
+    risk: performance
+    exit: Tail-block and ISA correctness with real before/after timing.
+  - id: R3.03
+    title: Locality-aware tiling and node ordering
+    depends_on: [R3.02]
+    status: PLANNED
+    batch_hint: B07
+    risk: architecture_performance
+    exit: Stable external IDs and measured steady-state impact.
+  - id: R3.04
+    title: Optional mixed-precision with drift controls
+    depends_on: [R3.02]
+    status: PLANNED
+    batch_hint: B07
+    risk: high_numerical
+    exit: Default precision unchanged; explicit opt-in validated by errors and energy.
+  - id: R6.01
+    title: Versioned material history schema and Result/Restart integration
+    depends_on: [R5.01, R4.01]
+    status: PLANNED
+    batch_hint: B08
+    risk: high_schema_numerical
+    exit: Trial/commit and schema version persisted safely.
+  - id: R6.02
+    title: J2 plasticity with loading and unloading reference tests
+    depends_on: [R6.01]
+    status: PLANNED
+    batch_hint: B08
+    risk: high_numerical
+    exit: Return mapping, dissipation and restart tests pass.
+  - id: R6.03
+    title: Finite deformation and objectivity tests
+    depends_on: [R6.02]
+    status: PLANNED
+    batch_hint: B09
+    risk: high_numerical
+    exit: Rigid rotation/objectivity and energetic consistency tests.
+  - id: R6.04
+    title: Time-varying loads and additional INP analysis semantics
+    depends_on: [R5.04]
+    status: PLANNED
+    batch_hint: B09
+    risk: input_numerical
+    exit: Supported loads represented and applied correctly; unsupported rejected.
+  - id: R6.05
+    title: Mass scaling, bulk viscosity and stability controls
+    depends_on: [R6.03]
+    status: PLANNED
+    batch_hint: B09
+    risk: high_numerical
+    exit: Explicit error-energy budgets; never trade stability for apparent speed.
+  - id: R7.01
+    title: Incremental persistent BVH refit and rebuild comparison
+    depends_on: [R0.04]
+    status: PLANNED
+    batch_hint: B10
+    risk: contact_performance
+    exit: Identical pair detection and bounded memory with fair timing.
+  - id: R7.02
+    title: Deterministic parallel contact candidate assembly
+    depends_on: [R7.01]
+    status: PLANNED
+    batch_hint: B10
+    risk: contact_concurrency
+    exit: Shared candidates/races/duplicate tests and numerical consistency.
+  - id: R7.03
+    title: Contact friction history and surface transition validation
+    depends_on: [R7.02]
+    status: PLANNED
+    batch_hint: B11
+    risk: high_contact_numerical
+    exit: Objective friction history and dissipative energy checks.
+  - id: R7.04
+    title: Continuous collision detection integration
+    depends_on: [R7.02]
+    status: PLANNED
+    batch_hint: B11
+    risk: high_contact_numerical
+    exit: No untested claims of whole-domain CCD; verified missed-contact cases.
+  - id: R7.05
+    title: Contact results and history publishers
+    depends_on: [R7.03, R4.02]
+    status: PLANNED
+    batch_hint: B11
+    risk: contact_result
+    exit: Source identity, sign, location and energy output verified.
+  - id: G0.01
+    title: CUDA TET4 actual-device build and reference acceptance
+    depends_on: [R0.05]
+    status: PLANNED
+    batch_hint: G00
+    risk: high_gpu
+    exit: Toolchain, GPU, sanitizer and CPU/GPU numerical evidence, or BLOCKED_ENV.
+  - id: G1.01
+    title: GPU resident-state complete explicit step
+    depends_on: [G0.01, R1.02]
+    status: PLANNED
+    batch_hint: G01
+    risk: high_gpu
+    exit: No hidden per-step transfer and verified dynamic loads/output lifetime.
+  - id: G1.02
+    title: GPU C3D8 and C3D8R physics port
+    depends_on: [G1.01, R5.05]
+    status: PLANNED
+    batch_hint: G01
+    risk: high_gpu_numerical
+    exit: CPU/GPU comparable fields, stability, energy and full-model timing.
+  - id: G1.03
+    title: GPU contact integrated pipeline prototype
+    depends_on: [G1.01, R7.02]
+    status: PLANNED
+    batch_hint: G01
+    risk: high_gpu_contact
+    exit: Device-side search/force/manifold state with actual-device tests.
+  - id: R8.01
+    title: Shell S4R and beam B31 vertical slices
+    depends_on: [R5.05, R6.01]
+    status: PLANNED
+    batch_hint: LONG_TERM
+    risk: high_numerical
+    exit: Per-family complete description, kernel, INP, Result and reference tests.
+  - id: R9.01
+    title: Partition owned/ghost semantics and MPI prototype
+    depends_on: [R5.01]
+    status: PLANNED
+    batch_hint: LONG_TERM
+    risk: high_distributed
+    exit: Domain IDs and ghost exchange; no false cross-rank determinism claim.
+  - id: R10.01
+    title: Implicit solver adapter and transactional trial-state prototype
+    depends_on: [R6.01]
+    status: PLANNED
+    batch_hint: LONG_TERM
+    risk: high_implicit
+    exit: Sparse operator and nonlinear state tests without cost to explicit default.
+  - id: R11.01
+    title: Nastran BDF / LS-DYNA K / Gmsh reader subsets
+    depends_on: [R5.01]
+    status: PLANNED
+    batch_hint: LONG_TERM
+    risk: input_semantics
+    exit: Format-specific capability report and reference fixtures.
