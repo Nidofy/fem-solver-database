@@ -6,7 +6,7 @@
 - `BATCH_HEAD_SHA` (reviewed object, unchanged by repair):
   `719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5`
 - Freeze/packet commit: `b58dfff04b484f2ed15524d51883e5f979fd1bc1`
-- `FIX_HEAD_SHA`: recorded at the end of this report (final repair commit).
+- `FIX_HEAD_SHA`: `02e1ee40894189ff0274dc6f881273ea7d0ec5a8` (the ledger commit that carries this report; content fixes are the four commits listed below).
 
 ## Fix commits (one per merged root cause)
 
