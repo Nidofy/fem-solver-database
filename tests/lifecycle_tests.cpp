@@ -388,6 +388,53 @@ int main(int argc, char **argv) {
             writer.write(emptyrun.snapshot());
         }
         check(ResultReader(temp / "empty.sdbres").index.empty(), "empty output file");
+        // emptyrun only initialized and published once: exactly the initialize evaluation,
+        // because frequency=0 never schedules a frame (eager publication cost one more).
+        check(emptyrun.force_evaluations() == 1, "no-output publication costs no force evaluations");
+        // R1.01: publication must not re-evaluate forces on non-output increments,
+        // and a pure-U frame needs no constitutive data at all.
+        {
+            auto full = ModelCompiler{}.compile<double>(parse(source).model);
+            CpuRun<double> lazy(full);
+            lazy.initialize();
+            (void)lazy.snapshot(); // increment 0 is due and carries non-U fields
+            std::uint64_t due_frames = 1;
+            while (lazy.advance()) {
+                auto before = lazy.force_evaluations();
+                auto frame = lazy.snapshot();
+                auto after = lazy.force_evaluations();
+                auto inc = lazy.increment();
+                bool due = inc % 100 == 0; // fixture: frequency=100, 2000 increments
+                check(after - before == (due ? 1u : 0u), "publication evaluates only due increments");
+                check(frame.fields.empty() != due, "due increments carry fields");
+                due_frames += due;
+            }
+            check(due_frames == 21, "due frame count");
+            // 1 evaluation per completed increment, 1 for initialize, 21 for due publications.
+            check(lazy.force_evaluations() == 2000 + 1 + 21, "lazy publication total evaluations");
+            auto u_ir = parse(source).model;
+            u_ir.steps[0].outputs.clear();
+            IROutput u_only;
+            u_only.frequency = 100;
+            u_only.variables = {"U"};
+            u_ir.steps[0].outputs.push_back(u_only);
+            auto u_model = ModelCompiler{}.compile<double>(std::move(u_ir));
+            CpuRun<double> u_run(u_model);
+            u_run.initialize();
+            std::uint64_t u_frames = 1; // increment 0 snapshot is due
+            (void)u_run.snapshot();
+            while (u_run.advance()) {
+                auto before = u_run.force_evaluations();
+                auto frame = u_run.snapshot();
+                u_frames += !frame.fields.empty();
+                check(u_run.force_evaluations() == before, "U-only publication skips force evaluation");
+            }
+            check(u_frames == 21, "U-only due frame count");
+            check(u_run.force_evaluations() == 2001, "U-only run evaluation total");
+            check(u_run.state().data().displacement.read()(3, 0) ==
+                      lazy.state().data().displacement.read()(3, 0),
+                  "publication laziness leaves trajectory bit-identical");
+        }
         std::cout << "lifecycle checks=" << checks << " PASS\n";
         return 0;
     } catch (const std::exception &e) {

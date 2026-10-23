@@ -86,8 +86,21 @@ class ResultPublisher {
     static ResultFrame publish(const CompiledModel<T> &model, StateDB<T> &state, CpuExplicit<T> &cpu,
                                FrameInfo info, const std::vector<IROutput> &requests,
                                std::uint64_t increments, std::uint64_t budget = native::default_limit) {
-        // Pure linear constitutive re-evaluation; never advances history or modifies velocity.
-        cpu.forces(state);
+        // Due-selection happens before any constitutive re-evaluation: a non-output
+        // increment must not pay for a force pass, and a pure-displacement frame
+        // needs no force data at all. Evaluation below is pure linear constitutive
+        // re-evaluation; it never advances history or modifies velocity.
+        std::vector<const IROutput *> due;
+        bool needs_forces = false;
+        for (auto &r : requests)
+            if (OutputScheduler::due(r, info.increment, increments)) {
+                due.push_back(&r);
+                for (auto &name : r.variables)
+                    if (name != "U")
+                        needs_forces = true;
+            }
+        if (needs_forces)
+            cpu.forces(state);
         auto &s = state.data();
         auto u = s.displacement.read(), v = s.velocity.read(), f = s.internal_force.read(),
              ext = s.external_force.read(), contact = s.contact_force.read();
@@ -103,85 +116,85 @@ class ResultPublisher {
         frame.info = info;
         std::uint64_t used = 0;
         std::set<std::tuple<std::string, std::string, bool>> emitted;
-        for (auto &r : requests)
-            if (OutputScheduler::due(r, info.increment, increments))
-                for (auto &name : r.variables) {
-                    if (!emitted.emplace(name, r.region, r.history).second)
-                        continue;
-                    ResultField field;
-                    auto &d = field.descriptor;
-                    d.name = name;
-                    d.region = r.region;
-                    d.history = r.history;
-                    d.provenance = "CPU linear TET4; current displacement constitutive evaluation";
-                    bool nodal = name == "U" || name == "V" || name == "A" || name == "RF";
-                    bool global = name == "ALLKE" || name == "ALLSE";
-                    d.location =
-                        global ? Location::Global : (nodal ? Location::Node : Location::IntegrationPoint);
-                    d.components =
-                        global ? std::vector<std::string>{name}
-                               : (nodal ? std::vector<std::string>{"X", "Y", "Z"}
-                                        : std::vector<std::string>{"XX", "YY", "ZZ", "XY", "YZ", "ZX"});
-                    if (!nodal && !global) {
-                        d.integration_point = 1;
-                        d.tensor_shear = name == "E";
-                    }
-                    if (name == "V")
-                        d.provenance = "v(t-dt/2) + dt/2 * a(t); full-time reconstruction";
-                    if (name == "RF")
-                        d.provenance =
-                            "f_internal - f_applied - f_contact on constrained DOFs; zero elsewhere";
-                    std::vector<Index> ids;
-                    if (!r.region.empty())
-                        ids = model.region(nodal, r.region);
-                    else {
-                        std::size_t count = global ? 1 : (nodal ? model.mesh.nodes() : model.mesh.elements());
-                        ids.resize(count);
-                        for (Index i = 0; i < count; ++i)
-                            ids[i] = i;
-                    }
-                    auto width = d.components.size();
-                    auto need = std::uint64_t(ids.size()) * (8 + 8 * width);
-                    if (need > budget - used)
-                        throw std::length_error("result snapshot memory budget");
-                    used += need;
-                    field.values.reserve(ids.size() * width);
-                    field.ids.reserve(ids.size());
-                    for (auto i : ids) {
-                        field.ids.push_back(global ? 0 : Id(i) + 1);
-                        if (global) {
-                            double energy = 0;
-                            if (name == "ALLKE") {
-                                for (Index n = 0; n < model.mesh.nodes(); ++n)
-                                    for (unsigned c = 0; c < 3; ++c) {
-                                        auto speed = velocity(n, c);
-                                        energy += .5 * double(s.mass.read()(n)) * speed * speed;
-                                    }
-                            } else
-                                for (Index e = 0; e < model.mesh.elements(); ++e)
-                                    for (unsigned c = 0; c < 6; ++c)
-                                        energy += .5 * double(cpu.plan().volume.read()(e)) *
-                                                  double(s.stress.read()(e, c)) *
-                                                  double(s.strain.read()(e, c)) * (c < 3 ? 1 : 2);
-                            field.values.push_back(energy);
-                        } else if (nodal)
-                            for (unsigned c = 0; c < 3; ++c)
-                                field.values.push_back(
-                                    name == "U"
-                                        ? double(u(i, c))
-                                        : (name == "V"
-                                               ? velocity(i, c)
-                                               : (name == "A" ? acceleration(i, c)
-                                                              : (fixed(i, c) ? double(f(i, c) - ext(i, c) -
-                                                                                      contact(i, c))
-                                                                             : 0))));
-                        else
-                            for (unsigned c = 0; c < 6; ++c)
-                                field.values.push_back(name == "S" ? double(s.stress.read()(i, c))
-                                                                   : double(s.strain.read()(i, c)));
-                    }
-                    frame.fields.push_back(std::move(field));
+        for (auto *request : due) {
+            auto &r = *request;
+            for (auto &name : r.variables) {
+                if (!emitted.emplace(name, r.region, r.history).second)
+                    continue;
+                ResultField field;
+                auto &d = field.descriptor;
+                d.name = name;
+                d.region = r.region;
+                d.history = r.history;
+                d.provenance = "CPU linear TET4; current displacement constitutive evaluation";
+                bool nodal = name == "U" || name == "V" || name == "A" || name == "RF";
+                bool global = name == "ALLKE" || name == "ALLSE";
+                d.location =
+                    global ? Location::Global : (nodal ? Location::Node : Location::IntegrationPoint);
+                d.components = global
+                                   ? std::vector<std::string>{name}
+                                   : (nodal ? std::vector<std::string>{"X", "Y", "Z"}
+                                            : std::vector<std::string>{"XX", "YY", "ZZ", "XY", "YZ", "ZX"});
+                if (!nodal && !global) {
+                    d.integration_point = 1;
+                    d.tensor_shear = name == "E";
                 }
+                if (name == "V")
+                    d.provenance = "v(t-dt/2) + dt/2 * a(t); full-time reconstruction";
+                if (name == "RF")
+                    d.provenance = "f_internal - f_applied - f_contact on constrained DOFs; zero elsewhere";
+                std::vector<Index> ids;
+                if (!r.region.empty())
+                    ids = model.region(nodal, r.region);
+                else {
+                    std::size_t count = global ? 1 : (nodal ? model.mesh.nodes() : model.mesh.elements());
+                    ids.resize(count);
+                    for (Index i = 0; i < count; ++i)
+                        ids[i] = i;
+                }
+                auto width = d.components.size();
+                auto need = std::uint64_t(ids.size()) * (8 + 8 * width);
+                if (need > budget - used)
+                    throw std::length_error("result snapshot memory budget");
+                used += need;
+                field.values.reserve(ids.size() * width);
+                field.ids.reserve(ids.size());
+                for (auto i : ids) {
+                    field.ids.push_back(global ? 0 : Id(i) + 1);
+                    if (global) {
+                        double energy = 0;
+                        if (name == "ALLKE") {
+                            for (Index n = 0; n < model.mesh.nodes(); ++n)
+                                for (unsigned c = 0; c < 3; ++c) {
+                                    auto speed = velocity(n, c);
+                                    energy += .5 * double(s.mass.read()(n)) * speed * speed;
+                                }
+                        } else
+                            for (Index e = 0; e < model.mesh.elements(); ++e)
+                                for (unsigned c = 0; c < 6; ++c)
+                                    energy += .5 * double(cpu.plan().volume.read()(e)) *
+                                              double(s.stress.read()(e, c)) * double(s.strain.read()(e, c)) *
+                                              (c < 3 ? 1 : 2);
+                        field.values.push_back(energy);
+                    } else if (nodal)
+                        for (unsigned c = 0; c < 3; ++c)
+                            field.values.push_back(
+                                name == "U"
+                                    ? double(u(i, c))
+                                    : (name == "V"
+                                           ? velocity(i, c)
+                                           : (name == "A"
+                                                  ? acceleration(i, c)
+                                                  : (fixed(i, c) ? double(f(i, c) - ext(i, c) - contact(i, c))
+                                                                 : 0))));
+                    else
+                        for (unsigned c = 0; c < 6; ++c)
+                            field.values.push_back(name == "S" ? double(s.stress.read()(i, c))
+                                                               : double(s.strain.read()(i, c)));
+                }
+                frame.fields.push_back(std::move(field));
+            }
+        }
         return frame;
     }
 };

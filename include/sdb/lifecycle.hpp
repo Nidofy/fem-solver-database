@@ -91,6 +91,7 @@ template <class T> class CpuRun {
     std::uint64_t configuration() const { return config_; }
     std::uint64_t step_index() const { return step_; }
     std::uint64_t increment() const { return increment_; }
+    std::uint64_t force_evaluations() const { return cpu_.force_evaluations(); }
     void initialize() {
         if (initialized_)
             throw std::logic_error("run already initialized");
@@ -129,6 +130,9 @@ template <class T> class CpuRun {
     void save(const std::filesystem::path &path) {
         if (!initialized_)
             initialize();
+        // Lazy publication must not leave a stale force field in the restart:
+        // persist a displacement-consistent evaluation like the eager path did.
+        cpu_.forces(state_);
         RestartInfo info;
         info.configuration = config_;
         info.step = step_;

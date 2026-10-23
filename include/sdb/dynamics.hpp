@@ -165,6 +165,7 @@ template <class T> class CpuExplicit {
     TetPlan<T> plan_;
     CpuPolicy policy_;
     Assembly assembly_;
+    std::uint64_t force_evaluations_ = 0;
 
   public:
     CpuExplicit(const MeshDB<T> &mesh, StateDB<T> &state, CpuPolicy policy = CpuPolicy::Serial,
@@ -176,6 +177,8 @@ template <class T> class CpuExplicit {
 #endif
     }
     const TetPlan<T> &plan() const { return plan_; }
+    // Completed element+assembly passes; observable for output-scheduling contracts.
+    std::uint64_t force_evaluations() const noexcept { return force_evaluations_; }
     // Step-level homogeneous translation mask. No parser or result dependency.
     void set_constraints(std::span<const Constraint> constraints, StateDB<T> &state) {
         if (state.model_id() != plan_.model_id)
@@ -241,6 +244,7 @@ template <class T> class CpuExplicit {
                     }
             });
         }
+        ++force_evaluations_;
     }
     void initialize(StateDB<T> &state, T dt) {
         if (!(dt > 0) || !std::isfinite(dt) || dt > plan_.stable_step)
