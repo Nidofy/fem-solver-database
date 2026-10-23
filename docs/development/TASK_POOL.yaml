@@ -6,37 +6,37 @@
 schema_version: 2
 program: fem-solver-database-v2
 current_batch: B01
-batch_state: FROZEN_FOR_BATCH_REVIEW
+batch_state: REPAIRED_PENDING_GATE
 batch_base_sha: aaa74afb3c264bbd7ca43555a7445c77994ccaa2
 batch_content_head_sha: 719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 # repaired B01-O-001/A-002: freeze-time value was a nonexistent hash
 tasks:
   - id: R0.01
     title: Freeze repository baseline and inspect source reality
-    status: FROZEN_FOR_BATCH_REVIEW
+    status: IMPLEMENTED_SELF_TESTED  # repaired 2026-10-24; pending incremental re-review gate
     commit: bef76e3
     evidence: verification/reviews/B01/task-evidence/R0.01.md
   - id: R0.02
     title: Reproducible CPU build and test matrix
-    status: FROZEN_FOR_BATCH_REVIEW
+    status: IMPLEMENTED_SELF_TESTED  # repaired 2026-10-24; pending incremental re-review gate
     commit: a3779f0
     evidence: verification/reviews/B01/task-evidence/R0.02.md
   - id: R0.03
     title: Task ledger, status notes and ADR tracking
-    status: FROZEN_FOR_BATCH_REVIEW
+    status: IMPLEMENTED_SELF_TESTED  # repaired 2026-10-24; pending incremental re-review gate
     commit: 12ffe5b
   - id: R1.01
     title: Avoid redundant force evaluation on non-output timesteps
-    status: FROZEN_FOR_BATCH_REVIEW
+    status: IMPLEMENTED_SELF_TESTED  # repaired 2026-10-24; pending incremental re-review gate
     commit: fcc3c80
     evidence: verification/reviews/B01/task-evidence/R1.01.md
   - id: R1.02
     title: Physical time-layer and read-only output publication contract
-    status: FROZEN_FOR_BATCH_REVIEW
+    status: IMPLEMENTED_SELF_TESTED  # repaired 2026-10-24; pending incremental re-review gate
     commit: 0447789
     evidence: verification/reviews/B01/task-evidence/R1.02.md
   - id: R0.04
     title: Separate cold, steady-state, and IO benchmarks
-    status: FROZEN_FOR_BATCH_REVIEW
+    status: IMPLEMENTED_SELF_TESTED  # repaired 2026-10-24; pending incremental re-review gate
     commit: d83ee85
     evidence: verification/reviews/B01/task-evidence/R0.04.md
   - id: R0.05
