@@ -41,3 +41,16 @@ Updated after every task. Cross-session handoff details: SESSION_HANDOFF.md.
 2. Reports returned → GLM runs `05_GLM53_REVIEW_FIX_PROMPT.md` flow
    (findings ledger, C0/C1 first, targeted re-review).
 3. Accepted → merge to stable, open B02 (R1.03/R1.04/R2.04).
+
+## EXTENDED_IDLE candidate (produced under masterplan §3 rules)
+
+- **B02c** on branch `dev/glm-b02-candidate` (worktree `../sdb-b02c`),
+  based on the stable SHA `aaa74af` — NOT stacked on unreviewed B01 code.
+  Single commit `b87fb53`: R2.04a raw-vs-View fair statistics + cross-layout
+  View correctness tests. Zero file overlap with B01 (touches
+  tests/tests.cpp, benchmarks/benchmark.cpp, docs/development/b02c/ only).
+  Key measured finding: View overhead vs raw ≤1.3% serial / within noise
+  under OMP at 1M nodes — the assumed "View/raw bottleneck" is not
+  reproduced; a raw fast-path optimization would be premature. Review this
+  candidate as its own immutable snapshot (`aaa74af..b87fb53`) if desired;
+  it can also be dropped freely (no B01 dependency).

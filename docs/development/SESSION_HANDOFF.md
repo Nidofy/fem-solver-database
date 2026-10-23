@@ -3,11 +3,15 @@
 A fresh session MUST re-verify against real Git state before trusting this
 file: `git status --porcelain=v1 -b`, `git log --oneline -8`, task pool.
 
-## Current position (2026-10-24)
+## Current position (2026-10-24, end of session)
 
-- Branch: `dev/glm-b01`. Batch **B01 is FROZEN for review**.
-- Code range under review: `aaa74af..719c3fb` (7 task commits). The commit
-  after 719c3fb adds only the review packet + ledger (record in BATCH_HISTORY).
+- **B01 frozen for review** on `dev/glm-b01`: reviewed code range
+  `aaa74af..719c3fb`; packet/ledger commits after it (`b58dfff`+). Packet:
+  `verification/reviews/B01/` (start at manifest.yaml).
+- **B02c candidate frozen** on `dev/glm-b02-candidate` (worktree
+  `../sdb-b02c`), base `aaa74af`, head `b87fb53`: R2.04a view-vs-raw fair
+  statistics + layout correctness tests; zero file overlap with B01;
+  can be reviewed separately or dropped.
 - What is in B01: baseline/inventory (R0.01), 3-config test matrix (R0.02),
   ledger (R0.03), lazy publication R1.01 (core change:
   `include/sdb/results/results.hpp` + counter in `dynamics.hpp` + `save()`
