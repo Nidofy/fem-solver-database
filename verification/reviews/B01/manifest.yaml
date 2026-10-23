@@ -5,16 +5,20 @@ repository: https://github.com/Nidofy/fem-solver-database
 local_path: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2
 development_branch: dev/glm-b01
 batch_base_sha: aaa74afb3c264bbd7ca43555a7445c77994ccaa2
-# All code/test/benchmark content ends at 719c3fb; the freeze commit that adds
-# this packet (and only packet/ledger files) follows it and is recorded in
-# CONTINUOUS_STATUS.md after committing. Review the code diff BASE..719c3fb.
-batch_content_head_sha: 719c3fb2a5cd3f6d8a8b13eec1b8a7c1d59dd1a4
+# Repair note (B01-A-002 / B01-O-001): the freeze-time value here was
+# 719c3fb2a5cd3f6d8a8b13eec1b8a7c1d59dd1a4 — a nonexistent object (the full
+# hash was written from memory instead of `git rev-parse`). It is preserved
+# only in this comment and in repair-report.md. The value below was resolved
+# with `git rev-parse 719c3fb` and is machine-validated by
+# verification/validate_batch_identity.py.
+batch_content_head_sha: 719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5
+freeze_packet_sha: b58dfff04b484f2ed15524d51883e5f979fd1bc1
 frozen_date: 2026-10-24
 build_environment:
   os: Windows 10.0.26200 x64 (16 logical cores)
   cmake: 4.3.1-msvc1 (Ninja generator)
   primary: MinGW-w64 g++ 15.2.0 x86_64-win32-seh-ucrt (Release, OpenMP 4.5)
-  secondary: [MinGW serial, MSVC 14.44 RelWithDebInfo ASan+UBSan serial]
+  secondary: [MinGW serial, MSVC 14.44 RelWithDebInfo AddressSanitizer-only serial]
   cuda: BLOCKED_ENV (no NVIDIA device/toolkit; see task-evidence/R0.05.md)
 tasks:
   - {id: R0.01, status: IMPLEMENTED_SELF_TESTED, commit: bef76e3}

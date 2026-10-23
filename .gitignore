@@ -41,3 +41,5 @@ general-domain-output/
 !/verification/summarize_benchmarks.py
 # Curated batch-review packets are authored for publication (no host-local paths).
 !/verification/reviews/
+# Batch identity validator is a portable tool, same as the reproduce scripts.
+!/verification/validate_batch_identity.py

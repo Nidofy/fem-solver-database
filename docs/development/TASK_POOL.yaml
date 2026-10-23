@@ -8,7 +8,7 @@ program: fem-solver-database-v2
 current_batch: B01
 batch_state: FROZEN_FOR_BATCH_REVIEW
 batch_base_sha: aaa74afb3c264bbd7ca43555a7445c77994ccaa2
-batch_content_head_sha: 719c3fb2a5cd3f6d8a8b13eec1b8a7c1d59dd1a4
+batch_content_head_sha: 719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 # repaired B01-O-001/A-002: freeze-time value was a nonexistent hash
 tasks:
   - id: R0.01
     title: Freeze repository baseline and inspect source reality
