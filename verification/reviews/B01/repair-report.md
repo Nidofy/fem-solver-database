@@ -81,3 +81,64 @@ evidence/identity issues, not physics, blocked the gate.
 incremental re-review of `BATCH_HEAD..FIX_HEAD`. GLM does not self-declare
 READY_FOR_ACCEPTANCE; that decision belongs to the reviewers/user after the
 incremental pass. No push/merge to any protected branch was performed.
+
+---
+
+# Round-2 repair (2026-10-25) — after incremental re-review
+
+Inputs: `astra-incremental-review.md` (FAIL/NOT_READY; A-002/A-004
+NOT_CLOSED, new A-005/A-006) and `opus-incremental-review.md`
+(PASS/READY within B scope; new O-004 C3), both recorded in this packet with
+accurate provenance. All five round-2 items reproduced before fixing
+(see findings.md round-2 section for the reproduction record).
+
+## Round-2 fix commits (one per root cause)
+
+| Commit | Findings | Content |
+|---|---|---|
+| 23b8bc5 | A-002 residual + A-005 | validator rewrite: strict parsing (missing/empty/invalid/duplicate/quoted distinguished, freeze required, no HEAD fallback) + `--expect-base/head/freeze` external pinning; 17-control replay suite incl. fail-open replay on a detached BATCH_HEAD checkout (`task-evidence/identity-controls.py`, JSON output committed). |
+| 3c1f2c2 | A-004 residual | `run_setup_ms` times construction only of the live instance (`std::optional::emplace`; destruction outside clock); compat-matrix count wording "plans 21 / executes 10 / writes 1". |
+| b4be2a5 | A-006 | R0.04 table + delta bullets rendered programmatically from the same medians as baseline.json (`summarize.py --markdown`); 16-run matrix rerun (corrected run_setup semantics); post-fix cell check 0/72 mismatches; stale-table history note added. |
+| 994a607 | O-004 | `report-provenance.md` dual-hash record (original bytes vs CRLF→LF blob) for all four reviewer reports + machine-replayable commands; ledger wording corrected; round-2 reports recorded (blob == original, no CRLF). |
+| (final) | — | this round-2 section, findings round-2 ledger, development ledger updates. NEW_FIX_HEAD_SHA recorded in BATCH_HISTORY. |
+
+## Scope discipline (round 2)
+
+`git diff BATCH_HEAD(719c3fb)..round-2-head -- include src tests examples
+CMakeLists.txt cmake` is empty; the only code-adjacent change is
+`benchmarks/lifecycle_benchmark.cpp` (timing boundary inside the benchmark
+program). No public API, no solver default path, no schema change, no
+test-threshold relaxation.
+
+## Round-2 regression actually executed (at 994a607)
+
+- MinGW Release+OMP rebuild + full CTest: 8/8 PASS.
+- MinGW serial rebuild + full CTest: 8/8 PASS.
+- MSVC RelWithDebInfo ASan-only rebuild + full CTest: 8/8 PASS
+  (UBSan still not executed on this host — unchanged recorded gap).
+- Identity controls: 17/17 as expected (incl. BATCH_HEAD fail-open replay).
+- Cell-level table/baseline consistency: 0/72 mismatches.
+- Byte compatibility of `sdb_run` output vs pre-R1.01 reference: identical.
+
+## Incremental re-review scope requested (round 3)
+
+- **Reviewer A**: (a) identity tool — strict-parsing edges, external
+  expected-value pinning, and the BATCH_HEAD fail-open replay
+  (`task-evidence/identity-controls.py` + JSON); (b) benchmark timing
+  boundary — `run_setup_ms` optional-emplace form excludes destruction;
+  compat-matrix count wording; (c) consistency — regenerate
+  `summarize.py --markdown` output and compare against R0.04 table at display
+  precision; spot-check baseline.json medians vs raw JSONL.
+- **Reviewer B**: (a) identity-related changes only (same validator/controls);
+  (b) O-004 closure — recompute the four report hashes against
+  `report-provenance.md` (originals at the two handoff directories).
+- Neither reviewer needs to repeat the round-1 numerical-physics passes:
+  runtime source remains byte-identical to BATCH_HEAD (verifiable with the
+  one-line git diff above).
+
+## Gate self-assessment (round 2)
+
+All round-2 findings FIXED_VERIFIED with replayable evidence; no defer used.
+Overall batch state remains **REPAIRED_PENDING_GATE** (round-2), awaiting the
+targeted round-3 incremental re-review above. No push/merge of protected
+branches performed.
