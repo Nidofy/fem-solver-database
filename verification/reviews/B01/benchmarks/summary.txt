@@ -1,15 +1,15 @@
 nodes	samples	execution_policy	omp_env	compile_ms	kernel_ms	nondue_snapshot_ms	steady_kernel_per_increment_ms	force_evaluations	snapshot_ms	native_write_ms	reader_scan_query_ms	restart_write_ms	restart_restore_ms	peak_process_bytes
-1000000	1	serial	1	678.481	19.511	7.88	17.4333	14	17.54	1575.968	1765.546	1737.44	1708.071	1329332224
-1000000	1	serial	4	678.932	16.732	7.869	16.6525	14	16.818	1552.499	1773.638	1748.473	1696.139	1328963584
-200000	3	serial	1	132.898	3.066	1.387	2.9105	14	3.121	302.152	348.565	353.824	340.673	271687680
-200000	3	serial	4	133.253	2.962	1.412	2.931	14	3.261	301.755	345.675	350.515	343.991	271687680
-1000000	1	serial	1	681.525	16.89	0.013	16.4994	12	9.786	1549.493	1779.521	1757.379	1718.236	1328832512
-1000000	1	serial	4	684.568	16.533	0.013	16.63	12	8.736	1539.755	1795.105	1755.458	1714.434	1328840704
-200000	3	serial	1	133.116	3.017	0.021	2.8166	12	1.706	300.335	347.668	353.432	341.039	271511552
-200000	3	serial	4	133.13	3.022	0.017	2.9003	12	2.153	293.796	351.776	354.903	343.309	271712256
+1000000	1	serial	1	777.064	19.825	9.672	18.1689	14	18.199	1768.145	1963.206	1908.838	2091.764	1328201728
+1000000	1	serial	4	725.05	18.542	9.052	18.4017	14	20.163	1742.5	2168.135	2038.3	1906.909	1328160768
+200000	3	serial	1	145.71	3.763	1.576	3.2821	14	3.635	337.125	374.29	388.6	362.097	271118336
+200000	3	serial	4	137.671	3.143	1.503	3.2014	14	3.375	328.806	369.344	389.884	371.268	270848000
+1000000	1	serial	1	733.311	18.743	0.013	19.019	12	10.805	1674.715	1972.395	1962.892	1941.708	1328025600
+1000000	1	serial	4	742.966	16.488	0.013	16.5504	12	9.782	1609.95	1997.396	2016.198	1840.704	1328234496
+200000	3	serial	1	142.961	3.084	0.012	2.9266	12	1.989	335.958	375.731	384.924	352.138	270954496
+200000	3	serial	4	145.544	3.089	0.016	3.0286	12	1.888	323.441	373.836	376.254	352.532	271056896
 
 R1.01 eager->lazy publication cost delta (same conditions, serial execution):
-200k-serial-env1: nondue publication 1.387->0.021 ms (removed 1.366 ms = 47% of one step); due-U snapshot 3.121->1.706 ms (removed 1.415 ms); steady step unchanged (2.910 vs 2.817 ms)
-200k-serial-env4: nondue publication 1.412->0.017 ms (removed 1.395 ms = 48% of one step); due-U snapshot 3.261->2.153 ms (removed 1.108 ms); steady step unchanged (2.931 vs 2.900 ms)
-1m-serial-env1: nondue publication 7.880->0.013 ms (removed 7.867 ms = 45% of one step); due-U snapshot 17.540->9.786 ms (removed 7.754 ms); steady step unchanged (17.433 vs 16.499 ms)
-1m-serial-env4: nondue publication 7.869->0.013 ms (removed 7.856 ms = 47% of one step); due-U snapshot 16.818->8.736 ms (removed 8.082 ms); steady step unchanged (16.652 vs 16.630 ms)
+200k-serial-env1: nondue publication 1.576->0.012 ms (removed 1.564 ms = 48% of one step); due-U snapshot 3.635->1.989 ms (removed 1.646 ms); steady step unchanged (3.282 vs 2.927 ms)
+200k-serial-env4: nondue publication 1.503->0.016 ms (removed 1.487 ms = 46% of one step); due-U snapshot 3.375->1.888 ms (removed 1.487 ms); steady step unchanged (3.201 vs 3.029 ms)
+1m-serial-env1: nondue publication 9.672->0.013 ms (removed 9.659 ms = 53% of one step); due-U snapshot 18.199->10.805 ms (removed 7.394 ms); steady step unchanged (18.169 vs 19.019 ms)
+1m-serial-env4: nondue publication 9.052->0.013 ms (removed 9.039 ms = 49% of one step); due-U snapshot 20.163->9.782 ms (removed 10.381 ms); steady step unchanged (18.402 vs 16.550 ms)
