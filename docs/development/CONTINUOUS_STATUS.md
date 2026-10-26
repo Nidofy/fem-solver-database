@@ -3,15 +3,19 @@
 Updated after every task and review milestone. Cross-session handoff details:
 SESSION_HANDOFF.md.
 
-- Current batch: **B01 — REPAIRED_PENDING_GATE** (2026-10-24)
+- Current batch: **B01 — REPAIRED_PENDING_GATE, round 2** (2026-10-25)
 - Batch base SHA: `aaa74afb3c264bbd7ca43555a7445c77994ccaa2`
 - Batch content HEAD (reviewed object, unchanged by repair): `719c3fb`
   (full: `719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5`)
 - Freeze/packet commit: `b58dfff`
-- Repair series: `97b1b8a` (identity, A-002/O-001), `816fb8d` (execution
-  policy + OMP retraction, A-001/O-002), `5f66b7c` (ASan-only, A-003/O-003),
-  `d5cad6c` (phase fields + errata, A-004), plus the packet/ledger commit
-  (recorded in BATCH_HISTORY/repair-report as FIX_HEAD).
+- Repair series round 1: `97b1b8a`/`816fb8d`/`5f66b7c`/`d5cad6c` + packet
+  commit `02e1ee4` (= FIX_HEAD_SHA).
+- Incremental re-review: A FAIL (A-002/A-004 NOT_CLOSED, new A-005/A-006),
+  B PASS (new O-004 C3). Round-2 repair series: `23b8bc5` (strict identity
+  parsing + expected pinning + 17 controls), `3c1f2c2` (run_setup timing
+  boundary + compat counts), `b4be2a5` (single-source markdown rendering,
+  0/72 cell mismatch), `994a607` (dual-hash report provenance), packet commit
+  `d6c67de` (= NEW_FIX_HEAD_SHA; docs-only commits may follow).
 - Working branch: `dev/glm-b01`
 - Dual review: Reviewer A (GPT-6 Astra, `03` prompt) → CHANGES_REQUESTED/FAIL;
   Reviewer B (GPT-6 Astra, user-authorized Opus substitute, `04` prompt) →
@@ -38,8 +42,10 @@ SESSION_HANDOFF.md.
 
 ## Next steps (external)
 
-1. Coordinators run the targeted incremental re-review of
-   `BATCH_HEAD..FIX_HEAD` (scope listed in `verification/reviews/B01/repair-report.md`).
+1. Coordinators run the round-3 targeted incremental re-review
+   (`02e1ee4..NEW_FIX_HEAD` above; scope in repair-report.md round-2 section:
+   A lane = identity tool + timing semantics + table/data consistency;
+   B lane = identity changes + O-004 provenance).
 2. Gate passes → user authorizes stable merge (GLM does not merge by itself).
 3. B02 pool: R1.03 / R1.04 / R2.04(fast-path decision informed by B02c
    measurement: View overhead ≤1.3%, no raw fast-path justified yet).
