@@ -1,15 +1,19 @@
 # B01 — merged findings ledger and dispositions
 
-Sources (verbatim copies in this directory, hashes verified against the
-user-provided values):
+Sources (copies in this directory; accurate provenance in `report-provenance.md`):
 
 - `astra-review.md` — Reviewer A, GPT-6 Astra, `03_ASTRA_BATCH_REVIEW_PROMPT.md`.
-  SHA-256 `ab3b58af…5bf6e0`. Verdict `CHANGES_REQUESTED / FAIL`.
+  Original SHA-256 `ab3b58af…5bf6e0` (21625 bytes, one trailing CRLF);
+  committed blob SHA-256 `78763a24…d61318` — content byte-equal after
+  CRLF→LF normalization per `.gitattributes` (corrected wording, B01-O-004).
+  Verdict `CHANGES_REQUESTED / FAIL`.
 - `opus-review.md` — Reviewer B, **GPT-6 Astra acting under explicit user
   authorization in place of the unavailable Opus**, `04_OPUS_BATCH_REVIEW_PROMPT.md`
   (filename kept for workflow compatibility; no Claude/Opus participation is
-  claimed anywhere in this packet). SHA-256 `34e23484…d9e191`. Verdict
-  `REQUEST_CHANGES / HOLD`.
+  claimed anywhere in this packet). Original SHA-256 `34e23484…d9e191`
+  (20609 bytes, one trailing CRLF); committed blob SHA-256
+  `ff74bae8…3f804c8` — content byte-equal after CRLF→LF normalization.
+  Verdict `REQUEST_CHANGES / HOLD`.
 
 Both reports reviewed the same immutable object
 `719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5` (user-pinned short SHA `719c3fb`;

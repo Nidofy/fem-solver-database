@@ -16,7 +16,7 @@
 | 816fb8d | A-001 / O-002 | lifecycle benchmark reports `execution_policy:"serial"` + `omp_compiled/omp_max_threads/omp_env` per row; "OMP4 ≈ serial / bandwidth-bound" diagnosis retracted in R0.04 evidence and open-risks; mislabeled raw JSONL moved to `benchmarks/superseded/` with explanatory README; fresh 16-run matrix under corrected `serial-env1/serial-env4` tags (numbers consistent: publication savings stand as serial measurements). |
 | 5f66b7c | A-003 / O-003 | sanitizer claims corrected to "MSVC AddressSanitizer only; UBSan not executed" in build-test.md, manifest.yaml, compat-matrix.md, task-evidence/R0.02.md, task-evidence/R1.01.md, CONTINUOUS_STATUS.md; host-capability facts recorded (no libubsan/libasan in MinGW, no MSVC UBSan). |
 | d5cad6c | A-004 + B errata | benchmark adds `run_setup_ms`, `initialize_ms`, `kernel_only_ms`, `plan_increments`, `executed_increments`, `frames_written`; matrix rerun with the fields; R0.04 phase semantics stated precisely; numerical-validation.md count errata fixed (2022 = 2000+1+21; released segment = 500 increments). |
-| (final) | — | reviewer reports recorded verbatim (`astra-review.md`, `opus-review.md`, hashes match the user-provided values), `findings.md`, this report, ledger updates. |
+| (final) | — | reviewer report copies recorded with accurate provenance (`astra-review.md`, `opus-review.md`; originals differ from committed blobs by one trailing CRLF, content byte-equal after CRLF→LF — see `report-provenance.md`, corrected in round 2 per B01-O-004), `findings.md`, this report, ledger updates. |
 
 ## Scope discipline
 
@@ -73,7 +73,8 @@ evidence/identity issues, not physics, blocked the gate.
 - All C0/C1 findings (A-001, O-001) and all C2 findings: **FIXED_VERIFIED**
   with recorded evidence; no defer was used (none needed).
 - Both original reports exist, reviewed the same immutable object, and are
-  recorded verbatim in the packet.
+  recorded as content-exact copies (blob differs from original bytes only by
+  CRLF→LF normalization; see `report-provenance.md`).
 - Full applicable test suites pass on three configurations at fix head.
 
 **Status: REPAIRED_PENDING_GATE** — ready for the coordinators' targeted
