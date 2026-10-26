@@ -34,7 +34,8 @@
    for physics (first `step()` re-evaluates), so physics is unaffected either
    way; only bytes change for that un-published-save pattern.
 3. Benchmark JSON adds keys; old keys keep meaning except the generated model
-   now runs 21 increments (was 2) with output frequency 10 (was 1) —
+   plans 21 increments (was 2), executes 10 and writes 1 frame per run, with
+   output frequency 10 (was 1) —
    historical `verification/*.jsonl` from other hosts are not comparable
    anyway; new baseline established under `benchmarks/`.
 

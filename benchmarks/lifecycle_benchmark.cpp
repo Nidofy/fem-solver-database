@@ -1,6 +1,7 @@
 #include <sdb/lifecycle.hpp>
 #include <chrono>
 #include <cstdlib>
+#include <optional>
 #include <iostream>
 #include <iomanip>
 #ifdef _OPENMP
@@ -85,13 +86,15 @@ int main(int argc, char **argv) {
         // regardless of OMP_NUM_THREADS. Reported explicitly (B01-A-001/O-002):
         // no parallel-efficiency conclusion may be drawn from this benchmark.
         // Setup phases kept distinct (B01-A-004): compile_ms above covers IR
-        // compilation only; run_setup_ms covers StateDB+TetPlan+plan build;
+        // compilation only; run_setup_ms covers StateDB+TetPlan+plan build of
+        // the instance actually used below — emplace constructs inside the
+        // timed region while the object lives until scope end, so destruction
+        // is NOT part of the measurement (round-2 fix: the earlier probe form
+        // timed construction+destruction of a discarded instance);
         // initialize_ms covers the first force pass + half-step velocity setup.
-        double run_setup_ms = timed([&] {
-            CpuRun<double> probe(model); // same construction work; discarded
-            (void)probe;
-        });
-        CpuRun<double> run(model);
+        std::optional<CpuRun<double>> run_storage;
+        double run_setup_ms = timed([&] { run_storage.emplace(model); });
+        CpuRun<double> &run = *run_storage;
         double initialize_ms = timed([&] { run.initialize(); });
         auto enforce = [&] {
             if (peak() > budget)
