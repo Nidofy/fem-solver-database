@@ -1,7 +1,11 @@
 """Machine-replayable batch identity validator.
 
-Round-2 repair of B01-A-002 / B01-A-005:
+Round-2 repair of B01-A-002 / B01-A-005, round-3 repair of B01-R3-001:
 
+- R3-001: only column-0 lines can define identity fields — indented lines
+  (nested mappings, literal/folded block-scalar text) never do, and quoted
+  identity keys are normalized into the same duplicate-checked namespace
+  instead of being silently skipped.
 - A-005: parsing is strict. Values are captured as raw strings first, so a
   present-but-invalid field FAILS instead of being silently dropped. Distinguishes
   "field missing" (error: the batch-freeze contract requires it) from
@@ -59,19 +63,33 @@ def strip_quotes(raw: str) -> str:
 def load_manifest_strict(path: pathlib.Path) -> dict:
     """Parse top-level `key: value` lines strictly for KNOWN_KEYS.
 
+    Top level means column 0: any indented line belongs to a nested mapping or
+    a literal/folded block scalar and can never define an identity field
+    (B01-R3-001 — the earlier form stripped indentation first, so block-scalar
+    text like `notes: |` containing `freeze_packet_sha: …` faked a required
+    field). Quoted keys (`"key":` / `'key':`) are normalized to the bare name
+    and take part in the SAME duplicate detection — never silently skipped.
+
     Returns {key: raw-value-after-quote-strip}. Raises SystemExit via fail() on
     duplicate keys, empty values, or a missing required key. Comment lines and
     unknown keys are ignored.
     """
     seen: dict[str, str] = {}
-    for lineno, line in enumerate(path.read_text(encoding="utf-8-sig").splitlines(), start=1):
-        stripped = line.strip()
+    for lineno, raw_line in enumerate(path.read_text(encoding="utf-8-sig").splitlines(), start=1):
+        if not raw_line or raw_line[0] in " \t":
+            continue  # blank or indented: nested mapping / block scalar content
+        stripped = raw_line.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        m = re.match(r"^([A-Za-z0-9_]+)\s*:\s*(.*)$", stripped)
-        if not m:
-            continue  # nested structures are not part of the identity contract
-        key, raw = m.group(1), m.group(2)
+        m = re.match(r"^\"([^\"]+)\"\s*:\s*(.*)$", stripped) or \
+            re.match(r"^'([^']+)'\s*:\s*(.*)$", stripped)
+        if m:
+            key, raw = m.group(1), m.group(2)
+        else:
+            m = re.match(r"^([A-Za-z0-9_]+)\s*:\s*(.*)$", stripped)
+            if not m:
+                continue
+            key, raw = m.group(1), m.group(2)
         if key not in KNOWN_KEYS:
             continue
         if key in seen:

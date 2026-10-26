@@ -1,8 +1,10 @@
-"""Replayable identity-validator controls (round-2 repair evidence).
+"""Replayable identity-validator controls (round-2 + round-3 repair evidence).
 
 Covers the original positive/negative controls, the A-002 expected-identity
-mismatch case, the A-005 fail-open replay on a real BATCH_HEAD checkout, and
-the parsing edges (missing/empty/quoted/duplicate keys).
+mismatch case, the A-005 fail-open replay on a real BATCH_HEAD checkout, the
+parsing edges (missing/empty/quoted/duplicate keys), and the R3-001 structural
+rules (nested mappings / block scalars never define identity; quoted keys join
+the duplicate-checked namespace).
 
 Run from the repository root:
   python verification/reviews/B01/task-evidence/identity-controls.py
@@ -103,6 +105,54 @@ def main() -> int:
          pos_expect, note="quoted well-formed 40-hex is accepted (documented rule)")
     case("duplicate-base-key", original + f"batch_base_sha: {FREEZE}\n", str(REPO), 1,
          note="duplicate identity keys are rejected, no silent override")
+
+    # --- R3-001 structural rules (round-3): nested text/maps never define
+    # identity; quoted keys join the duplicate-checked namespace. Fixtures are
+    # generated here so the suite is self-contained. ---
+    scalar_text = original.replace(
+        f"freeze_packet_sha: {FREEZE}\n",
+        f"notes: |\n  freeze_packet_sha: {FREEZE}\n")
+    case("r3-scalar-text-only-freeze", scalar_text, str(REPO), 1,
+         note="block-scalar text must not satisfy the required top-level freeze")
+    nested_map = original.replace(
+        f"freeze_packet_sha: {FREEZE}\n",
+        f"identity_metadata:\n  freeze_packet_sha: {FREEZE}\n")
+    case("r3-nested-only-freeze", nested_map, str(REPO), 1,
+         note="nested mapping values are not top-level identity")
+    case("r3-quoted-duplicate-invalid", original + f'"freeze_packet_sha": invalid-sha\n', str(REPO), 1,
+         note="double-quoted duplicate key is normalized and rejected")
+    case("r3-single-quoted-duplicate-invalid", original + f"'freeze_packet_sha': invalid-sha\n",
+         str(REPO), 1, note="single-quoted duplicate key is normalized and rejected")
+    nested_harmless = original.replace(
+        "frozen_date: 2026-10-24\n",
+        f"frozen_date: 2026-10-24\nnotes: |\n  batch_base_sha: {BAD}\n"
+        f"  freeze_packet_sha: {FREEZE}\nidentity_metadata:\n  batch_content_head_sha: {BAD}\n")
+    case("r3-nested-text-with-identity-names-valid", nested_harmless, str(REPO), 0, pos_expect,
+         note="legit nested notes/metadata never fabricate or override identity")
+    quoted_key_standalone = original.replace(f"batch_base_sha: {BASE}",
+                                             f'"batch_base_sha": {BASE}')
+    case("r3-quoted-key-standalone-valid", quoted_key_standalone, str(REPO), 0, pos_expect,
+         note="a quoted key is equivalent to its bare form when not duplicated")
+    case("r3-duplicate-freeze-identical", original + f"freeze_packet_sha: {FREEZE}\n", str(REPO), 1,
+         note="duplicate identity keys are rejected even with identical values")
+    uppercase_all = original.replace("batch_base_sha:", "BATCH_BASE_SHA:") \
+        .replace("batch_content_head_sha:", "BATCH_CONTENT_HEAD_SHA:") \
+        .replace("freeze_packet_sha:", "FREEZE_PACKET_SHA:")
+    case("r3-uppercase-key-rejected", uppercase_all, str(REPO), 1,
+         note="identity keys are case-sensitive lowercase; uppercase spellings are unknown keys")
+    case("r3-inline-comment-rejected", original.replace(f"freeze_packet_sha: {FREEZE}",
+                                                        f"freeze_packet_sha: {FREEZE} # note"),
+         str(REPO), 1, note="narrow syntax: inline comments after values are not supported")
+    crlf_manifest = original.replace("\n", "\r\n")
+    case("r3-crlf-manifest-accepted", crlf_manifest, str(REPO), 0, pos_expect,
+         note="CRLF line endings are accepted")
+    case("r3-quoted-whitespace-empty-rejected", original.replace(f"freeze_packet_sha: {FREEZE}",
+                                                                 'freeze_packet_sha: " "'), str(REPO), 1)
+    case("r3-unclosed-quote-rejected", original.replace(f"freeze_packet_sha: {FREEZE}",
+                                                        f'freeze_packet_sha: "{FREEZE}'), str(REPO), 1)
+    case("r3-outer-whitespace-accepted", original.replace(f"freeze_packet_sha: {FREEZE}",
+                                                           f"freeze_packet_sha:  {FREEZE}  "),
+         str(REPO), 0, pos_expect, note="surrounding whitespace of values is ignored")
 
     (HERE / "identity-controls.json").write_text(json.dumps(controls, indent=2) + "\n", encoding="utf-8")
     shutil.rmtree(batch_head, ignore_errors=True)
