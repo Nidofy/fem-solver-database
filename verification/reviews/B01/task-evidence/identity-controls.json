@@ -1,0 +1,138 @@
+[
+  {
+    "case": "positive-with-expected-identity",
+    "expected_exit": 0,
+    "actual_exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1",
+    "git_dir_kind": "dev",
+    "note": "real manifest + externally pinned base/head/freeze"
+  },
+  {
+    "case": "positive-at-batch-head-checkout",
+    "expected_exit": 0,
+    "actual_exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1",
+    "git_dir_kind": "batch-head",
+    "note": "same, against the detached BATCH_HEAD fixture"
+  },
+  {
+    "case": "bad-original-sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: batch_content_head_sha does not resolve to a commit object: 719c3fb2a5cd3f6d8a8b13eec1b8a7c1d59dd1a4",
+    "git_dir_kind": "dev",
+    "note": "first-round nonexistent object"
+  },
+  {
+    "case": "abbreviated-head",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: batch_content_head_sha is not a full 40-hex lowercase object id: '719c3fb'",
+    "git_dir_kind": "dev",
+    "note": "short id must be rejected"
+  },
+  {
+    "case": "base-not-ancestor",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: base b58dfff04b484f2ed15524d51883e5f979fd1bc1 is not an ancestor of head 719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+    "git_dir_kind": "dev",
+    "note": ""
+  },
+  {
+    "case": "freeze-before-head",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: head 719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 is not an ancestor of freeze aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+    "git_dir_kind": "dev",
+    "note": ""
+  },
+  {
+    "case": "tainted-freeze",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: commits 719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5..420d5b74c451ad1bfcc41dd873939dbe3c103675 change source paths, so the frozen code identity is not 719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5: benchmarks/lifecycle_benchmark.cpp",
+    "git_dir_kind": "dev",
+    "note": "packet commit changes docs only; docs tip has benchmark source changes"
+  },
+  {
+    "case": "different-valid-head-generic",
+    "expected_exit": 0,
+    "actual_exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=b58dfff04b484f2ed15524d51883e5f979fd1bc1 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1",
+    "git_dir_kind": "dev",
+    "note": "A-002: generically consistent but WRONG batch object \u2014 this is why callers must always pass --expect-head"
+  },
+  {
+    "case": "different-valid-head-with-expect",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: batch_content_head_sha b58dfff04b484f2ed15524d51883e5f979fd1bc1 does not match the externally fixed expectation 719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+    "git_dir_kind": "dev",
+    "note": "A-002 closure: mismatch vs externally fixed head"
+  },
+  {
+    "case": "expect-base-mismatch",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: batch_base_sha aaa74afb3c264bbd7ca43555a7445c77994ccaa2 does not match the externally fixed expectation b58dfff04b484f2ed15524d51883e5f979fd1bc1",
+    "git_dir_kind": "dev",
+    "note": ""
+  },
+  {
+    "case": "a005-invalid-freeze-at-batch-head",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: freeze_packet_sha is not a full 40-hex lowercase object id: 'invalid-sha'",
+    "git_dir_kind": "batch-head",
+    "note": "A-005 replay at real BATCH_HEAD checkout: fail-open must now fail"
+  },
+  {
+    "case": "a005-invalid-freeze-dev-tree",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: freeze_packet_sha is not a full 40-hex lowercase object id: 'invalid-sha'",
+    "git_dir_kind": "dev",
+    "note": "same on dev tree; failure must come from the field, not incidental diffs"
+  },
+  {
+    "case": "freeze-missing",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: missing required identity field(s): freeze_packet_sha (the batch-freeze contract requires base, content head and freeze packet)",
+    "git_dir_kind": "dev",
+    "note": "missing required field"
+  },
+  {
+    "case": "freeze-empty-value",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 15: 'freeze_packet_sha' is present but empty",
+    "git_dir_kind": "dev",
+    "note": "present but empty"
+  },
+  {
+    "case": "freeze-quoted-invalid",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: freeze_packet_sha is not a full 40-hex lowercase object id: 'invalid-sha'",
+    "git_dir_kind": "dev",
+    "note": "quoted values are unwrapped then validated"
+  },
+  {
+    "case": "head-quoted-valid",
+    "expected_exit": 0,
+    "actual_exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1",
+    "git_dir_kind": "dev",
+    "note": "quoted well-formed 40-hex is accepted (documented rule)"
+  },
+  {
+    "case": "duplicate-base-key",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: duplicate identity key 'batch_base_sha' (first value 'aaa74afb3c264bbd7ca43555a7445c77994ccaa2', repeated as 'b58dfff04b484f2ed15524d51883e5f979fd1bc1')",
+    "git_dir_kind": "dev",
+    "note": "duplicate identity keys are rejected, no silent override"
+  }
+]
