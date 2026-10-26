@@ -142,3 +142,59 @@ All round-2 findings FIXED_VERIFIED with replayable evidence; no defer used.
 Overall batch state remains **REPAIRED_PENDING_GATE** (round-2), awaiting the
 targeted round-3 incremental re-review above. No push/merge of protected
 branches performed.
+
+---
+
+# Round-3 repair (2026-10-26) — after the merged single-reviewer incremental review
+
+Inputs: `merged-incremental-review-r3.md` (single GPT-6 Astra High, user
+authorization recorded in the report; FAIL/NOT_READY, blocker R3-001/C2,
+non-blocking R3-002/C3), evidence replayed from the reviewer's fixture
+directory before any fix. Scope kept minimal: identity tool + controls +
+ledger wording + this packet. No solver runtime, test, benchmark or schema
+change; no C++ was rebuilt this round (nothing compiled changed — validator
+and controls are Python; per the 05 workflow only targeted controls and
+consistency checks were rerun).
+
+## Round-3 fix commits
+
+| Commit | Finding | Content |
+|---|---|---|
+| c5c44e7 | R3-001 (A-005 residual) | column-0 top-level parsing; quoted keys normalized into duplicate detection; 30-control suite (17 original + 4 counterexamples + 9 structural accept/reject rules), JSON committed. |
+| 85d1667 | R3-002 + report recording | ledger wording qualified with dual-hash provenance links; round-3 report copy recorded (blob == original). |
+| (final) | — | findings round-3 ledger, this section, development handoff updates. NEXT_FIX_HEAD_SHA recorded in BATCH_HISTORY. |
+
+## Round-3 verification actually executed
+
+- Four reviewer counterexamples re-run pre-fix (all exit 0 — reproduced) and
+  post-fix against the reviewer's original fixtures (all exit 1, correct
+  diagnostics: missing freeze ×2, duplicate identity key ×2).
+- Full control suite: **30/30 as expected** (includes the round-2 BATCH_HEAD
+  fail-open replay and the different-valid-head expected-identity case —
+  A-002 behavior unchanged and not reopened).
+- Reviewer's additional edge fixtures re-checked individually: crlf-valid /
+  outer-whitespace / quoted-single-valid accepted; duplicate-identical /
+  inline-comment / quoted-whitespace-empty rejected.
+- Runtime zero-diff gate: `git diff --name-only 719c3fbbe4db…..HEAD --
+  include src tests examples CMakeLists.txt cmake` → empty.
+- Official manifest positive control with external pinning → IDENTITY OK.
+
+## Incremental re-review scope requested (round 4, parser/controls + wording only)
+
+Single or dual reviewer at the coordinator's choice; scope:
+(a) `verification/validate_batch_identity.py` structural rules — column-0
+top-level only, quoted-key normalization, duplicate contract; adversarial
+probes beyond the 30 committed controls are welcome;
+(b) `identity-controls.py` / `identity-controls.json` — replay the suite,
+confirm the four round-3 counterexamples fail for the stated reasons;
+(c) the R3-002 wording fixes in the three development ledgers (grep for
+unqualified `verbatim` should only hit historical self-incriminating quotes);
+(d) confirm `719c3fb..NEXT_FIX_HEAD` still has an empty runtime diff.
+No numerical/physics re-review is required (runtime source unchanged since
+BATCH_HEAD; verifiable with the one-line git diff above).
+
+## Gate self-assessment (round 3)
+
+R3-001 and R3-002 FIXED_VERIFIED with replayable evidence; no defer used.
+Batch state remains **REPAIRED_PENDING_GATE** (round 3), awaiting the round-4
+targeted review above. No push/merge of protected branches performed.

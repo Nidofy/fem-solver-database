@@ -180,3 +180,75 @@ original ratings in this table.
   CMakeLists.txt cmake` → empty (runtime code still byte-identical to the
   reviewed object).
 - `sdb_run` full-run output byte-identical to the pre-R1.01 reference.
+
+---
+
+# Round 3 — merged single-reviewer incremental re-review (2026-10-26) and third repair
+
+## Round-3 reviewer verdict
+
+`merged-incremental-review-r3.md` — a single GPT-6 Astra (High) reviewer,
+user-authorized to merge the former A/B lane scopes for this round (no dual
+lane, no second reviewer; not Claude/Opus). Original SHA-256
+`3c41df93…0dfa32`, blob-identical copy recorded here (see report-provenance.md).
+**INCREMENTAL_REVIEW: FAIL / NOT_READY** — sole blocker B01-R3-001 (C2);
+non-blocking B01-R3-002 (C3). Closed this round: A-002, A-004, A-006, O-004
+(within its specified scope). Reviewer ran identity/data/documentation checks
+only (no C++ build, CTest, probes or benchmarks this round — not claimed
+otherwise anywhere in this ledger).
+
+## Reproduction record (round 3, before fixing)
+
+All four reviewer counterexamples reproduced against the round-2 validator
+with the three external `--expect-*` values pinned (fixtures at
+`sdb-review-b01-merged-r3/verification/reviews/B01/merged-r3-evidence/`):
+
+| fixture | content | expected | actual (pre-fix) |
+|---|---|---|---|
+| `scalar-text-only-freeze.yaml` | `notes: \|` literal block containing `freeze_packet_sha: <freeze>`; no top-level freeze | exit 1 (missing) | **exit 0 IDENTITY OK** |
+| `nested-only-freeze.yaml` | `identity_metadata:` nested map containing the freeze line | exit 1 (missing) | **exit 0** |
+| `quoted-duplicate-invalid.yaml` | valid top-level freeze + appended `"freeze_packet_sha": invalid-sha` | exit 1 (duplicate/invalid) | **exit 0** (quoted line silently skipped) |
+| `single-quoted-duplicate-invalid.yaml` | same with single quotes | exit 1 | **exit 0** |
+
+Root cause: `load_manifest_strict` stripped indentation before key matching,
+so indented block-scalar/nested lines impersonated top-level identity fields;
+lines whose quoted key did not match the bare-key regex were unconditionally
+skipped, bypassing duplicate detection. External expectations cannot repair a
+parser that ignores part of its input.
+
+## Round-3 dispositions
+
+| Finding | Severity | Disposition | Fix commit |
+|---|---|---|---|
+| B01-R3-001 (A-005 residual: structural parsing) | C2 | FIXED_VERIFIED | c5c44e7 |
+| B01-R3-002 (ledger wording propagation) | C3 | FIXED_VERIFIED | 85d1667 |
+
+A-005's round-3 reviewer verdict NOT_CLOSED is preserved above; the round-3
+developer disposition FIXED_VERIFIED refers to the new fix below, not to a
+self-granted re-review.
+
+## Round-3 fix and verification
+
+- `validate_batch_identity.py`: only **column-0** lines can define identity
+  fields (indented lines belong to nested mappings / block scalars — matching
+  YAML semantics, where a column-0 key also terminates a block); quoted keys
+  (`"key":` / `'key':`) are normalized to the bare name and enter the SAME
+  duplicate-checked namespace instead of being skipped. Duplicate keys are
+  rejected even with identical values; missing vs present-but-empty vs
+  invalid distinction, freeze requirement, no-HEAD-fallback, 40-hex, object /
+  ancestry / source-purity checks and external `--expect-*` pinning unchanged.
+- Control suite extended to **30 controls** (`identity-controls.py`,
+  `identity-controls.json` committed): the original 17 + the four R3-001
+  counterexamples (now exit 1) + positive structural rules (legitimate nested
+  notes/metadata containing identity-looking names do not fabricate or
+  override identity; standalone quoted key equivalent to bare; CRLF; outer
+  whitespace) + rejection rules (identical-value duplicates, uppercase keys,
+  inline comments, quoted-whitespace, unclosed quotes). **30/30 as expected**;
+  the four counterexamples were re-run against the reviewer's original fixture
+  files directly (all exit 1 with the correct diagnostic: missing field ×2,
+  duplicate identity key ×2).
+- R3-002: `CONTINUOUS_STATUS.md`, `BATCH_HISTORY.md`, `SESSION_HANDOFF.md`
+  wording qualified (LF-normalized content-equal copies; dual hashes; link to
+  `report-provenance.md`); the historical self-incriminating quote in
+  findings.md is preserved as history. Round-3 report recorded with
+  provenance (no CRLF; blob == original bytes).
