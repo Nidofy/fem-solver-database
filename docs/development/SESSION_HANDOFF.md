@@ -3,9 +3,22 @@
 A fresh session MUST re-verify against real Git state before trusting this
 file: `git status --porcelain=v1 -b`, `git log --oneline -12`, task pool.
 
-## Current position (2026-10-24, after B01 dual review + repair)
+## Current position (2026-10-25, after round-2 incremental review + repair)
 
-- **B01 repaired, pending incremental re-review gate.** Branch `dev/glm-b01`.
+- **B01 round-2 repaired, pending round-3 targeted re-review gate.** Branch `dev/glm-b01`.
+- Round-1: FIX_HEAD `02e1ee4`. Incremental review: A FAIL (A-002/A-004
+  NOT_CLOSED; new A-005/A-006), B PASS (new O-004 C3). Round-2 fixes:
+  `23b8bc5`/`3c1f2c2`/`b4be2a5`/`994a607` + packet `d6c67de`
+  (= NEW_FIX_HEAD; `037b809`+ docs-only). Round-3 scope in
+  `verification/reviews/B01/repair-report.md` (A: identity tool + timing
+  semantics + table consistency; B: identity changes + O-004 provenance).
+- Identity gate now requires external pinning, e.g.:
+  `python verification/validate_batch_identity.py verification/reviews/B01/manifest.yaml --expect-base aaa74af... --expect-head 719c3fb... --expect-freeze b58dfff...`
+  (full SHAs in manifest; replay controls:
+  `python verification/reviews/B01/task-evidence/identity-controls.py`).
+- Reviewer report copies: provenance rule in
+  `verification/reviews/B01/report-provenance.md` (original vs CRLF→LF blob
+  hashes; record both, never claim plain hash equality for CRLF originals).
   Reviewed object (unchanged by repair): `719c3fb` (full
   `719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5`); freeze packet `b58dfff`.
 - Repair series (no runtime solver code changed): `97b1b8a` identity
