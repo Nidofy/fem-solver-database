@@ -29,8 +29,7 @@ file: `git status --porcelain=v1 -b`, `git log --oneline -12`, task pool.
 - Reviewers were two mutually isolated GPT-6 Astra instances (Reviewer B
   user-authorized to substitute for unavailable Opus; `opus-review.md`
   filename is workflow compatibility only, no Claude/Opus participation
-  claimed). Reports are verbatim copies in `verification/reviews/B01/` with
-  SHA-256 on record.
+  claimed). Reports are content-exact copies: LF-normalized content equals the originals; original-byte and Git-blob SHA-256 are recorded separately in `verification/reviews/B01/report-provenance.md`.
 - Gate status: **REPAIRED_PENDING_GATE** — awaiting the coordinators'
   incremental re-review of `719c3fb..02e1ee4` (scope in
   `verification/reviews/B01/repair-report.md`). Until accepted: no stable
@@ -87,6 +86,7 @@ NINJA="/c/Program Files/Microsoft Visual Studio/18/Professional/Common7/IDE/Comm
 - Atomic commit per task/fix; update `docs/development/*` and
   `verification/reviews/<BATCH>/` after each unit.
 - Never mark ACCEPTED before external review; no force-push/reset --hard;
-  reviewer report files are verbatim copies only; CUDA stays BLOCKED_ENV
+  reviewer report files are provenance-recorded copies per report-provenance.md (never
+  author or alter reviewer content); CUDA stays BLOCKED_ENV
   here; no push/merge of protected branches without explicit user
   authorization.

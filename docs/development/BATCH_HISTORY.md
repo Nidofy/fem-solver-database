@@ -7,5 +7,5 @@
 
 Legend for task marks: ✓ = IMPLEMENTED_SELF_TESTED, frozen for batch review
 (never ACCEPTED before external review). Review outcomes are appended only
-from real reviewer reports; reviewer files in the packet are verbatim copies
-whose SHA-256 matches the user-provided handoff values.
+from real reviewer reports; reviewer report copies follow `verification/reviews/B01/report-provenance.md`:
+Reports are content-exact copies: LF-normalized content equals the originals; original-byte and Git-blob SHA-256 are recorded separately in `verification/reviews/B01/report-provenance.md`.

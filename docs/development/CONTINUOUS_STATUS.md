@@ -19,8 +19,7 @@ SESSION_HANDOFF.md.
 - Working branch: `dev/glm-b01`
 - Dual review: Reviewer A (GPT-6 Astra, `03` prompt) → CHANGES_REQUESTED/FAIL;
   Reviewer B (GPT-6 Astra, user-authorized Opus substitute, `04` prompt) →
-  REQUEST_CHANGES/HOLD. Both reports recorded verbatim in the packet
-  (SHA-256 verified). All 7 findings + 2 errata → FIXED_VERIFIED; ledger in
+  REQUEST_CHANGES/HOLD. Reports are content-exact copies: LF-normalized content equals the originals; original-byte and Git-blob SHA-256 are recorded separately in `verification/reviews/B01/report-provenance.md`. All 7 findings + 2 errata → FIXED_VERIFIED; ledger in
   `verification/reviews/B01/findings.md`.
 
 ## Task states (summary; authoritative list in TASK_POOL.yaml)
