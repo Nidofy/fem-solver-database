@@ -5,10 +5,10 @@
 #           REPAIRED_PENDING_GATE / ACCEPTED / DEFERRED
 schema_version: 2
 program: fem-solver-database-v2
-current_batch: B01
-batch_state: ACCEPTED # independent R5 PASS + user-authorized integration, 2026-10-28
-batch_base_sha: aaa74afb3c264bbd7ca43555a7445c77994ccaa2
-batch_content_head_sha: 719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 # repaired B01-O-001/A-002: freeze-time value was a nonexistent hash
+current_batch: ALR1
+batch_state: FROZEN_FOR_BATCH_REVIEW # self-tested; independent ALR1 review pending
+batch_base_sha: 480da32a17e3b60e6694b95e5c9ec83618e5b64b
+batch_content_head_sha: 8122adf2c149a672222ab81d8ac722e69931205c
 tasks:
   - id: R0.01
     title: Freeze repository baseline and inspect source reality
@@ -47,17 +47,41 @@ tasks:
   # --- next batch candidates (dependencies satisfied) ---
   - id: R1.03
     title: Bounded result output queue and backpressure contract
-    status: PLANNED
+    status: FROZEN_FOR_BATCH_REVIEW
+    commit: cbc312c
+    evidence: docs/development/astra_lifecycle_result/HANDOFF.md
     depends_on: [R1.02]
   - id: R1.04
     title: Result and restart failure injection
-    status: PLANNED
+    status: FROZEN_FOR_BATCH_REVIEW
+    commit: 50204bd
+    evidence: docs/development/astra_lifecycle_result/HANDOFF.md
     depends_on: [R1.02]
   - id: R2.04
     title: Raw vs View access overhead and specialized fast path
     status: PLANNED
     depends_on: [R0.04]
-next_ready: [R1.03, R1.04, R2.04]
+  - id: ALR1.A1
+    title: Strict all-state read-only output publication
+    status: FROZEN_FOR_BATCH_REVIEW
+    commit: 4c2c559
+  - id: ALR1.A2
+    title: Opt-in bounded persistent native result index
+    status: FROZEN_FOR_BATCH_REVIEW
+    commit: ed8262d
+  - id: ALR1.A4
+    title: Joint restart-result identity and precision guards
+    status: FROZEN_FOR_BATCH_REVIEW
+    commit: ca4b682
+  - id: ALR1.A6
+    title: Full integration C3D8 and mixed TET4 CPU lifecycle
+    status: FROZEN_FOR_BATCH_REVIEW
+    commit: ca4b682
+  - id: ALR1.A0.A5
+    title: CPU evidence and stage performance measurements
+    status: FROZEN_FOR_BATCH_REVIEW
+    commit: 8122adf
+next_ready: [] # independent ALR1 review next; R2.04/B02c ownership unchanged
 
 # 2026-10-28: independent R5 gate passed; user authorized B01 merge/push.
 # Next batch may start from accepted stable tip; B02c remains unaccepted.

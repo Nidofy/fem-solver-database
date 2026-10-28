@@ -3,7 +3,19 @@
 A fresh session MUST re-verify against real Git state before trusting this
 file: `git status --porcelain=v1 -b`, `git log --oneline -12`, task pool.
 
-## Current position (2026-10-28, independent R5 PASS and B01 acceptance)
+## Current position (2026-10-29, ALR1 freeze)
+
+Current branch is `codex/astra-lifecycle-result-hardening`; base `480da32`, content
+HEAD `8122adf2c149a672222ab81d8ac722e69931205c`. Read
+[ALR1 HANDOFF](astra_lifecycle_result/HANDOFF.md), its manifest and STATUS first.
+A1-A4 CPU lifecycle and A6 C3D8/mixed implementation are self-tested, not independently
+accepted. Serial/OpenMP/MSVC ASan each passed 11/11. CUDA remains BLOCKED_ENV/NOT_RUN.
+No ALR1 push/merge is authorized or performed. Next action is independent review;
+no automatic next feature expansion. Preserve GLM B02c and historical B01 evidence.
+
+The rest of this file records the prior B01 handoff, not current integration authority.
+
+## Historical position (2026-10-28, independent R5 PASS and B01 acceptance)
 
 - **B01 ACCEPTED** for the documented standalone CPU scope. Independent single
   GPT-6 Astra High R5 reviewed `15771815c016af66d064e5f4d66dc1dbc6b0a74a`
@@ -61,7 +73,7 @@ NINJA="/c/Program Files/Microsoft Visual Studio/18/Professional/Common7/IDE/Comm
 - Identity gate for every future packet:
   `python verification/validate_batch_identity.py <manifest.yaml> --expect-base <fixed-base> --expect-head <fixed-head> --expect-freeze <fixed-freeze>`
   (all values external constants; use full SHAs above).
-- No NVIDIA GPU / CUDA toolkit on this host → CUDA tasks stay BLOCKED_ENV.
+- Historical CUDA probe was blocked. Current ALR1 nvcc/nvidia-smi/default Toolkit checks also fail; physical GPU absence is not asserted (CIM probe denied).
 - `AGENTS.md` does not exist in this repo. clang-format:
   `"/c/Program Files/Microsoft Visual Studio/18/Professional/VC/Tools/Llvm/x64/bin/clang-format.exe" --style=file -i <files>`.
 - The lifecycle benchmark always executes SERIAL (CpuRun has no policy

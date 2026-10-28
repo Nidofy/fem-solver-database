@@ -1,0 +1,26 @@
+[
+  {
+    "path": "docs\\CODEX_REPO_MAP.md",
+    "before_sha256": "9f90b17c6bb8805d3d58d51cad665bc31c3e73f2935b1365c1a2370edaecc18c",
+    "after_sha256": "63c4e624c5e8f4491fce1804d2d08d65d05952465e8e8ece9916a167b2a6522f",
+    "appended_utf8": "\n\n## 2026-10-29 - Standalone Solver Database ALR1 lifecycle/C3D8 extension\n\nThe independent `solver_database_v2/` repository now has a frozen CPU lifecycle\nimplementation on `codex/astra-lifecycle-result-hardening`, content HEAD `8122adf`.\nIt is not connected to the production solver entry chain. The narrow boundary is\nINP -> model IR/compiler -> CpuRun -> owning results -> native storage/query ->\nlinked checkpoint/restart. Read `solver_database_v2/docs/development/astra_lifecycle_result/HANDOFF.md`.\nStandalone tests passed; production solver not locally compiled or verified.\n"
+  },
+  {
+    "path": "docs\\CODEX_MODULE_NOTES.md",
+    "before_sha256": "9dd65ec0bf36f94a88d1f64704c43633a73028fba59c41140957fa280ecbc3cf",
+    "after_sha256": "7d40d02d1840cd17b1d91d740fc8a3103b403c0ba55b4c03bba5e49d5600f1dd",
+    "appended_utf8": "\n\n## 2026-10-29 - Standalone ALR1 module boundary\n\n`solver_database_v2/include/sdb/hex8.hpp` adds reference small-strain, full 2x2x2\nC3D8 CPU evaluation and row-sum mass; dynamics.hpp integrates mixed TET4/HEX8.\nThe results headers add const derived scratch publication, owning bounded async\nwriting, opt-in native v2 lazy index and checkpoint/result link validation.\nExisting native v1 remains default; FrameIndex is now a read-only facade.\nNo production module dispatch or general-contact algorithm was changed.\nEvidence: standalone ALR1 HANDOFF; serial/OpenMP/MSVC ASan 11/11 each (exit 0).\nCUDA BLOCKED_ENV/NOT_RUN; production not locally compiled or verified.\n"
+  },
+  {
+    "path": "docs\\CODEX_MIGRATION_NOTES.md",
+    "before_sha256": "bcbc1c27ef3135e228aa3edea1e44182db81f7ab2b9935279d02b6843b8459f9",
+    "after_sha256": "9075468cc70d741d78022dc17bb0d3b8e361a038ce148384611c6ef14a73e2f0",
+    "appended_utf8": "\n\n## 2026-10-29 - Standalone ALR1 migration gates\n\nReview `solver_database_v2` BASE `480da32` through content HEAD `8122adf` before\nintegration; the branch is FROZEN_FOR_BATCH_REVIEW, not ACCEPTED. Adapt model/state/\nresult contracts without replacing parent solver architecture. Map C3D8 IP order\nexplicitly, select legacy/indexed output intentionally, retain .sdbrst.result-link\nfor safe append and require explicit close to surface async failures. Unlinked\nlegacy restart can branch to new output. Prefix hashes/CRC are not authentication;\nflush is not power-loss durability. Validate real platform, CUDA and production\ndependencies separately. No parent build, integration, push or release was attempted.\n"
+  },
+  {
+    "path": "docs\\CODEX_TASK_LOG.md",
+    "before_sha256": "4d4d3426989fb54c7ecedd7a052d7cab004c7affff77e1316a71cb7951e5c988",
+    "after_sha256": "110b951ac0c4eedc4c2c3ee69235ef5af1993e3362f42ca2548c40851409ed55",
+    "appended_utf8": "\n\n## 2026-10-29 - ALR1 standalone lifecycle and full-integration C3D8\n\nFiles changed: standalone dynamics/hex8/lifecycle/compiler/native/results headers,\nsdb_run, standalone CMake, focused tests/fixtures, benchmark and development/evidence\nrecords; parent changes for this task are only these four appended map/log entries.\nEarlier uncommitted parent edits and unrelated files remain preserved and uncommitted.\nImplemented const output scratch, bounded async storage, lazy opt-in native v2 index,\nlinked restart append guards, input precision checks and CPU C3D8/mixed 8-IP lifecycle.\nVerification: standalone serial/OpenMP/MSVC ASan CTest 11/11 each, exit 0; three-run\nstage/large/index performance logs; 100000-frame and separate 100000-node field tests.\nUnimplemented/unverified: CUDA lifecycle/HEX (BLOCKED_ENV/NOT_RUN), compression,\nUBSan/TSan, power-loss durability, finite rotation/nonlinear extensions and production\nintegration. GCC vector-encoding warning is retained for independent review.\nAssumptions: reference small strain, isotropic linear elasticity, constant-step explicit,\nsingle writer/producer contracts. Migration: use ALR1 HANDOFF and independent review;\nno ACCEPTED claim. Production solver not locally compiled or verified.\n"
+  }
+]

@@ -13,3 +13,13 @@ Reports are content-exact copies: LF-normalized content equals the originals; or
 Historical pre-R5 authorization allowed isolated B02 only. Later on 2026-10-28,
 the user authorized B01 merge/push after review; independent R5 passed.
 Current state is ACCEPTED; see acceptance.md and SESSION_HANDOFF.
+
+## ALR1 frozen implementation, 2026-10-29
+
+Base `480da32a17e3b60e6694b95e5c9ec83618e5b64b`, content HEAD
+`8122adf2c149a672222ab81d8ac722e69931205c`, branch
+`codex/astra-lifecycle-result-hardening`. State FROZEN_FOR_BATCH_REVIEW;
+A1/A2/A3/A4/A6 CPU implementation and A0/A5 CPU evidence self-tested.
+Final serial/OpenMP/ASan 11/11 each. CUDA BLOCKED_ENV/NOT_RUN.
+No independent review verdict yet, no push/merge. See astra_lifecycle_result/HANDOFF.md.
+B01 acceptance and B02c candidate history above are preserved with their original scope.

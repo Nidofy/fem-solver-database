@@ -1,0 +1,322 @@
+{
+  "schema": "alr1-review-packet/1",
+  "state": "FROZEN_FOR_BATCH_REVIEW",
+  "base_sha": "480da32a17e3b60e6694b95e5c9ec83618e5b64b",
+  "content_head_sha": "8122adf2c149a672222ab81d8ac722e69931205c",
+  "runtime_test_sha": "ca4b682e8181584c62bb1f5afe4e97a4f0276300",
+  "branch": "codex/astra-lifecycle-result-hardening",
+  "freeze_packet_sha": "Resolve git log -1 --format=%H -- docs/development/astra_lifecycle_result/HANDOFF.md; this packet is a subsequent documentation-only commit",
+  "hash_basis": "Git blob bytes at content_head_sha, not CRLF checkout bytes",
+  "final_tests": [
+    {
+      "configuration": "GCC Release OpenMP",
+      "tests": 11,
+      "passed": 11,
+      "exit_code": 0,
+      "seconds": 16.55,
+      "log": "final-omp-ctest.txt"
+    },
+    {
+      "configuration": "GCC Release serial",
+      "tests": 11,
+      "passed": 11,
+      "exit_code": 0,
+      "seconds": 16.62,
+      "log": "final-serial-ctest.txt"
+    },
+    {
+      "configuration": "MSVC RelWithDebInfo ASan serial",
+      "tests": 11,
+      "passed": 11,
+      "exit_code": 0,
+      "seconds": 67.66,
+      "log": "final-asan.txt"
+    }
+  ],
+  "not_run": [
+    "CUDA compile/device",
+    "UBSan",
+    "TSan",
+    "power-loss durability",
+    "parent production integration",
+    "OS-cache-evicted disk benchmark"
+  ],
+  "content_files": [
+    {
+      "path": "CMakeLists.txt",
+      "git_blob_sha256": "123e4fef0e960d6d587b1a7ecaf02a3de496ec4c4d9c1935678cbda9be505d6c"
+    },
+    {
+      "path": "benchmarks/lifecycle_stages.cpp",
+      "git_blob_sha256": "93f589b606b5cbc4e7b4111b27d9fd8076940f9cd476eb8fbe39c8c54dac4deb"
+    },
+    {
+      "path": "docs/development/astra_lifecycle_result/C3D8.md",
+      "git_blob_sha256": "11846bc8ab5e01c52e5c37eeadd1b11f325548eb975c8e55f8f427a2ea9dc941"
+    },
+    {
+      "path": "docs/development/astra_lifecycle_result/DECISIONS.md",
+      "git_blob_sha256": "f7e7976622735eace82edc6b238b2bb42d241a880c0e434b349fdc1bff7897fb"
+    },
+    {
+      "path": "docs/development/astra_lifecycle_result/STATUS.md",
+      "git_blob_sha256": "ba84c22c3b86a7587cdd6d0aa0585af5981b054083910bd9753f7e66161bbd1e"
+    },
+    {
+      "path": "examples/sdb_run.cpp",
+      "git_blob_sha256": "f4e446bf3aae48e2b601b1f8123adb08004258c3126dcc2a4ea1cbc8dea9204d"
+    },
+    {
+      "path": "include/sdb/dynamics.hpp",
+      "git_blob_sha256": "e65eafda01f712b4719b3790de55153921363327babf033f73fa84a3d4e08afe"
+    },
+    {
+      "path": "include/sdb/hex8.hpp",
+      "git_blob_sha256": "caae6ab6fe0fee0e62eb91512df25dd9b2437acb4174f609790c8ef0e36020e1"
+    },
+    {
+      "path": "include/sdb/io/native.hpp",
+      "git_blob_sha256": "eb9afb8ede1358e7411afd3c8c3f818d438687a4ffbc57afa8212d2c3ecc0c6d"
+    },
+    {
+      "path": "include/sdb/lifecycle.hpp",
+      "git_blob_sha256": "1a52d2fd8fc53d3018f29e7bb59099a41767976081a3d993a21decc7c89ed628"
+    },
+    {
+      "path": "include/sdb/model_compiler/compiler.hpp",
+      "git_blob_sha256": "ffcab34d5a2e6d7fb3f9caea9adee8ba13bf9e49344a9956522631df36fb52bc"
+    },
+    {
+      "path": "include/sdb/results/async_writer.hpp",
+      "git_blob_sha256": "c9971f914f6a8f5ea9e09df527287ff2cb5383f68f63da340a4bf1be83ec67c4"
+    },
+    {
+      "path": "include/sdb/results/checkpoint_link.hpp",
+      "git_blob_sha256": "cd057fb93ec7e51b656f1e2ee1fe05059812eec37b2b05959fbad6a4beb0eca5"
+    },
+    {
+      "path": "include/sdb/results/export.hpp",
+      "git_blob_sha256": "1d7fc3fb2ed2042f1144c5846d9d03b9fa7a74bae1b9e36a0ce20913c0145067"
+    },
+    {
+      "path": "include/sdb/results/indexed_format.hpp",
+      "git_blob_sha256": "1a56c84927486cd9141d3253105159b32d5b111907e10f69e34d3e433241b28d"
+    },
+    {
+      "path": "include/sdb/results/results.hpp",
+      "git_blob_sha256": "234dc612308753ba1a54ed9d3346f5d24ca9a433c45054e1532ec9b338b0e61c"
+    },
+    {
+      "path": "tests/async_results_tests.cpp",
+      "git_blob_sha256": "af1178bd05b71f85e59f93c87fe0b534c9be0919ef1047fae18d72f49d449ce3"
+    },
+    {
+      "path": "tests/fixtures/abaqus/forced_hex.inp",
+      "git_blob_sha256": "119afdc39e2bfe73ed5b0e4fc9ad6cfec54e3add8e92986f1796334a34d4386f"
+    },
+    {
+      "path": "tests/fixtures/abaqus/mixed_hex_tet.inp",
+      "git_blob_sha256": "59c7424ff7b2cef64f19c35cef14df498b4eea6149224007a862ce8538c4b6e8"
+    },
+    {
+      "path": "tests/hex8_tests.cpp",
+      "git_blob_sha256": "1a9200aca539fffdfcbdee1fd6cc9ab7b455dcec233c91117686f29dbb37448b"
+    },
+    {
+      "path": "tests/indexed_results_tests.cpp",
+      "git_blob_sha256": "f1c8c2d65afef389621975e0ab744db36041d905df9b22041349373751326b5e"
+    },
+    {
+      "path": "tests/lifecycle_tests.cpp",
+      "git_blob_sha256": "2848eeab229dd049ff08d38d52f1d3d32b2c2bd82a43134745ff8b0cdcdd307b"
+    },
+    {
+      "path": "tests/pipeline.py",
+      "git_blob_sha256": "28914417ff6c701d5e9d2b8f8f242977252b9f035b34ebc58d849a0d8d7a4fa9"
+    },
+    {
+      "path": "verification/reviews/ALR1/PERFORMANCE.md",
+      "git_blob_sha256": "dcc281be4d4f800aced9b750b60ab23d081030e7e657de69b74076f1c28fe23c"
+    },
+    {
+      "path": "verification/reviews/ALR1/a1-build.txt",
+      "git_blob_sha256": "2c7d3644b973f021f3df4a8c98e0b002ed5cd07ef418b80b29391114fdc6b749"
+    },
+    {
+      "path": "verification/reviews/ALR1/a1-ctest.txt",
+      "git_blob_sha256": "81072ee149223cdea87e8ef74071ee51f893dc09c19cb2845c7f41a88c13ace1"
+    },
+    {
+      "path": "verification/reviews/ALR1/a2-build.txt",
+      "git_blob_sha256": "24ea0afe3725ff671fe276d2a18d6cdfb46b3fe6b1b8dd9bb515c38ca11e0cce"
+    },
+    {
+      "path": "verification/reviews/ALR1/a2-ctest.txt",
+      "git_blob_sha256": "b14bf99ee0b06ac8fa335a695655617f60371b73b03d092f955904d66e5b0fa2"
+    },
+    {
+      "path": "verification/reviews/ALR1/a2-initial-progress.txt",
+      "git_blob_sha256": "2024f6ec68a19405a2af9d0395b35dd9b01badad1a03dbea4db3036f14305869"
+    },
+    {
+      "path": "verification/reviews/ALR1/a2-process.txt",
+      "git_blob_sha256": "9af2a28c1361c24516afc276c17b3d990137c2a190a363e55d112b2e1db469de"
+    },
+    {
+      "path": "verification/reviews/ALR1/a3-build.txt",
+      "git_blob_sha256": "c36529fd6753f3f6d35b9084283987f2441722754dc0fe1fa4472f871bc920ff"
+    },
+    {
+      "path": "verification/reviews/ALR1/a3-ctest.txt",
+      "git_blob_sha256": "a7c292f55a96061f8193dfa90596b681d0b872ef8e4df04c7a7c3e35a47cbd5b"
+    },
+    {
+      "path": "verification/reviews/ALR1/a4-build.txt",
+      "git_blob_sha256": "bb4ae70515bc13e6861dc3e826b037e2b9a5630dab26356fc2ba6b67a7d869b0"
+    },
+    {
+      "path": "verification/reviews/ALR1/a4-ctest.txt",
+      "git_blob_sha256": "a8eb642071743bef3834e9808a17c48816d1cc67d647da5cea3e8d8fa25ca0bf"
+    },
+    {
+      "path": "verification/reviews/ALR1/a4-red.txt",
+      "git_blob_sha256": "189dac6a37e39fd73b596ea289e95e1835316f2e61ab58a3f9047a62ac1050c3"
+    },
+    {
+      "path": "verification/reviews/ALR1/a6-build.txt",
+      "git_blob_sha256": "78eb875601fbe142a751fdab7a1bb921b091046fc10d25e2becc213bc7eae388"
+    },
+    {
+      "path": "verification/reviews/ALR1/a6-ctest.txt",
+      "git_blob_sha256": "f219d0c0816bfa2980660a3789d3de184717505e61dc5b46611064ff8c838390"
+    },
+    {
+      "path": "verification/reviews/ALR1/a6-red.txt",
+      "git_blob_sha256": "c725352ca7906fb7e10fe346872fa1667313d79df50b5ce7c5f4cf72ff531eae"
+    },
+    {
+      "path": "verification/reviews/ALR1/baseline-build.txt",
+      "git_blob_sha256": "7a289b503c2450e87f6f751cd1ef65e1cb29ba762e7b6fa8be96718905892a45"
+    },
+    {
+      "path": "verification/reviews/ALR1/baseline-ctest.txt",
+      "git_blob_sha256": "d215074057e5544412810e740258452170f9fa15c3f06bcf0973c00285681367"
+    },
+    {
+      "path": "verification/reviews/ALR1/baseline-with-regression.txt",
+      "git_blob_sha256": "5b1e4a04802c97d69f3a3ad960ba1d0c89d670eb22298059472f1e1c73cfc6f1"
+    },
+    {
+      "path": "verification/reviews/ALR1/environment.txt",
+      "git_blob_sha256": "a8e47e641157decb012c8b2506da0c9ee4246269222c689b42efd9307d37f9cb"
+    },
+    {
+      "path": "verification/reviews/ALR1/final-asan.txt",
+      "git_blob_sha256": "8a57c096722f9c98e0f57d5c8ef94a1fb8049256745a849fa4cecad1802a75ba"
+    },
+    {
+      "path": "verification/reviews/ALR1/final-omp-build.txt",
+      "git_blob_sha256": "c4023dbc4828a090409cb725e04865754f005210ac6d002bc7e243c3f1483597"
+    },
+    {
+      "path": "verification/reviews/ALR1/final-omp-ctest.txt",
+      "git_blob_sha256": "db4277e9221331089b5b23e26a1f350bc8fb3af21475ab1a1df1137c4b12b4e0"
+    },
+    {
+      "path": "verification/reviews/ALR1/final-serial-build.txt",
+      "git_blob_sha256": "675b8ad3db1bf045168bd985e6a59665935663f122576026052912ff8327ac52"
+    },
+    {
+      "path": "verification/reviews/ALR1/final-serial-ctest.txt",
+      "git_blob_sha256": "6ba1241e325347de90d03de7e33847d0f240fc7acf71be71678699f5b0fc958c"
+    },
+    {
+      "path": "verification/reviews/ALR1/hex8-build.txt",
+      "git_blob_sha256": "1d31af7c9edb4f82a0ca5855df3fe6196b9695940795e5a1a9cd0918b17633b9"
+    },
+    {
+      "path": "verification/reviews/ALR1/hex8-ctest.txt",
+      "git_blob_sha256": "d5c039aa04cab20d572c51be6912d24cf55eeca47928d282e6c13a2bf3308d02"
+    },
+    {
+      "path": "verification/reviews/ALR1/index-1.txt",
+      "git_blob_sha256": "0bc0781fe615a6b41b0f477751866936d499080ce449237374139cf0058c824a"
+    },
+    {
+      "path": "verification/reviews/ALR1/index-2.txt",
+      "git_blob_sha256": "d0b44ddb80231ffb667161c8d4d1ac9aaaa31b54be73ea3e03128a620506961e"
+    },
+    {
+      "path": "verification/reviews/ALR1/index-3.txt",
+      "git_blob_sha256": "86bc5018b6302e6a9f2720385428f74296d460a9c1b317e9c39473b63a4f1541"
+    },
+    {
+      "path": "verification/reviews/ALR1/index-memory-run.txt",
+      "git_blob_sha256": "d28efa54355cf6bdfc1feacfcab082827e503f676594c8f33da9cf515753094c"
+    },
+    {
+      "path": "verification/reviews/ALR1/index-memory-stderr.txt",
+      "git_blob_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "verification/reviews/ALR1/index-memory.json",
+      "git_blob_sha256": "1f905fb4acc1bf652c11dda59c61a89c208c40be23b08231ce21e9a5968e46d1"
+    },
+    {
+      "path": "verification/reviews/ALR1/large-1.jsonl",
+      "git_blob_sha256": "90203d792c4cc5291ad1e858676e5c099c0a6f53baef8b9592ad2f23ed104634"
+    },
+    {
+      "path": "verification/reviews/ALR1/large-2.jsonl",
+      "git_blob_sha256": "7067d62535cc0f25f332a2cb48a92adfde6010b6ae5395a34606e9dbffe2b749"
+    },
+    {
+      "path": "verification/reviews/ALR1/large-3.jsonl",
+      "git_blob_sha256": "f883b997ff5d24374bd95ea770d349b636660ea8af63cb57a072d13dcbce43d4"
+    },
+    {
+      "path": "verification/reviews/ALR1/performance-summary.json",
+      "git_blob_sha256": "3d07aa233f18835c2c95a639886d9adca565c853ac9da063ad26078cf6f21da6"
+    },
+    {
+      "path": "verification/reviews/ALR1/precision-red-build.txt",
+      "git_blob_sha256": "ec8cfabb30193408329c794779af817014974155a2841b9269ac326c3170e596"
+    },
+    {
+      "path": "verification/reviews/ALR1/precision-red.txt",
+      "git_blob_sha256": "95daa049c587711cc926db22eb05ee9b4c98ddcb408ab84a9568e3fa1c18a34f"
+    },
+    {
+      "path": "verification/reviews/ALR1/readonly-red.txt",
+      "git_blob_sha256": "2b571b59e246ef7aa627af9b2f2d241a77c9f7aaf970601e4dcfa890b72678ae"
+    },
+    {
+      "path": "verification/reviews/ALR1/reproduce.ps1",
+      "git_blob_sha256": "357aedcc723c28120d40e478e5314cd981583f9a283492dab6d9e9741a882a7e"
+    },
+    {
+      "path": "verification/reviews/ALR1/run-asan.cmd",
+      "git_blob_sha256": "04a4b56d1ab96208b23950d92bae2b0d711cec7a76c891a5c6215c6b1035c6d5"
+    },
+    {
+      "path": "verification/reviews/ALR1/stages-1.jsonl",
+      "git_blob_sha256": "46bf489264f96268450dc15550230acc17f9b2e7b43cc1d64bb7a8ee11af5a4a"
+    },
+    {
+      "path": "verification/reviews/ALR1/stages-2.jsonl",
+      "git_blob_sha256": "b868cc435aa5ceef5b7bec922256d103dbb457c9f310f17c492e36d5afee933d"
+    },
+    {
+      "path": "verification/reviews/ALR1/stages-3.jsonl",
+      "git_blob_sha256": "e770751163abc2bf6bea11d787594c5583561606f202cb34eac983a3e3425d63"
+    },
+    {
+      "path": "verification/reviews/ALR1/stages-build.txt",
+      "git_blob_sha256": "9ad5ff5719991a1af77146b35c543af46f936fa625cc0bf81709a69df1c8f17d"
+    },
+    {
+      "path": "verification/reviews/ALR1/summarize_metrics.py",
+      "git_blob_sha256": "e0166249cd609cce9d1d287a8ba85e408b4e6d1303cc4fd38a05c8a41424f8ac"
+    }
+  ]
+}

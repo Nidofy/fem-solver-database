@@ -1,7 +1,28 @@
 # Lifecycle hardening status
 
 BASE_SHA: 480da32a17e3b60e6694b95e5c9ec83618e5b64b
-Status: IN_PROGRESS; no independent acceptance claimed.
+Status: FROZEN_FOR_BATCH_REVIEW / READY_FOR_REVIEW; no independent acceptance claimed.
+Content HEAD_SHA: 8122adf2c149a672222ab81d8ac722e69931205c.
+Runtime/test HEAD_SHA: ca4b682e8181584c62bb1f5afe4e97a4f0276300.
+
+## Current verified state (2026-10-29)
+
+| Area | Final state | Evidence boundary |
+|---|---|---|
+| A0 | IMPLEMENTED_SELF_TESTED | final serial/OpenMP/ASan 11/11 each; reproducible commands in HANDOFF |
+| A1 | IMPLEMENTED_SELF_TESTED | exact all-state trajectory and repeated capture tests, TET/HEX/mixed float/double |
+| A2 | IMPLEMENTED_SELF_TESTED, opt-in v2 | 100000 frames and independent 100000-node field; legacy v1 remains default and scans |
+| A3 | IMPLEMENTED_SELF_TESTED, uncompressed | bounded async/backpressure/faults; no durable or compression claim |
+| A4 | IMPLEMENTED_SELF_TESTED | linked safe append and existing input controls plus precision-overflow gates |
+| A5 CPU | IMPLEMENTED_SELF_TESTED | 3-run stage/large/index performance evidence; CPU lifecycle remains serial |
+| A5 CUDA | BLOCKED_ENV / NOT_RUN | source exists; no local compilation/device claim |
+| A6 | IMPLEMENTED_SELF_TESTED | CPU full-integration small-strain C3D8 and mixed lifecycle, all 8 IPs |
+
+Final commands exited 0; OpenMP 16.55 s, serial 16.62 s, ASan 67.66 s.
+No independent acceptance. See HANDOFF.md for remaining limits and review focus.
+The tables and milestones below are historical baseline/progress observations.
+
+## Historical baseline
 
 | Area | Actual baseline and evidence | State |
 |---|---|---|
@@ -44,7 +65,7 @@ shared-node equilibrium, convergence, invalid Jacobians and OpenMP comparisons.
 Process matrix covers pure/mixed, both precisions, both native formats, async,
 non-due restart and IP8 export; C3D8R is rejected. Latest OpenMP CTest 11/11,
 exit 0, including new precision-overflow gates. Earlier serial/ASan 11/11 passed;
-final refresh after the input-range gate is pending. No GPU physics claim.
+final refresh subsequently passed 11/11 in both configurations (see current state). No GPU physics claim.
 
 A4 precision follow-up: regression demonstrated float action overflow was accepted.
 Compiler now checks peak amplitude-scaled actions against selected precision;

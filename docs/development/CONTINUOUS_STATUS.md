@@ -3,7 +3,7 @@
 Updated after every task and review milestone. Cross-session handoff details:
 SESSION_HANDOFF.md.
 
-- Current batch: **B01 — ACCEPTED, independent round-5 gate passed** (2026-10-28)
+- Historical batch: **B01 — ACCEPTED, independent round-5 gate passed** (2026-10-28)
 - Batch base SHA: `aaa74afb3c264bbd7ca43555a7445c77994ccaa2`
 - Batch content HEAD (reviewed object, unchanged by repair): `719c3fb`
   (full: `719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5`)
@@ -32,6 +32,18 @@ SESSION_HANDOFF.md.
   REQUEST_CHANGES/HOLD. Reports are content-exact copies: LF-normalized content equals the originals; original-byte and Git-blob SHA-256 are recorded separately in `verification/reviews/B01/report-provenance.md`. All 7 findings + 2 errata → FIXED_VERIFIED; ledger in
   `verification/reviews/B01/findings.md`.
 
+## Current ALR1 freeze (2026-10-29)
+
+- Current batch: **ALR1 - FROZEN_FOR_BATCH_REVIEW / READY_FOR_REVIEW**, not ACCEPTED.
+- Base: `480da32a17e3b60e6694b95e5c9ec83618e5b64b`; content HEAD:
+  `8122adf2c149a672222ab81d8ac722e69931205c`; runtime/test SHA `ca4b682`.
+- A1-A4 CPU lifecycle hardening and A6 C3D8/mixed path implemented and self-tested.
+  A5 CPU evidence retained; CUDA BLOCKED_ENV/NOT_RUN; compression not added.
+- Final standalone CTest serial/OpenMP/MSVC ASan: 11/11 each, exit 0.
+- Authoritative current handoff: [ALR1 HANDOFF](astra_lifecycle_result/HANDOFF.md).
+- No push/merge/release. B01 acceptance below is historical and does not accept ALR1.
+  B02c remains unintegrated; R2.04 raw/view candidate ownership is unchanged.
+
 ## Task states (summary; authoritative list in TASK_POOL.yaml)
 
 | Task | Status | Notes |
@@ -49,7 +61,7 @@ SESSION_HANDOFF.md.
   stop 733 checkpoint); identity validator positive/negative controls pass.
 - Repair diff BATCH_HEAD..FIX_HEAD touches no runtime solver code.
 
-## Next steps after B01 acceptance
+## Historical next steps after B01 acceptance (superseded by ALR1 freeze)
 
 1. Fast-forward the reviewed B01 tip plus acceptance record into
    codex/standalone-database and push under user authorization. Query Git refs

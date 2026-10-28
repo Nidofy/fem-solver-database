@@ -1,7 +1,11 @@
 # Solver Database V2
 
-Independent C++20 finite element data infrastructure. The CPU implementation is
-built and tested locally with GCC/OpenMP and MSVC AddressSanitizer. The native
+Independent C++20 finite element data infrastructure. The CPU implementation includes
+TET4 and full-integration C3D8 small-strain linear elasticity, mixed elements,
+read-only snapshots, bounded asynchronous results and linked restart append.
+It is built and tested locally with GCC serial/OpenMP and MSVC AddressSanitizer.
+Current implementation evidence and review limits are in
+[`ALR1 handoff`](docs/development/astra_lifecycle_result/HANDOFF.md). The native
 CUDA implementation is **not locally compiled / not locally verified**: this
 machine's CUDA configuration fails because `nvcc` is unavailable. See
 [`verification/README.md`](verification/README.md) for verification scope.
@@ -63,7 +67,7 @@ All headers are under `include/sdb/`; namespace `sdb`.
 | `implicit.hpp` | DOF map, CSR/BSR storage and apply, residual/tangent, matrix-free callback |
 | `checkpoint.hpp` | versioned, checksummed, portable state checkpoints and atomic file replacement |
 | `database.hpp` | optional aggregate owner and coordinated state/contact transactions |
-| `dynamics.hpp` | TET4 reference geometry, lumped mass, serial/OpenMP forces and central difference |
+| `dynamics.hpp`, `hex8.hpp` | TET4/HEX8 reference geometry, lumped mass, serial/OpenMP forces and central difference |
 | `cuda_memory.hpp` | device pool, stream, event, pinned memory, explicit resident field mirrors |
 | `cuda_contact.hpp` | GPU candidate append and contiguous manifold upload/download |
 | `cuda_backend.hpp` | single-GPU TET4 execution, implemented in `src/cuda_backend.cu` |
@@ -105,11 +109,14 @@ shared-node assembly, deterministic versus atomic OpenMP, and split restart.
 
 The time-step API stores displacement at t[n] and velocity at t[n-1/2]. Each
 step evaluates forces at t[n] then advances velocity/displacement. Consequently
-stored stress/force after step belong to the preceding force evaluation; call
-`CpuExplicit::forces` to produce CPU output at the final displacement. Changing
+stored stress/force after step belong to the preceding force evaluation.
+`CpuRun::snapshot` reconstructs current-time quantities in reusable read-only
+scratch; `CpuExplicit::output_forces` is the low-level derived-data alternative. Changing
 the time step requires a deliberate velocity re-centering scheme; this example
-implements constant dt. Linear small-strain TET4 is the only physics kernel.
-Beam/shell/hex/polygon storage does not imply corresponding physics support.
+implements constant dt. Linear small-strain TET4 and full-integration HEX8 are
+CPU physics kernels. Beam/shell/reduced-hex/polygon storage does not imply
+corresponding physics support. The [C3D8 contract](docs/development/astra_lifecycle_result/C3D8.md)
+defines quadrature, mass, stability, IP order and numerical verification.
 
 Read [`docs/LAYOUT_AND_SYNC.md`](docs/LAYOUT_AND_SYNC.md) before borrowing views.
 # Lifecycle extension (2.1)
@@ -130,8 +137,8 @@ build/sdb_run --model run.sdbmodel --output split.sdbres --stop-after 700 --chec
 build/sdb_run --model run.sdbmodel --output split.sdbres --restart run.sdbrst --append
 ```
 
-The `.sdbres` backend is native block I/O, not HDF5/ODB. C3D4 linear isotropic
-small-strain CPU dynamics is the executable subset; `NLGEOM=NO` must be explicit.
+The `.sdbres` backend is native block I/O, not HDF5/ODB. C3D4 and full-integration C3D8 linear isotropic
+small-strain CPU dynamics are the executable subset; `NLGEOM=NO` must be explicit.
 Other stored formulations are gated before kernel construction. CUDA lifecycle
 execution, general Abaqus compatibility and production integration are not
 claimed. Existing low-level APIs and original tests remain supported.
@@ -151,3 +158,41 @@ Cross-facet friction history transfer, full deforming CCD, mortar, shell/thermal
 contact and MPI/CUDA contact execution are not complete. The standalone static
 triangle TOI primitive does not provide automatic whole-domain time-step cutback.
 No commercial-solver feature parity or production qualification is claimed.
+
+## Indexed results, asynchronous output and safe continuation
+
+```text
+build/sdb_run --input tests/fixtures/abaqus/mixed_hex_tet.inp --output mixed.sdbres --indexed --async-mib 16 --stop-after 333 --checkpoint mixed.sdbrst
+build/sdb_run --input tests/fixtures/abaqus/mixed_hex_tet.inp --output mixed.sdbres --restart mixed.sdbrst --append --async-mib 16
+build/sdb_run --read mixed.sdbres --field S --entity 1 --ip 8
+```
+
+`--indexed` selects native indexed v2 for a new file. Legacy v1 remains the default
+for byte compatibility; both formats are auto-detected on append/read. V2 opens
+metadata and a fixed footer, then reads selected fields/entity blocks on demand.
+Each v2 file has its own nonce, so compare decoded values across independent runs.
+`ResultReader::index` now provides a read-only lazy metadata facade; size, empty,
+at, subscript, front/back and const iteration remain available. Mutating a vector
+of frame metadata is no longer part of the supported interface. Entity rows in
+v2 use ascending internal IDs; SourceMap retains external labels and instances.
+Use independent readers for simultaneous queries.
+
+`--async-mib` bounds admitted snapshots plus encoding/validation scratch and
+in-flight work; it excludes persistent model/solver data and the producer's current
+frame. Oversized frames throw, queue saturation blocks, and close reports worker
+errors. Always explicitly close an `AsyncResultWriter` before reporting success.
+Compression is not enabled; float is widened losslessly to double for storage.
+A completed flush is not a guarantee of physical power-loss durability.
+
+CLI checkpoints publish a `.sdbrst.result-link` companion after result commit.
+Keep it with the checkpoint: append verifies the exact result prefix and refuses
+result-ahead, checkpoint-ahead, changed/missing files or an occupied writer.
+Legacy unlinked checkpoints remain readable and may branch into a new result file.
+`--recover-tail` explicitly repairs an incomplete tail only after checking the
+linked prefix; CRC damage is rejected. A `.writer-lock` directory implements the
+cooperative single-writer rule. A crashed writer's stale lock requires explicit
+operator recovery after confirming the owner is gone.
+
+IP1 is available as S/E; IP2..8 are independent fields selected with `--ip` and
+exported as S@IP2..8 / E@IP2..8. TET4 has no rows at IP2..8. Visualization fills
+those absent cells with NaN, never with invented stress values.
