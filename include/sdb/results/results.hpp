@@ -235,22 +235,35 @@ inline void validate_frame(const ResultFrame &f, const ResultModel &model,
                 throw std::runtime_error("nonfinite result");
     }
 }
+} // namespace sdb::lifecycle
+#include "indexed_format.hpp"
+namespace sdb::lifecycle {
 class ResultReader {
     std::filesystem::path path_;
     std::uint64_t limit_;
     std::vector<native::Record> records_;
+    std::shared_ptr<indexed_detail::File> indexed_;
 
   public:
     ResultModel model;
-    std::vector<FrameInfo> index;
+    FrameIndex index;
     std::uint64_t valid_end = 0;
     bool incomplete_tail = false;
     explicit ResultReader(const std::filesystem::path &path, bool allow_incomplete_tail = false,
                           std::uint64_t limit = native::default_limit)
         : path_(path), limit_(limit) {
         std::ifstream in(path, std::ios::binary);
-        native::prefix(in, result_magic);
-        model = native::unpack<ResultModel>(native::record(in, 0, limit), limit);
+        std::array<std::uint8_t,8> magic_bytes{}; native::read(in,magic_bytes);
+        native::Reader probe{magic_bytes};
+        if(probe.integer<std::uint64_t>()==indexed_detail::magic) {
+            indexed_=std::make_shared<indexed_detail::File>(path,limit,allow_incomplete_tail);
+            model=indexed_->model;index.bind(indexed_);
+            valid_end=indexed_->valid_end;incomplete_tail=indexed_->incomplete_tail;
+        } else {
+            in.seekg(0);
+            native::prefix(in, result_magic);
+            model = native::unpack<ResultModel>(native::record(in, 0, limit), limit);
+        }
         if (model.precision != 4 && model.precision != 8)
             throw std::runtime_error("result precision invalid");
         if (model.coordinates.size() != model.nodes.size() ||
@@ -261,6 +274,7 @@ class ResultReader {
             for (auto n : ns)
                 if (n >= model.nodes.size())
                     throw std::runtime_error("result mesh connectivity invalid");
+        if(indexed_) return;
         valid_end = static_cast<std::uint64_t>(in.tellg());
         auto size = std::filesystem::file_size(path);
         while (valid_end < size) {
@@ -285,7 +299,10 @@ class ResultReader {
         if (incomplete_tail && !allow_incomplete_tail)
             throw std::runtime_error("incomplete result tail (explicit recovery required)");
     }
+    bool indexed() const { return bool(indexed_); }
+    ResultReadStats read_stats() const { return indexed_?indexed_->stats():ResultReadStats{}; }
     ResultFrame frame(std::size_t i) const {
+        if(indexed_) return indexed_->frame(i);
         auto rec = records_.at(i);
         std::ifstream in(path_, std::ios::binary);
         in.seekg(static_cast<std::streamoff>(rec.offset));
@@ -296,9 +313,9 @@ class ResultReader {
     std::size_t by_time(double time) const {
         if (!std::isfinite(time) || index.empty() || time < index.front().time || time > index.back().time)
             throw std::out_of_range("result time outside stored range");
-        auto it =
-            std::lower_bound(index.begin(), index.end(), time, [](auto &i, double t) { return i.time < t; });
-        return static_cast<std::size_t>(it - index.begin());
+        std::size_t lo=0,hi=index.size();
+        while(lo<hi) {auto mid=lo+(hi-lo)/2;if(index[mid].time<time)lo=mid+1;else hi=mid;}
+        return lo;
     }
     std::set<Id> region(bool node, const std::string &name) const {
         auto normalized = upper(name);
@@ -325,9 +342,27 @@ class ResultReader {
             }
         throw std::invalid_argument("unknown result region: " + name);
     }
+    ResultField entity_field(std::size_t frame_index,const std::string &name,Id entity,
+                             const std::string &region_name="",bool history=false) const {
+        return field(frame_index,name,region_name,history,entity);
+    }
     ResultField field(std::size_t frame_index, const std::string &name, const std::string &region_name = "",
-                      bool history = false) const {
-        auto f = frame(frame_index);
+                      bool history = false, std::optional<Id> entity = {}) const {
+        auto normalized=upper(name);
+        std::function<std::set<Id>(const ResultDescriptor &)> selection;
+        if(!region_name.empty())selection=[&](const ResultDescriptor &d){
+            if(d.location==Location::Global)throw std::invalid_argument("global field cannot have a mesh region");
+            return region(d.location==Location::Node,region_name);
+        };
+        auto f = indexed_ ? indexed_->frame(frame_index,&normalized,history,entity,selection) : frame(frame_index);
+        if(entity && !indexed_) for(auto &v:f.fields) {
+            ResultField selected;selected.descriptor=v.descriptor;auto w=v.descriptor.components.size();
+            for(std::size_t i=0;i<v.ids.size();++i)if(v.ids[i]==*entity) {
+                selected.ids.push_back(*entity);
+                selected.values.insert(selected.values.end(),v.values.begin()+i*w,v.values.begin()+(i+1)*w);
+            }
+            v=std::move(selected);
+        }
         std::optional<ResultField> found;
         std::vector<const ResultField *> matching;
         for (auto &v : f.fields)
@@ -388,14 +423,20 @@ class ResultQuery {
   public:
     static std::vector<std::pair<double, double>>
     history(const ResultReader &reader, const std::string &field, Id entity, unsigned component = 0,
-            const std::string &region = "", bool history_request = false) {
+            const std::string &region = "", bool history_request = false,
+            double time_begin=0, double time_end=std::numeric_limits<double>::max()) {
         if (!region.empty())
             (void)reader.region(field == "U" || field == "V" || field == "A" || field == "RF", region);
+        if(!std::isfinite(time_begin) || !std::isfinite(time_end) || time_begin>time_end)
+            throw std::invalid_argument("invalid history time interval");
         std::vector<std::pair<double, double>> values;
         for (std::size_t i = 0; i < reader.index.size(); ++i) {
+            auto time=reader.index[i].time;
+            if(time<time_begin)continue;
+            if(time>time_end)break;
             ResultField f;
             try {
-                f = reader.field(i, field, region, history_request);
+                f = reader.entity_field(i, field, entity, region, history_request);
             } catch (const std::out_of_range &) {
                 continue;
             }
@@ -425,11 +466,12 @@ class NativeResultStorage final : public IResultStorage {
     std::optional<FrameInfo> last_;
     std::uint64_t limit_;
     bool failed_ = false;
+    std::unique_ptr<indexed_detail::File> indexed_;
 
   public:
     NativeResultStorage(const std::filesystem::path &path, ResultModel model, bool append = false,
                         bool recover = false, std::uint64_t limit = native::default_limit,
-                        std::function<void()> append_preflight = {})
+                        std::function<void()> append_preflight = {}, bool indexed = false)
         : lease_(path), model_(std::move(model)), limit_(limit) {
         if (upper(path.extension().string()) == ".H5" || upper(path.extension().string()) == ".HDF5")
             throw std::invalid_argument("native backend requires a non-HDF5 suffix (.sdbres)");
@@ -442,14 +484,21 @@ class NativeResultStorage final : public IResultStorage {
                 std::filesystem::resize_file(path, existing.valid_end);
             if (!existing.index.empty())
                 last_ = existing.index.back();
+            if(existing.indexed()) indexed_=std::make_unique<indexed_detail::File>(path,limit_);
             out_.open(path, std::ios::binary | std::ios::app);
+            out_.seekp(0,std::ios::end);
         } else {
             if (std::filesystem::exists(path))
                 throw std::runtime_error("result exists; use explicit append or a new output path");
             out_.open(path, std::ios::binary | std::ios::trunc);
-            native::prefix(out_, result_magic);
-            native::record(out_, 0, native::pack(model_, limit_));
-            flush();
+            if(indexed) {
+                indexed_detail::File::create(out_,model_,limit_);
+                indexed_=std::make_unique<indexed_detail::File>(path,limit_);
+            } else {
+                native::prefix(out_, result_magic);
+                native::record(out_, 0, native::pack(model_, limit_));
+                flush();
+            }
         }
         if (!out_)
             throw std::runtime_error("cannot open result output");
@@ -458,10 +507,13 @@ class NativeResultStorage final : public IResultStorage {
         if (failed_)
             throw std::runtime_error("result writer is failed");
         validate_frame(frame, model_, last_);
-        auto bytes = native::pack(frame, limit_);
         try {
-            native::record(out_, 1, bytes);
-            flush();
+            if(indexed_) indexed_->append(out_,frame);
+            else {
+                auto bytes = native::pack(frame, limit_);
+                native::record(out_, 1, bytes);
+                flush();
+            }
             last_ = frame.info;
         } catch (...) {
             failed_ = true;

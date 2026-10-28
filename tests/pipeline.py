@@ -118,6 +118,20 @@ for precision, tolerance in (("float", 3e-6), ("double", 1e-7)):
     assert "incomplete" in invoke("--read", bad, fail=True)
     print(f"independent_reader precision={precision} frames=21 reference_and_XML=PASS exact_restart=PASS")
 
+# Indexed v2 uses per-file nonces; compare decoded values, never nonce bytes.
+indexed = scratch / "indexed.sdbres"
+indexed_split = scratch / "indexed-split.sdbres"
+indexed_restart = scratch / "indexed.sdbrst"
+for path in (indexed,indexed_split): path.unlink(missing_ok=True)
+invoke("--model",model,"--output",indexed,"--indexed","--async-mib","1")
+invoke("--model",model,"--output",indexed_split,"--indexed","--async-mib","1",
+       "--stop-after","733","--checkpoint",indexed_restart)
+invoke("--model",model,"--output",indexed_split,"--restart",indexed_restart,"--append")
+for field in ("U","V","A","RF","S","E"):
+    assert invoke("--read",indexed,"--field",field,"--entity","1") == invoke(
+        "--read",indexed_split,"--field",field,"--entity","1")
+print("indexed independent-process linked restart/async PASS")
+
 assert "CPU" in invoke("--input", Path(fixture).with_name("stored_types.inp"),
                         "--output", scratch / "unsupported.sdbres", fail=True)
 assert "unknown option" in invoke("--typo", fail=True)

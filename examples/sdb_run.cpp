@@ -45,7 +45,7 @@ template <class T> int run(const Args &a) {
                                 a.contains("--append"), a.contains("--recover-tail"), limit, [&] {
         CheckpointLink::verify(a.at("--output"), a.at("--restart"), cpu, model,
                                a.contains("--recover-tail"));
-    });
+    }, a.contains("--indexed"));
     ResultWriter writer(storage);
     if (auto last = storage.last(); last && last->time > cpu.state().data().time)
         throw std::runtime_error(
@@ -78,7 +78,7 @@ template <class T> int run(const Args &a) {
 int main(int argc, char **argv) {
     try {
         Args a;
-        const std::set<std::string> flags{"--append", "--recover-tail", "--inspect"};
+        const std::set<std::string> flags{"--indexed", "--append", "--recover-tail", "--inspect"};
         const std::set<std::string> value_options{
             "--async-mib", "--input",     "--model",      "--save-model", "--backend",    "--precision",
             "--output",    "--checkpoint", "--restart",    "--stop-after", "--buffer-mib",

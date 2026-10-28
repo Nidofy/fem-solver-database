@@ -1,0 +1,12 @@
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01
+    Start 6: indexed_results_contracts
+1/1 Test #6: indexed_results_contracts ........***Failed  161.70 sec
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) = 161.70 sec
+
+The following tests FAILED:
+	  6 - indexed_results_contracts (Failed)
+Initial 100k-frame run terminated by implementer after repeated open/close overhead was observed; not a correctness PASS. Replaced per-page file open with a persistent bounded reader stream.

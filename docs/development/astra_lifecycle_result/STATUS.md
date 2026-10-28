@@ -26,3 +26,12 @@ A1: IMPLEMENTED_SELF_TESTED / READY_FOR_REVIEW. Expanded float/double all-field 
 A3 queue/lease: IMPLEMENTED_SELF_TESTED. Slow storage, ordered byte-budget backpressure, oversize admission, cancellation, append/flush failure and native sync/async byte equality pass. CTest 9/9 exit 0 (a3-ctest.txt). CLI --async-mib selects this path. Compression and explicit disk commit-marker format remain pending; no durability claim.
 
 A4 linked append: IMPLEMENTED_SELF_TESTED; 9/9 CTest exit 0. Regression exposed checkpoint-ahead append before repair. float/double process tests cover non-due cursor 733, result ahead/behind, missing/stale link, missing result, occupied writer, corrupted prefix and explicit incomplete-tail recovery. All rejection cases preserve result bytes. No real power-loss proof.
+
+A2 indexed native v2: IMPLEMENTED_SELF_TESTED, opt-in --indexed. 100000 frames
+write about 13 s; warm-cache reopen 6.5 ms in first completed sample, no historical
+values decoded. Five random single-entity queries decode 120 value bytes total.
+100000-node field query decodes <=256 rows. Normal open retains one footer;
+legacy v1 still scans. Recovery checks all complete records and rejects CRC damage;
+truncated tail and malicious CRC-correct oversized directory tests pass. CTest
+10/10 exit 0. Current public index is a read-only metadata facade (documented API
+adjustment); normal selected reads do not promise detection of unqueried damage.
