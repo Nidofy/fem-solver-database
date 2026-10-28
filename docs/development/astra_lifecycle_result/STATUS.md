@@ -10,7 +10,7 @@ Status: IN_PROGRESS; no independent acceptance claimed.
 | A2 | ResultReader constructor decodes every record; field/history decode full frames | Missing persistent/selective index |
 | A3 | NativeResultStorage checks CRC, shape, budgets and flushes records; ResultFrame owns vectors | Synchronous present; async missing |
 | A4.1 | RestartDB loads into temporary state; sdb_run compares only last time, no linked result watermark | Partial; unsafe gaps need rejection |
-| A4.2 | input/abaqus.hpp, model_compiler/compiler.hpp; lifecycle_tests parser and instance controls | Subset implemented; path-range policy and further adversarial coverage pending |
+| A4.2 | input/abaqus.hpp, model_compiler/compiler.hpp; lifecycle_tests parser and instance controls | Subset implemented; cycle/depth/byte/entity/path-root protections already implemented and tested; further adversarial coverage pending |
 | A5 | dynamics.hpp serial/OpenMP, src/cuda_backend.cu TET source; lifecycle benchmark reports serial | CPU baseline present; CUDA toolkit/device not observed, NOT_RUN |
 | A6 | descriptors and StateDB variable IP offsets exist; TetPlan rejects non-TET4; compiler rejects C3D8 execution | Storage only; CPU/kernel/results integration missing |
 
@@ -24,3 +24,5 @@ dependencies are changed. CUDA/UBSan/production verification remains unclaimed.
 A1: IMPLEMENTED_SELF_TESTED / READY_FOR_REVIEW. Expanded float/double all-field trajectories and snapshot ownership pass; current OpenMP Release CTest 8/8, exit 0 (a1-ctest.txt).
 
 A3 queue/lease: IMPLEMENTED_SELF_TESTED. Slow storage, ordered byte-budget backpressure, oversize admission, cancellation, append/flush failure and native sync/async byte equality pass. CTest 9/9 exit 0 (a3-ctest.txt). CLI --async-mib selects this path. Compression and explicit disk commit-marker format remain pending; no durability claim.
+
+A4 linked append: IMPLEMENTED_SELF_TESTED; 9/9 CTest exit 0. Regression exposed checkpoint-ahead append before repair. float/double process tests cover non-due cursor 733, result ahead/behind, missing/stale link, missing result, occupied writer, corrupted prefix and explicit incomplete-tail recovery. All rejection cases preserve result bytes. No real power-loss proof.

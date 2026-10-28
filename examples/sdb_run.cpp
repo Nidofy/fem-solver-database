@@ -1,5 +1,6 @@
 #include <sdb/lifecycle.hpp>
 #include <sdb/results/async_writer.hpp>
+#include <sdb/results/checkpoint_link.hpp>
 #include <sdb/results/export.hpp>
 #include <iostream>
 #include <iomanip>
@@ -38,8 +39,13 @@ template <class T> int run(const Args &a) {
         throw std::invalid_argument("--output required");
     auto limit =
         a.contains("--buffer-mib") ? mib(a.at("--buffer-mib")) : native::default_limit;
+    if (a.contains("--append") && !a.contains("--restart"))
+        throw std::invalid_argument("safe append requires --restart with a result link");
     NativeResultStorage storage(a.at("--output"), ResultModel::from(model, cpu.configuration()),
-                                a.contains("--append"), a.contains("--recover-tail"), limit);
+                                a.contains("--append"), a.contains("--recover-tail"), limit, [&] {
+        CheckpointLink::verify(a.at("--output"), a.at("--restart"), cpu, model,
+                               a.contains("--recover-tail"));
+    });
     ResultWriter writer(storage);
     if (auto last = storage.last(); last && last->time > cpu.state().data().time)
         throw std::runtime_error(
@@ -62,7 +68,7 @@ template <class T> int run(const Args &a) {
     if (async) async->close();
     else writer.flush();
     if (a.contains("--checkpoint"))
-        cpu.save(a.at("--checkpoint"));
+        CheckpointLink::publish(a.at("--output"),a.at("--checkpoint"),cpu,model);
     std::cout << std::setprecision(17) << "nodes=" << model.mesh.nodes()
               << " elements=" << model.mesh.elements() << " increments=" << cpu.state().data().step
               << " time=" << cpu.state().data().time << " precision=" << sizeof(T)

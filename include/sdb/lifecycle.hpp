@@ -87,6 +87,7 @@ template <class T> class CpuRun {
         config_ = native::hash(w.bytes);
     }
     StateDB<T> &state() { return state_; }
+    const StateDB<T> &state() const { return state_; }
     const auto &plans() const { return plans_; }
     std::uint64_t configuration() const { return config_; }
     std::uint64_t step_index() const { return step_; }

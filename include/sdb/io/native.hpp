@@ -198,7 +198,7 @@ inline void end(std::istream &in) {
 class FileLease {
     std::filesystem::path path_;
   public:
-    explicit FileLease(const std::filesystem::path &file) : path_(file.string() + ".writer-lock") {
+    explicit FileLease(const std::filesystem::path &file) : path_(std::filesystem::weakly_canonical(file).string() + ".writer-lock") {
         if (!std::filesystem::create_directory(path_))
             throw std::runtime_error("result file occupied or stale writer lease: " + file.string());
     }

@@ -1,0 +1,13 @@
+nodes=5 elements=2 increments=2000 time=0.19999999494757503 precision=4 completed=1
+Traceback (most recent call last):
+  File "D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\pipeline.py", line 47, in <module>
+    invoke("--model", model, "--precision", precision, "--output", old,
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+           "--restart", bound, "--append", fail=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\pipeline.py", line 16, in invoke
+    raise AssertionError(f"command {args}: {p.returncode}\n{p.stdout}\n{p.stderr}")
+AssertionError: command ('--model', WindowsPath('D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01/link-red-scratch/float.sdbmodel'), '--precision', 'float', '--output', WindowsPath('D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01/link-red-scratch/float-older.sdbres'), '--restart', WindowsPath('D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01/link-red-scratch/float-bound.sdbrst'), '--append'): 0
+nodes=5 elements=2 increments=2000 time=0.19999999494757503 precision=4 completed=1
+
+

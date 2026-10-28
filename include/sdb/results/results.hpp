@@ -1,6 +1,7 @@
 #pragma once
 #include "../io/model_store.hpp"
 #include "../dynamics.hpp"
+#include <functional>
 
 namespace sdb::lifecycle {
 enum class Location : std::uint8_t { Node, Element, IntegrationPoint, SectionPoint, Face, Contact, Global };
@@ -427,11 +428,13 @@ class NativeResultStorage final : public IResultStorage {
 
   public:
     NativeResultStorage(const std::filesystem::path &path, ResultModel model, bool append = false,
-                        bool recover = false, std::uint64_t limit = native::default_limit)
+                        bool recover = false, std::uint64_t limit = native::default_limit,
+                        std::function<void()> append_preflight = {})
         : lease_(path), model_(std::move(model)), limit_(limit) {
         if (upper(path.extension().string()) == ".H5" || upper(path.extension().string()) == ".HDF5")
             throw std::invalid_argument("native backend requires a non-HDF5 suffix (.sdbres)");
         if (append) {
+            if (append_preflight) append_preflight();
             ResultReader existing(path, recover, limit);
             if (native::pack(existing.model, limit_) != native::pack(model_, limit_))
                 throw std::runtime_error("result append model/configuration mismatch");

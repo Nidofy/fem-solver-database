@@ -1,0 +1,16 @@
+[1/16] Building CXX object CMakeFiles/sdb_general_contact_demo.dir/examples/general_contact.cpp.obj
+[2/16] Building CXX object CMakeFiles/sdb_contact_domain_demo.dir/examples/general_contact_domain.cpp.obj
+[3/16] Building CXX object CMakeFiles/sdb_general_contact_tests.dir/tests/general_contact_tests.cpp.obj
+[4/16] Building CXX object CMakeFiles/sdb_contact_geometry_tests.dir/tests/general_contact_geometry_tests.cpp.obj
+[5/16] Building CXX object CMakeFiles/sdb_async_results_tests.dir/tests/async_results_tests.cpp.obj
+[6/16] Linking CXX executable sdb_general_contact_tests.exe
+[7/16] Linking CXX executable sdb_general_contact_demo.exe
+[8/16] Building CXX object CMakeFiles/sdb_lifecycle_benchmark.dir/benchmarks/lifecycle_benchmark.cpp.obj
+[9/16] Linking CXX executable sdb_contact_geometry_tests.exe
+[10/16] Linking CXX executable sdb_contact_domain_demo.exe
+[11/16] Linking CXX executable sdb_lifecycle_benchmark.exe
+[12/16] Linking CXX executable sdb_async_results_tests.exe
+[13/16] Building CXX object CMakeFiles/sdb_run.dir/examples/sdb_run.cpp.obj
+[14/16] Linking CXX executable sdb_run.exe
+[15/16] Building CXX object CMakeFiles/sdb_lifecycle_tests.dir/tests/lifecycle_tests.cpp.obj
+[16/16] Linking CXX executable sdb_lifecycle_tests.exe

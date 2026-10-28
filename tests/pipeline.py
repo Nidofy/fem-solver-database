@@ -24,13 +24,69 @@ for precision, tolerance in (("float", 3e-6), ("double", 1e-7)):
     for path in (model, result, split, restart):
         path.unlink(missing_ok=True)
     print(invoke("--input", fixture, "--backend", "cpu", "--precision", precision,
-                 "--output", result, "--save-model", model).strip())
+                 "--output", result, "--save-model", model, "--async-mib", "1").strip())
     # No original INP is supplied to subsequent processes.
     invoke("--model", model, "--precision", precision, "--output", split,
            "--stop-after", "700", "--checkpoint", restart)
     invoke("--model", model, "--precision", precision, "--output", split,
            "--restart", restart, "--append")
     assert result.read_bytes() == split.read_bytes()
+    # A checkpoint must bind the exact committed result prefix, not just its time.
+    # stop 733 is deliberately not an output increment (last result is 700).
+    partial = scratch / (precision + "-partial.sdbres")
+    bound = scratch / (precision + "-bound.sdbrst")
+    partial.unlink(missing_ok=True)
+    invoke("--model", model, "--precision", precision, "--output", partial,
+           "--stop-after", "733", "--checkpoint", bound, "--async-mib", "1")
+    prefix = partial.read_bytes()
+    link = Path(str(bound) + ".result-link")
+    link_bytes = link.read_bytes()
+    def refused_unchanged(path, *extra):
+        before = path.read_bytes() if path.exists() else None
+        invoke("--model", model, "--precision", precision, "--output", path,
+               "--restart", bound, "--append", *extra, fail=True)
+        assert (path.read_bytes() if path.exists() else None) == before
+    # Missing/stale manifest, occupied writer, and incomplete tail fail without mutation.
+    link.unlink()
+    refused_unchanged(partial)
+    link.write_bytes(link_bytes[:-1])
+    refused_unchanged(partial)
+    link.write_bytes(link_bytes)
+    lease = Path(str(partial) + ".writer-lock")
+    lease.mkdir()
+    try:
+        refused_unchanged(partial)
+    finally:
+        lease.rmdir()
+    partial.write_bytes(prefix + b"partial")
+    refused_unchanged(partial)
+    invoke("--model", model, "--precision", precision, "--output", partial,
+           "--restart", bound, "--append", "--recover-tail", "--stop-after", "733")
+    assert partial.read_bytes() == prefix
+    missing = scratch / (precision + "-missing.sdbres")
+    missing.unlink(missing_ok=True)
+    refused_unchanged(missing)
+    # Same length altered data is not authorized by matching time/size alone.
+    altered = bytearray(prefix)
+    altered[-1] ^= 1
+    partial.write_bytes(altered)
+    refused_unchanged(partial)
+    partial.write_bytes(prefix)
+    # Another complete but older result prefix must be refused without mutation.
+    old = scratch / (precision + "-older.sdbres")
+    old.unlink(missing_ok=True)
+    invoke("--model", model, "--precision", precision, "--output", old, "--stop-after", "600")
+    older_bytes = old.read_bytes()
+    invoke("--model", model, "--precision", precision, "--output", old,
+           "--restart", bound, "--append", fail=True)
+    assert old.read_bytes() == older_bytes
+    invoke("--model", model, "--precision", precision, "--output", partial,
+           "--restart", bound, "--append", "--async-mib", "1")
+    assert partial.read_bytes() == result.read_bytes()
+    # Linked checkpoint cannot be silently used a second time against advanced results.
+    invoke("--model", model, "--precision", precision, "--output", partial,
+           "--restart", bound, "--append", fail=True)
+    assert partial.read_bytes() == result.read_bytes()
     rows = list(csv.DictReader(invoke("--read", result, "--field", "U", "--region", "FREE",
                                       "--entity", "4").splitlines()))
     assert len(rows) == 21
