@@ -41,6 +41,59 @@ struct FailingStorage : IResultStorage {
     void flush() override {}
     std::optional<FrameInfo> last() const override { return {}; }
 };
+template <class T> native::Bytes state_bytes(const StateDB<T> &state) {
+    native::Writer w;
+    const auto &d = state.data();
+    d.fields([&](const auto &f) {
+        using F = std::decay_t<decltype(f)>;
+        auto view = f.read();
+        for (std::size_t n = 0; n < f.size(); ++n)
+            for (unsigned c = 0; c < F::components; ++c)
+                w.scalar(view(n, c));
+    });
+    native::encode(w, d.step);
+    native::encode(w, d.time);
+    native::encode(w, d.dt);
+    return std::move(w.bytes);
+}
+template <class T> void output_trajectories(const std::filesystem::path &fixture) {
+    auto model = ModelCompiler{}.compile<T>(ReaderRegistry{}.read(fixture).model);
+    auto off = ModelCompiler{}.compile<T>(model.definition);
+    auto every = ModelCompiler{}.compile<T>(model.definition);
+    for (auto &step : off.outputs)
+        for (auto &r : step) { r.frequency = 0; r.intervals = 0; }
+    for (auto &step : every.outputs)
+        for (auto &r : step) { r.frequency = 1; r.intervals = 0; }
+    CpuRun<T> a(off), b(model), c(every);
+    a.initialize(); b.initialize(); c.initialize();
+    ResultFrame retained;
+    native::Bytes retained_bytes;
+    do {
+        auto before = state_bytes(c.state());
+        auto count = a.output_force_evaluations();
+        check(a.snapshot().fields.empty(), "disabled output has no fields");
+        check(a.output_force_evaluations() == count, "disabled output has no derived evaluations");
+        auto previous = b.output_force_evaluations();
+        auto rare = b.snapshot();
+        check(b.output_force_evaluations() - previous == (rare.fields.empty() ? 0u : 1u),
+              "non-due output has no derived evaluations");
+        auto f = c.snapshot();
+        check(state_bytes(c.state()) == before, "all state fields unchanged by snapshot");
+        check(native::pack(c.snapshot()) == native::pack(f), "repeat snapshot identical");
+        check(state_bytes(a.state()) == state_bytes(b.state()) &&
+              state_bytes(b.state()) == state_bytes(c.state()), "all output trajectories bit identical");
+        if (c.increment() == 1) {
+            retained = std::move(f);
+            retained_bytes = native::pack(retained);
+        }
+        if (c.increment() > 1)
+            check(native::pack(retained) == retained_bytes, "snapshot owns data after later steps");
+        auto more = a.advance();
+        check(b.advance() == more && c.advance() == more, "matching output trajectory cursors");
+        if (!more) break;
+    } while (true);
+}
+
 template <class T> void numerical(const std::filesystem::path &fixture, const std::filesystem::path &temp) {
     auto m = ModelCompiler{}.compile<T>(ReaderRegistry{}.read(fixture).model);
     check(m.report.executable_cpu && !m.report.executable_cuda, "capability");
@@ -288,6 +341,8 @@ int main(int argc, char **argv) {
         rejects([&] { parse(replaced(source, "name=FORCE,nlgeom=NO", "name=FORCE")); }, "NLGEOM=NO");
         rejects([&] { parse(replaced(source, "*Element, type=C3D4", "*Element, type=C3D10")); },
                 "unsupported element");
+        output_trajectories<float>(fixtures / "forced_tet.inp");
+        output_trajectories<double>(fixtures / "forced_tet.inp");
         numerical<float>(fixtures / "forced_tet.inp", temp);
         numerical<double>(fixtures / "forced_tet.inp", temp);
         rejects([&] { ModelStore::load<float>(temp / "d.sdbmodel"); }, "precision");
@@ -455,6 +510,9 @@ int main(int argc, char **argv) {
                 gather(d.acceleration.read(), 3, sig);
                 gather(d.external_force.read(), 3, sig);
                 gather(d.contact_force.read(), 3, sig);
+                gather(d.internal_force.read(), 3, sig);
+                gather(d.stress.read(), 6, sig);
+                gather(d.strain.read(), 6, sig);
                 gather(d.history.read(), 1, sig);
                 sig.push_back(double(d.step));
                 sig.push_back(d.time);

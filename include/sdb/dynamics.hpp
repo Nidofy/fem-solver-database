@@ -161,11 +161,19 @@ template <class T> class TetPlan {
         return {nodes.read(), gradients.read(), volume.read(), lambda.read(), mu.read()};
     }
 };
+// Output-owned derived quantities; no displacement, velocity or material history copy.
+template <class T> struct ForceSnapshot {
+    Field<T, 3> internal_force;
+    Field<T, 6> stress, strain;
+    ForceSnapshot(std::size_t nodes, std::size_t points)
+        : internal_force(nodes), stress(points), strain(points) {}
+};
 template <class T> class CpuExplicit {
     TetPlan<T> plan_;
     CpuPolicy policy_;
     Assembly assembly_;
-    std::uint64_t force_evaluations_ = 0;
+    std::uint64_t force_evaluations_ = 0, output_force_evaluations_ = 0;
+    std::optional<ForceSnapshot<T>> output_;
 
   public:
     CpuExplicit(const MeshDB<T> &mesh, StateDB<T> &state, CpuPolicy policy = CpuPolicy::Serial,
@@ -197,6 +205,22 @@ template <class T> class CpuExplicit {
         }
     }
     void forces(StateDB<T> &state) {
+        auto &s = state.data();
+        evaluate(state, s.internal_force, s.stress, s.strain);
+    }
+    // Borrow valid until the next evaluation. Publication copies into an owning frame.
+    const ForceSnapshot<T> &output_forces(const StateDB<T> &state) {
+        if (!output_)
+            output_.emplace(plan_.fixed.size(), state.data().stress.size());
+        evaluate(state, output_->internal_force, output_->stress, output_->strain);
+        ++output_force_evaluations_;
+        return *output_;
+    }
+    std::uint64_t output_force_evaluations() const noexcept { return output_force_evaluations_; }
+
+  private:
+    void evaluate(const StateDB<T> &state, Field<T, 3> &target_force,
+                  Field<T, 6> &target_stress, Field<T, 6> &target_strain) {
         if (state.model_id() != plan_.model_id)
             throw std::invalid_argument("state model mismatch");
         state.validate_shape();
@@ -205,7 +229,7 @@ template <class T> class CpuExplicit {
         auto &s = state.data();
         auto u = s.displacement.read();
         auto local = plan_.local_force.write();
-        auto stress = s.stress.write(), strain = s.strain.write();
+        auto stress = target_stress.write(), strain = target_strain.write();
         auto active = s.element_active.read();
         auto tet = plan_.views();
         parallel_for(tet.nodes.count, policy_, [=](std::size_t e) {
@@ -220,7 +244,7 @@ template <class T> class CpuExplicit {
                 }
             }
         });
-        auto force = s.internal_force.write();
+        auto force = target_force.write();
         if (assembly_ == Assembly::Deterministic) {
             parallel_for(force.count, policy_, [&](std::size_t n) {
                 for (unsigned c = 0; c < 3; ++c) {
@@ -233,7 +257,7 @@ template <class T> class CpuExplicit {
                 }
             });
         } else {
-            s.internal_force.fill(0);
+            target_force.fill(0);
             parallel_for(tet.nodes.count, policy_, [=](std::size_t e) {
                 for (unsigned a = 0; a < 4; ++a)
                     for (unsigned c = 0; c < 3; ++c) {
@@ -246,6 +270,7 @@ template <class T> class CpuExplicit {
         }
         ++force_evaluations_;
     }
+  public:
     void initialize(StateDB<T> &state, T dt) {
         if (!(dt > 0) || !std::isfinite(dt) || dt > plan_.stable_step)
             throw std::invalid_argument("invalid/unstable time step");

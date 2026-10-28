@@ -1,0 +1,2 @@
+[1/2] Building CXX object CMakeFiles/sdb_lifecycle_tests.dir/tests/lifecycle_tests.cpp.obj
+[2/2] Linking CXX executable sdb_lifecycle_tests.exe

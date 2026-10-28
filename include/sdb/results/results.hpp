@@ -83,7 +83,7 @@ class OutputScheduler {
 class ResultPublisher {
   public:
     template <class T>
-    static ResultFrame publish(const CompiledModel<T> &model, StateDB<T> &state, CpuExplicit<T> &cpu,
+    static ResultFrame publish(const CompiledModel<T> &model, const StateDB<T> &state, CpuExplicit<T> &cpu,
                                FrameInfo info, const std::vector<IROutput> &requests,
                                std::uint64_t increments, std::uint64_t budget = native::default_limit) {
         // Due-selection happens before any constitutive re-evaluation: a non-output
@@ -99,11 +99,12 @@ class ResultPublisher {
                     if (name != "U")
                         needs_forces = true;
             }
-        if (needs_forces)
-            cpu.forces(state);
+        const ForceSnapshot<T> *derived = needs_forces ? &cpu.output_forces(state) : nullptr;
         auto &s = state.data();
-        auto u = s.displacement.read(), v = s.velocity.read(), f = s.internal_force.read(),
+        auto u = s.displacement.read(), v = s.velocity.read(), f = derived ? derived->internal_force.read() : s.internal_force.read(),
              ext = s.external_force.read(), contact = s.contact_force.read();
+        auto stress = derived ? derived->stress.read() : s.stress.read();
+        auto strain = derived ? derived->strain.read() : s.strain.read();
         auto fixed = cpu.plan().fixed.read();
         auto inv = s.inverse_mass.read();
         auto acceleration = [&](Index n, unsigned c) -> double {
@@ -173,7 +174,7 @@ class ResultPublisher {
                             for (Index e = 0; e < model.mesh.elements(); ++e)
                                 for (unsigned c = 0; c < 6; ++c)
                                     energy += .5 * double(cpu.plan().volume.read()(e)) *
-                                              double(s.stress.read()(e, c)) * double(s.strain.read()(e, c)) *
+                                              double(stress(e, c)) * double(strain(e, c)) *
                                               (c < 3 ? 1 : 2);
                         field.values.push_back(energy);
                     } else if (nodal)
@@ -189,8 +190,8 @@ class ResultPublisher {
                                                                  : 0))));
                     else
                         for (unsigned c = 0; c < 6; ++c)
-                            field.values.push_back(name == "S" ? double(s.stress.read()(i, c))
-                                                               : double(s.strain.read()(i, c)));
+                            field.values.push_back(name == "S" ? double(stress(i, c))
+                                                               : double(strain(i, c)));
                 }
                 frame.fields.push_back(std::move(field));
             }

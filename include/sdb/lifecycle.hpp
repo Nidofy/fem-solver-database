@@ -92,6 +92,7 @@ template <class T> class CpuRun {
     std::uint64_t step_index() const { return step_; }
     std::uint64_t increment() const { return increment_; }
     std::uint64_t force_evaluations() const { return cpu_.force_evaluations(); }
+    std::uint64_t output_force_evaluations() const { return cpu_.output_force_evaluations(); }
     void initialize() {
         if (initialized_)
             throw std::logic_error("run already initialized");
