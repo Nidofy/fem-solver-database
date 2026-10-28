@@ -18,3 +18,5 @@ Codex writer was listed. No C3D8 implementation was found in the accepted tree.
    stricter contract, not a claim that prior independent review ran these new tests.
 3. Native result schema remains v1 until an indexed format is actually implemented.
    Do not label queued/written bytes durable: C++ flush provides no power-loss proof.
+
+4. AsyncResultWriter owns admitted frames, reserves snapshot capacities plus native encoding and validation scratch, and holds the charge through in-flight flush. Persistent model and producer-owned frames are excluded and documented. Single producer; only cancel may run from a control thread. Explicit close is required for success/error reporting. No compression dependency or durable claim. NativeResultStorage now holds a cooperative cross-process directory lease; stale crash leases require explicit operator recovery.

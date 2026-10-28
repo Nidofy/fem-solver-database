@@ -1,10 +1,19 @@
 #include <sdb/lifecycle.hpp>
+#include <sdb/results/async_writer.hpp>
 #include <sdb/results/export.hpp>
 #include <iostream>
 #include <iomanip>
 using namespace sdb;
 using namespace sdb::lifecycle;
 using Args = std::map<std::string, std::string>;
+std::uint64_t mib(const std::string &text) {
+    if (text.empty() || text.find_first_not_of("0123456789") != std::string::npos)
+        throw std::invalid_argument("invalid memory budget");
+    auto n=std::stoull(text);
+    if (!n || n>std::numeric_limits<std::uint64_t>::max()/(1024*1024))
+        throw std::length_error("memory budget overflow or zero");
+    return n*1024*1024;
+}
 template <class T> int run(const Args &a) {
     auto model = a.contains("--model")
                      ? ModelStore::load<T>(a.at("--model"))
@@ -28,24 +37,30 @@ template <class T> int run(const Args &a) {
     if (!a.contains("--output"))
         throw std::invalid_argument("--output required");
     auto limit =
-        a.contains("--buffer-mib") ? std::stoull(a.at("--buffer-mib")) * 1024 * 1024 : native::default_limit;
+        a.contains("--buffer-mib") ? mib(a.at("--buffer-mib")) : native::default_limit;
     NativeResultStorage storage(a.at("--output"), ResultModel::from(model, cpu.configuration()),
                                 a.contains("--append"), a.contains("--recover-tail"), limit);
     ResultWriter writer(storage);
     if (auto last = storage.last(); last && last->time > cpu.state().data().time)
         throw std::runtime_error(
             "result file is ahead of checkpoint; use matching result prefix or new output");
+    std::optional<AsyncResultWriter> async;
+    if (a.contains("--async-mib")) async.emplace(storage, mib(a.at("--async-mib")));
     auto publish = [&] {
-        auto last = storage.last();
-        if (!last || cpu.state().data().time > last->time)
-            writer.write(cpu.snapshot(limit));
+        auto last = async ? async->last() : storage.last();
+        if (!last || cpu.state().data().time > last->time) {
+            auto frame=cpu.snapshot(limit);
+            if (async) async->write(std::move(frame));
+            else writer.write(frame);
+        }
     };
     publish();
     auto stop = a.contains("--stop-after") ? std::stoull(a.at("--stop-after"))
                                            : std::numeric_limits<std::uint64_t>::max();
     while (cpu.state().data().step < stop && cpu.advance())
         publish();
-    writer.flush();
+    if (async) async->close();
+    else writer.flush();
     if (a.contains("--checkpoint"))
         cpu.save(a.at("--checkpoint"));
     std::cout << std::setprecision(17) << "nodes=" << model.mesh.nodes()
@@ -59,7 +74,7 @@ int main(int argc, char **argv) {
         Args a;
         const std::set<std::string> flags{"--append", "--recover-tail", "--inspect"};
         const std::set<std::string> value_options{
-            "--input",     "--model",      "--save-model", "--backend",    "--precision",
+            "--async-mib", "--input",     "--model",      "--save-model", "--backend",    "--precision",
             "--output",    "--checkpoint", "--restart",    "--stop-after", "--buffer-mib",
             "--read",      "--field",      "--region",     "--time",       "--entity",
             "--component", "--vtk",        "--xdmf",       "--convert-v2"};
@@ -75,7 +90,7 @@ int main(int argc, char **argv) {
                 throw std::invalid_argument("unknown option/missing value: " + key);
         }
         if (a.contains("--read")) {
-            auto limit = a.contains("--buffer-mib") ? std::stoull(a.at("--buffer-mib")) * 1024 * 1024
+            auto limit = a.contains("--buffer-mib") ? mib(a.at("--buffer-mib"))
                                                     : native::default_limit;
             ResultReader r(a.at("--read"), false, limit);
             std::cout << std::setprecision(17);

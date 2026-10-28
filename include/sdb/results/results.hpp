@@ -418,6 +418,7 @@ class IResultStorage {
     virtual std::optional<FrameInfo> last() const = 0;
 };
 class NativeResultStorage final : public IResultStorage {
+    native::FileLease lease_; // destroyed after output stream closes
     std::ofstream out_;
     ResultModel model_;
     std::optional<FrameInfo> last_;
@@ -427,7 +428,7 @@ class NativeResultStorage final : public IResultStorage {
   public:
     NativeResultStorage(const std::filesystem::path &path, ResultModel model, bool append = false,
                         bool recover = false, std::uint64_t limit = native::default_limit)
-        : model_(std::move(model)), limit_(limit) {
+        : lease_(path), model_(std::move(model)), limit_(limit) {
         if (upper(path.extension().string()) == ".H5" || upper(path.extension().string()) == ".HDF5")
             throw std::invalid_argument("native backend requires a non-HDF5 suffix (.sdbres)");
         if (append) {

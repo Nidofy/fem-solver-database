@@ -22,3 +22,5 @@ No production solver, parent build, stable integration, remote push or external
 dependencies are changed. CUDA/UBSan/production verification remains unclaimed.
 
 A1: IMPLEMENTED_SELF_TESTED / READY_FOR_REVIEW. Expanded float/double all-field trajectories and snapshot ownership pass; current OpenMP Release CTest 8/8, exit 0 (a1-ctest.txt).
+
+A3 queue/lease: IMPLEMENTED_SELF_TESTED. Slow storage, ordered byte-budget backpressure, oversize admission, cancellation, append/flush failure and native sync/async byte equality pass. CTest 9/9 exit 0 (a3-ctest.txt). CLI --async-mib selects this path. Compression and explicit disk commit-marker format remain pending; no durability claim.
