@@ -81,7 +81,11 @@ template <class T> class CpuRun {
             start += double(n) * dt;
         }
         native::Writer w;
-        native::encode(w, std::string("cpu/tet4/linear/cd-v1/serial/deterministic"));
+        bool hex = false;
+        for (const auto &d : model.descriptors)
+            hex = hex || d.shape == Topology::Hex8;
+        native::encode(w, std::string(hex ? "cpu/tet4-hex8-full/linear/cd-v1/serial/deterministic"
+                                          : "cpu/tet4/linear/cd-v1/serial/deterministic"));
         native::encode(w, plans_);
         native::encode(w, std::uint8_t(sizeof(T)));
         config_ = native::hash(w.bytes);

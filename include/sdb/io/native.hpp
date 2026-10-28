@@ -197,14 +197,19 @@ inline void end(std::istream &in) {
 // Callers recover explicitly after verifying no owner is alive.
 class FileLease {
     std::filesystem::path path_;
+
   public:
-    explicit FileLease(const std::filesystem::path &file) : path_(std::filesystem::weakly_canonical(file).string() + ".writer-lock") {
+    explicit FileLease(const std::filesystem::path &file)
+        : path_(std::filesystem::weakly_canonical(file).string() + ".writer-lock") {
         if (!std::filesystem::create_directory(path_))
             throw std::runtime_error("result file occupied or stale writer lease: " + file.string());
     }
     FileLease(const FileLease &) = delete;
     FileLease &operator=(const FileLease &) = delete;
-    ~FileLease() { std::error_code ec; std::filesystem::remove(path_, ec); }
+    ~FileLease() {
+        std::error_code ec;
+        std::filesystem::remove(path_, ec);
+    }
 };
 template <class F> void atomic_stream(const std::filesystem::path &path, F fn) {
     checkpoint_detail::atomic_stream_write(path, std::move(fn));

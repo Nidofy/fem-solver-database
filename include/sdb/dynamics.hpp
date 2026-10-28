@@ -1,5 +1,6 @@
 #pragma once
 #include "state.hpp"
+#include "hex8.hpp"
 #include <chrono>
 
 namespace sdb {
@@ -28,7 +29,9 @@ template <class T> struct TetViews {
 // Tensor order xx,yy,zz,xy,yz,zx. Strain stores tensor shear, not engineering shear.
 template <class T>
 SDB_HD void tet_force(std::size_t e, TetViews<T> t, View<const T, 3> u, View<T, 12> local, View<T, 6> stress,
-                      View<T, 6> strain) {
+                      View<T, 6> strain, std::size_t point = std::numeric_limits<std::size_t>::max()) {
+    if (point == std::numeric_limits<std::size_t>::max())
+        point = e;
     T du[3][3]{};
     for (unsigned a = 0; a < 4; ++a)
         for (unsigned i = 0; i < 3; ++i)
@@ -44,8 +47,8 @@ SDB_HD void tet_force(std::size_t e, TetViews<T> t, View<const T, 3> u, View<T, 
     const T trace = eps[0] + eps[1] + eps[2];
     for (unsigned c = 0; c < 6; ++c) {
         s[c] = 2 * t.mu(e) * eps[c] + (c < 3 ? t.lambda(e) * trace : T(0));
-        stress(e, c) = s[c];
-        strain(e, c) = eps[c];
+        stress(point, c) = s[c];
+        strain(point, c) = eps[c];
     }
     for (unsigned a = 0; a < 4; ++a) {
         const T gx = t.gradients(e, 3 * a), gy = t.gradients(e, 3 * a + 1), gz = t.gradients(e, 3 * a + 2),
@@ -61,12 +64,16 @@ template <class T> class TetPlan {
     Field<T, 12> gradients;
     Field<T> volume, lambda, mu;
     Field<T, 12> local_force;
+    Field<T> integration_weight;
+    std::vector<std::size_t> ip_offsets;
+    std::vector<std::uint8_t> is_tet;
+    std::unique_ptr<HexPlan<T>> hex;
     Field<std::uint8_t, 3> fixed;
     AlignedVector<std::size_t> adjacency_offsets;
     AlignedVector<std::uint64_t> adjacency; // packed 4*element+local-node
     T stable_step = std::numeric_limits<T>::max();
     std::uint64_t model_id;
-    explicit TetPlan(const MeshDB<T> &mesh, StateDB<T> &state)
+    explicit TetPlan(const MeshDB<T> &mesh, StateDB<T> &state, bool allow_hex = false)
         : nodes(mesh.elements()), gradients(mesh.elements()), volume(mesh.elements()),
           lambda(mesh.elements()), mu(mesh.elements()), local_force(mesh.elements()), fixed(mesh.nodes()),
           model_id(mesh.fingerprint()) {
@@ -80,6 +87,17 @@ template <class T> class TetPlan {
         state.validate_shape();
         auto &s = state.data();
         Field<T> computed_mass(mesh.nodes()), computed_dt(mesh.elements());
+        integration_weight.resize(s.stress.size());
+        ip_offsets = state.ip_offsets();
+        is_tet.resize(mesh.elements(), 0);
+        bool has_hex = false;
+        for (Index e = 0; e < mesh.elements(); ++e)
+            has_hex = has_hex || mesh.element(e).topology == Topology::Hex8;
+        if (has_hex && allow_hex) {
+            hex = std::make_unique<HexPlan<T>>(mesh, state, computed_mass, computed_dt, volume,
+                                               integration_weight);
+            stable_step = hex->stable_step;
+        }
         auto mass = computed_mass.write();
         auto conn = nodes.write();
         auto grad = gradients.write();
@@ -92,6 +110,9 @@ template <class T> class TetPlan {
         for (Index e = 0; e < mesh.elements(); ++e) {
             const auto &el = mesh.element(e);
             const auto &mat = mesh.materials()[el.material];
+            if (el.topology == Topology::Hex8 && hex)
+                continue;
+            is_tet[e] = 1;
             if (el.topology != Topology::Tet4 || el.integration_points != 1 || mat.model != 1)
                 throw std::invalid_argument("TET4 linear-elastic one-IP kernel required");
             auto ns = mesh.connectivity(e);
@@ -113,6 +134,7 @@ template <class T> class TetPlan {
             if (!(det > 0) || !std::isfinite(det))
                 throw std::invalid_argument("invalid TET Jacobian");
             vol(e) = det / 6;
+            integration_weight.write()(ip_offsets[e]) = vol(e);
             const auto rho = mat.parameters[0], E = mat.parameters[1], nu = mat.parameters[2];
             la(e) = E * nu / ((1 + nu) * (1 - 2 * nu));
             shear(e) = E / (2 * (1 + nu));
@@ -136,6 +158,12 @@ template <class T> class TetPlan {
             dt(e) = T(.25) / (std::sqrt(maxnorm) * std::sqrt((la(e) + 2 * shear(e)) / rho));
             stable_step = std::min(stable_step, dt(e));
         }
+        for (Index e = 0; e < mesh.elements(); ++e)
+            if (!(dt(e) > 0) || !std::isfinite(dt(e)))
+                throw std::invalid_argument("invalid element stability bound");
+        for (Index n = 0; n < mesh.nodes(); ++n)
+            if (!std::isfinite(mass(n)) || mass(n) < 0 || (mass(n) > 0 && !std::isfinite(T(1) / mass(n))))
+                throw std::invalid_argument("nonfinite or unrepresentable lumped mass/inverse");
         if (s.dt == 0 && s.step == 0) {
             s.mass = std::move(computed_mass);
             s.stable_dt = std::move(computed_dt);
@@ -154,8 +182,9 @@ template <class T> class TetPlan {
         adjacency.resize(adjacency_offsets.back());
         auto cursor = adjacency_offsets;
         for (Index e = 0; e < mesh.elements(); ++e)
-            for (unsigned a = 0; a < 4; ++a)
-                adjacency[cursor[conn(e, a)]++] = std::uint64_t(e) * 4 + a;
+            if (is_tet[e])
+                for (unsigned a = 0; a < 4; ++a)
+                    adjacency[cursor[conn(e, a)]++] = std::uint64_t(e) * 4 + a;
     }
     TetViews<T> views() const {
         return {nodes.read(), gradients.read(), volume.read(), lambda.read(), mu.read()};
@@ -178,7 +207,7 @@ template <class T> class CpuExplicit {
   public:
     CpuExplicit(const MeshDB<T> &mesh, StateDB<T> &state, CpuPolicy policy = CpuPolicy::Serial,
                 Assembly assembly = Assembly::Deterministic)
-        : plan_(mesh, state), policy_(policy), assembly_(assembly) {
+        : plan_(mesh, state, true), policy_(policy), assembly_(assembly) {
 #ifndef _OPENMP
         if (policy == CpuPolicy::OpenMP)
             throw std::runtime_error("OpenMP not compiled");
@@ -219,8 +248,8 @@ template <class T> class CpuExplicit {
     std::uint64_t output_force_evaluations() const noexcept { return output_force_evaluations_; }
 
   private:
-    void evaluate(const StateDB<T> &state, Field<T, 3> &target_force,
-                  Field<T, 6> &target_stress, Field<T, 6> &target_strain) {
+    void evaluate(const StateDB<T> &state, Field<T, 3> &target_force, Field<T, 6> &target_stress,
+                  Field<T, 6> &target_strain) {
         if (state.model_id() != plan_.model_id)
             throw std::invalid_argument("state model mismatch");
         state.validate_shape();
@@ -232,18 +261,29 @@ template <class T> class CpuExplicit {
         auto stress = target_stress.write(), strain = target_strain.write();
         auto active = s.element_active.read();
         auto tet = plan_.views();
+        auto is_tet = plan_.is_tet.data();
+        auto ip_offsets = plan_.ip_offsets.data();
         parallel_for(tet.nodes.count, policy_, [=](std::size_t e) {
+            if (!is_tet[e])
+                return;
             if (active(e))
-                tet_force(e, tet, u, local, stress, strain);
+                tet_force(e, tet, u, local, stress, strain, ip_offsets[e]);
             else {
                 for (unsigned c = 0; c < 12; ++c)
                     local(e, c) = 0;
                 for (unsigned c = 0; c < 6; ++c) {
-                    stress(e, c) = 0;
-                    strain(e, c) = 0;
+                    stress(ip_offsets[e], c) = 0;
+                    strain(ip_offsets[e], c) = 0;
                 }
             }
         });
+        if (plan_.hex) {
+            auto hex = plan_.hex.get();
+            auto hex_local = hex->local_force.write();
+            parallel_for(hex->elements.size(), policy_, [=](std::size_t h) {
+                hex->force(h, u, hex_local, stress, strain, active(hex->elements[h]) != 0);
+            });
+        }
         auto force = target_force.write();
         if (assembly_ == Assembly::Deterministic) {
             parallel_for(force.count, policy_, [&](std::size_t n) {
@@ -253,12 +293,21 @@ template <class T> class CpuExplicit {
                         auto a = plan_.adjacency[k];
                         total += local(a / 4, (a % 4) * 3 + c);
                     }
+                    if (plan_.hex) {
+                        const auto &h = *plan_.hex;
+                        for (auto k = h.adjacency_offsets[n]; k < h.adjacency_offsets[n + 1]; ++k) {
+                            auto a = h.adjacency[k];
+                            total += h.local_force.read()(a / 8, (a % 8) * 3 + c);
+                        }
+                    }
                     force(n, c) = total;
                 }
             });
         } else {
             target_force.fill(0);
             parallel_for(tet.nodes.count, policy_, [=](std::size_t e) {
+                if (!is_tet[e])
+                    return;
                 for (unsigned a = 0; a < 4; ++a)
                     for (unsigned c = 0; c < 3; ++c) {
 #ifdef _OPENMP
@@ -268,8 +317,23 @@ template <class T> class CpuExplicit {
                     }
             });
         }
+        if (assembly_ == Assembly::Atomic && plan_.hex) {
+            auto hex = plan_.hex.get();
+            auto hex_local = hex->local_force.read();
+            auto conn = hex->nodes.read();
+            parallel_for(hex->elements.size(), policy_, [=](std::size_t h) {
+                for (unsigned a = 0; a < 8; ++a)
+                    for (unsigned c = 0; c < 3; ++c) {
+#ifdef _OPENMP
+#pragma omp atomic update
+#endif
+                        force(conn(h, a), c) += hex_local(h, 3 * a + c);
+                    }
+            });
+        }
         ++force_evaluations_;
     }
+
   public:
     void initialize(StateDB<T> &state, T dt) {
         if (!(dt > 0) || !std::isfinite(dt) || dt > plan_.stable_step)

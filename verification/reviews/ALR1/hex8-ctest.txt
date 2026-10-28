@@ -1,0 +1,26 @@
+UpdateCTestConfiguration  from :D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01/DartConfiguration.tcl
+Parse Config file:D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01/DartConfiguration.tcl
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 6
+    Start 6: hex8_contracts
+
+6: Test command: D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\build-b01\sdb_hex8_tests.exe "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01/hex8-scratch"
+6: Working Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01
+6: Environment variables: 
+6:  OMP_NUM_THREADS=4
+6: Test timeout computed to be: 120
+6: HEX8 float/double mechanics mixed/IP/restart PASS time_errors=1.13032e-09,2.82571e-10,7.06421e-11 mesh_errors=4.00517e-06,1.00734e-06,2.52192e-07
+1/1 Test #6: hex8_contracts ...................   Passed    0.26 sec
+
+The following tests passed:
+	hex8_contracts
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.27 sec

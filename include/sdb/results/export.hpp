@@ -40,7 +40,8 @@ inline std::vector<double> dense(const ResultField &f, std::size_t count) {
     return out;
 }
 inline std::string field_name(const ResultDescriptor &d) {
-    return d.name + (d.region.empty() ? "" : "@" + d.region);
+    return d.name + (d.region.empty() ? "" : "@" + d.region) +
+           (d.integration_point > 1 ? "@IP" + std::to_string(d.integration_point) : "");
 }
 class ResultExporter {
   public:

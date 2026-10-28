@@ -35,3 +35,19 @@ legacy v1 still scans. Recovery checks all complete records and rejects CRC dama
 truncated tail and malicious CRC-correct oversized directory tests pass. CTest
 10/10 exit 0. Current public index is a read-only metadata facade (documented API
 adjustment); normal selected reads do not promise detection of unqueried damage.
+
+A6: IMPLEMENTED_SELF_TESTED / READY_FOR_REVIEW for CPU float/double. HexPlan
+uses eight Gauss points, reference small strain, row-sum mass and a conservative
+stiffness/mass stability bound; mixed TET4/HEX8 keeps all IP offsets. Kernel tests
+include skew/warped geometry, analytic stiffness, rigid modes, patch, mass,
+shared-node equilibrium, convergence, invalid Jacobians and OpenMP comparisons.
+Process matrix covers pure/mixed, both precisions, both native formats, async,
+non-due restart and IP8 export; C3D8R is rejected. Latest OpenMP CTest 11/11,
+exit 0, including new precision-overflow gates. Earlier serial/ASan 11/11 passed;
+final refresh after the input-range gate is pending. No GPU physics claim.
+
+A4 precision follow-up: regression demonstrated float action overflow was accepted.
+Compiler now checks peak amplitude-scaled actions against selected precision;
+runtime also checks load range. Extreme finite amplitude interpolation has an
+overflow-safe fallback; ordinary interpolation rounding is preserved. Underflow/
+overflow in lumped mass or stability bounds is rejected before execution.

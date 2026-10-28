@@ -1,0 +1,129 @@
+[1/12] Building CXX object CMakeFiles/sdb_indexed_results_tests.dir/tests/indexed_results_tests.cpp.obj
+[2/12] Building CXX object CMakeFiles/sdb_hex8_tests.dir/tests/hex8_tests.cpp.obj
+In file included from D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/x86_64-w64-mingw32/bits/c++allocator.h:33,
+                 from D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/allocator.h:46,
+                 from D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/memory:67,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/memory.hpp:7,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/field.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/model.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/contact.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/checkpoint.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/model_store.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/hex8_tests.cpp:1:
+In member function 'void std::__new_allocator<_Tp>::deallocate(_Tp*, size_type) [with _Tp = unsigned char]',
+    inlined from 'constexpr void std::allocator< <template-parameter-1-1> >::deallocate(_Tp*, std::size_t) [with _Tp = unsigned char]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/allocator.h:215:35,
+    inlined from 'static constexpr void std::allocator_traits<std::allocator<_Up> >::deallocate(allocator_type&, pointer, size_type) [with _Tp = unsigned char]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/alloc_traits.h:649:23,
+    inlined from 'constexpr void std::_Vector_base<_Tp, _Alloc>::_M_deallocate(pointer, std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:396:19,
+    inlined from 'constexpr std::vector<_Tp, _Alloc>::_Guard_alloc::~_Guard_alloc() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:1883:27,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::_M_realloc_append(_Args&& ...) [with _Args = {unsigned char}; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/vector.tcc:640:7,
+    inlined from 'constexpr std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::emplace_back(_Args&& ...) [with _Args = {unsigned char}; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/vector.tcc:123:21,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::push_back(value_type&&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:1434:21,
+    inlined from 'void sdb::checkpoint_detail::Writer::integer(U) [with U = long long unsigned int]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/checkpoint.hpp:38:28,
+    inlined from 'void sdb::lifecycle::native::encode(Writer&, const X&) [with X = std::vector<long long unsigned int>]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:32:37,
+    inlined from 'void sdb::lifecycle::native::encode(Writer&, const X&) [with X = std::pair<std::vector<long long unsigned int>, std::vector<double> >]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:24:15,
+    inlined from 'sdb::lifecycle::native::Bytes sdb::lifecycle::native::pack(const X&, uint64_t) [with X = std::pair<std::vector<long long unsigned int>, std::vector<double> >]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:111:11,
+    inlined from 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:319:67:
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/new_allocator.h:172:66: warning: 'void operator delete(void*, std::size_t)' called on pointer '<unknown>' with nonzero offset [8, 65536] [-Wfree-nonheap-object]
+  172 |         _GLIBCXX_OPERATOR_DELETE(_GLIBCXX_SIZED_DEALLOC(__p, __n));
+      |                                                                  ^
+In member function '_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = unsigned char]',
+    inlined from 'constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = unsigned char]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/allocator.h:203:40,
+    inlined from 'static constexpr _Tp* std::allocator_traits<std::allocator<_Up> >::allocate(allocator_type&, size_type) [with _Tp = unsigned char]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/alloc_traits.h:614:28,
+    inlined from 'constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:387:33,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::reserve(size_type) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/vector.tcc:79:33,
+    inlined from 'sdb::lifecycle::native::Bytes sdb::lifecycle::native::pack(const X&, uint64_t) [with X = std::pair<std::vector<long long unsigned int>, std::vector<double> >]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:110:20,
+    inlined from 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:319:67:
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/new_allocator.h:151:73: note: returned from 'void* operator new(std::size_t)'
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                                         ^
+[3/12] Building CXX object CMakeFiles/sdb_run.dir/examples/sdb_run.cpp.obj
+In file included from D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/x86_64-w64-mingw32/bits/c++allocator.h:33,
+                 from D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/allocator.h:46,
+                 from D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/memory:67,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/memory.hpp:7,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/field.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/model.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/contact.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/checkpoint.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/model_store.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/examples/sdb_run.cpp:1:
+In member function 'void std::__new_allocator<_Tp>::deallocate(_Tp*, size_type) [with _Tp = unsigned char]',
+    inlined from 'constexpr void std::allocator< <template-parameter-1-1> >::deallocate(_Tp*, std::size_t) [with _Tp = unsigned char]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/allocator.h:215:35,
+    inlined from 'static constexpr void std::allocator_traits<std::allocator<_Up> >::deallocate(allocator_type&, pointer, size_type) [with _Tp = unsigned char]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/alloc_traits.h:649:23,
+    inlined from 'constexpr void std::_Vector_base<_Tp, _Alloc>::_M_deallocate(pointer, std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:396:19,
+    inlined from 'constexpr std::vector<_Tp, _Alloc>::_Guard_alloc::~_Guard_alloc() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:1883:27,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::_M_realloc_append(_Args&& ...) [with _Args = {unsigned char}; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/vector.tcc:640:7,
+    inlined from 'constexpr std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::emplace_back(_Args&& ...) [with _Args = {unsigned char}; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/vector.tcc:123:21,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::push_back(value_type&&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:1434:21,
+    inlined from 'void sdb::checkpoint_detail::Writer::integer(U) [with U = long long unsigned int]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/checkpoint.hpp:38:28,
+    inlined from 'void sdb::lifecycle::native::encode(Writer&, const X&) [with X = std::vector<long long unsigned int>]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:32:37,
+    inlined from 'void sdb::lifecycle::native::encode(Writer&, const X&) [with X = std::pair<std::vector<long long unsigned int>, std::vector<double> >]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:24:15,
+    inlined from 'sdb::lifecycle::native::Bytes sdb::lifecycle::native::pack(const X&, uint64_t) [with X = std::pair<std::vector<long long unsigned int>, std::vector<double> >]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:111:11,
+    inlined from 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:319:67:
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/new_allocator.h:172:66: warning: 'void operator delete(void*, std::size_t)' called on pointer '<unknown>' with nonzero offset [8, 65536] [-Wfree-nonheap-object]
+  172 |         _GLIBCXX_OPERATOR_DELETE(_GLIBCXX_SIZED_DEALLOC(__p, __n));
+      |                                                                  ^
+In member function '_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = unsigned char]',
+    inlined from 'constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = unsigned char]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/allocator.h:203:40,
+    inlined from 'static constexpr _Tp* std::allocator_traits<std::allocator<_Up> >::allocate(allocator_type&, size_type) [with _Tp = unsigned char]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/alloc_traits.h:614:28,
+    inlined from 'constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:387:33,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::reserve(size_type) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/vector.tcc:79:33,
+    inlined from 'sdb::lifecycle::native::Bytes sdb::lifecycle::native::pack(const X&, uint64_t) [with X = std::pair<std::vector<long long unsigned int>, std::vector<double> >]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:110:20,
+    inlined from 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:319:67:
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/new_allocator.h:151:73: note: returned from 'void* operator new(std::size_t)'
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                                         ^
+[4/12] Linking CXX executable sdb_run.exe
+[5/12] Linking CXX executable sdb_hex8_tests.exe
+[6/12] Linking CXX executable sdb_indexed_results_tests.exe
+[7/12] Building CXX object CMakeFiles/sdb_lifecycle_tests.dir/tests/lifecycle_tests.cpp.obj
+In file included from D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/x86_64-w64-mingw32/bits/c++allocator.h:33,
+                 from D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/allocator.h:46,
+                 from D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/memory:67,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/memory.hpp:7,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/field.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/model.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/contact.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/checkpoint.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/model_store.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/lifecycle_tests.cpp:1:
+In member function 'void std::__new_allocator<_Tp>::deallocate(_Tp*, size_type) [with _Tp = unsigned char]',
+    inlined from 'constexpr void std::allocator< <template-parameter-1-1> >::deallocate(_Tp*, std::size_t) [with _Tp = unsigned char]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/allocator.h:215:35,
+    inlined from 'static constexpr void std::allocator_traits<std::allocator<_Up> >::deallocate(allocator_type&, pointer, size_type) [with _Tp = unsigned char]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/alloc_traits.h:649:23,
+    inlined from 'constexpr void std::_Vector_base<_Tp, _Alloc>::_M_deallocate(pointer, std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:396:19,
+    inlined from 'constexpr std::vector<_Tp, _Alloc>::_Guard_alloc::~_Guard_alloc() [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:1883:27,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::_M_realloc_append(_Args&& ...) [with _Args = {unsigned char}; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/vector.tcc:640:7,
+    inlined from 'constexpr std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::emplace_back(_Args&& ...) [with _Args = {unsigned char}; _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/vector.tcc:123:21,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::push_back(value_type&&) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:1434:21,
+    inlined from 'void sdb::checkpoint_detail::Writer::integer(U) [with U = long long unsigned int]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/checkpoint.hpp:38:28,
+    inlined from 'void sdb::lifecycle::native::encode(Writer&, const X&) [with X = std::vector<long long unsigned int>]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:32:37,
+    inlined from 'void sdb::lifecycle::native::encode(Writer&, const X&) [with X = std::pair<std::vector<long long unsigned int>, std::vector<double> >]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:24:15,
+    inlined from 'sdb::lifecycle::native::Bytes sdb::lifecycle::native::pack(const X&, uint64_t) [with X = std::pair<std::vector<long long unsigned int>, std::vector<double> >]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:111:11,
+    inlined from 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:319:67:
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/new_allocator.h:172:66: warning: 'void operator delete(void*, std::size_t)' called on pointer '<unknown>' with nonzero offset [8, 65536] [-Wfree-nonheap-object]
+  172 |         _GLIBCXX_OPERATOR_DELETE(_GLIBCXX_SIZED_DEALLOC(__p, __n));
+      |                                                                  ^
+In member function '_Tp* std::__new_allocator<_Tp>::allocate(size_type, const void*) [with _Tp = unsigned char]',
+    inlined from 'constexpr _Tp* std::allocator< <template-parameter-1-1> >::allocate(std::size_t) [with _Tp = unsigned char]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/allocator.h:203:40,
+    inlined from 'static constexpr _Tp* std::allocator_traits<std::allocator<_Up> >::allocate(allocator_type&, size_type) [with _Tp = unsigned char]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/alloc_traits.h:614:28,
+    inlined from 'constexpr std::_Vector_base<_Tp, _Alloc>::pointer std::_Vector_base<_Tp, _Alloc>::_M_allocate(std::size_t) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:387:33,
+    inlined from 'constexpr void std::vector<_Tp, _Alloc>::reserve(size_type) [with _Tp = unsigned char; _Alloc = std::allocator<unsigned char>]' at D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/vector.tcc:79:33,
+    inlined from 'sdb::lifecycle::native::Bytes sdb::lifecycle::native::pack(const X&, uint64_t) [with X = std::pair<std::vector<long long unsigned int>, std::vector<double> >]' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/io/native.hpp:110:20,
+    inlined from 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)' at D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:319:67:
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/new_allocator.h:151:73: note: returned from 'void* operator new(std::size_t)'
+  151 |         return static_cast<_Tp*>(_GLIBCXX_OPERATOR_NEW(__n * sizeof(_Tp)));
+      |                                                                         ^
+[8/12] Linking CXX executable sdb_lifecycle_tests.exe
+[9/12] Building CXX object CMakeFiles/sdb_async_results_tests.dir/tests/async_results_tests.cpp.obj
+[10/12] Linking CXX executable sdb_async_results_tests.exe
+[11/12] Building CXX object CMakeFiles/sdb_lifecycle_benchmark.dir/benchmarks/lifecycle_benchmark.cpp.obj
+[12/12] Linking CXX executable sdb_lifecycle_benchmark.exe

@@ -61,11 +61,19 @@ template <class T> void output_trajectories(const std::filesystem::path &fixture
     auto off = ModelCompiler{}.compile<T>(model.definition);
     auto every = ModelCompiler{}.compile<T>(model.definition);
     for (auto &step : off.outputs)
-        for (auto &r : step) { r.frequency = 0; r.intervals = 0; }
+        for (auto &r : step) {
+            r.frequency = 0;
+            r.intervals = 0;
+        }
     for (auto &step : every.outputs)
-        for (auto &r : step) { r.frequency = 1; r.intervals = 0; }
+        for (auto &r : step) {
+            r.frequency = 1;
+            r.intervals = 0;
+        }
     CpuRun<T> a(off), b(model), c(every);
-    a.initialize(); b.initialize(); c.initialize();
+    a.initialize();
+    b.initialize();
+    c.initialize();
     ResultFrame retained;
     native::Bytes retained_bytes;
     do {
@@ -81,7 +89,8 @@ template <class T> void output_trajectories(const std::filesystem::path &fixture
         check(state_bytes(c.state()) == before, "all state fields unchanged by snapshot");
         check(native::pack(c.snapshot()) == native::pack(f), "repeat snapshot identical");
         check(state_bytes(a.state()) == state_bytes(b.state()) &&
-              state_bytes(b.state()) == state_bytes(c.state()), "all output trajectories bit identical");
+                  state_bytes(b.state()) == state_bytes(c.state()),
+              "all output trajectories bit identical");
         if (c.increment() == 1) {
             retained = std::move(f);
             retained_bytes = native::pack(retained);
@@ -90,7 +99,8 @@ template <class T> void output_trajectories(const std::filesystem::path &fixture
             check(native::pack(retained) == retained_bytes, "snapshot owns data after later steps");
         auto more = a.advance();
         check(b.advance() == more && c.advance() == more, "matching output trajectory cursors");
-        if (!more) break;
+        if (!more)
+            break;
     } while (true);
 }
 
@@ -265,6 +275,18 @@ int main(int argc, char **argv) {
         check(parse(external).model.parts[0].nodes[2].source.file.find("nodes.dat") != std::string::npos,
               "external NODE source");
         write_text(temp / "part.inc", external);
+        {
+            auto overflow = parse(source).model;
+            overflow.steps[0].loads[0].actions[0].value = 1e40;
+            rejects([&] { ModelCompiler{}.compile<float>(overflow); }, "precision");
+            IRAmplitude extreme{"EXTREME", false, {{0, -1e308}, {1, 1e308}}, {"test", 1, 1}};
+            check(LoadEvaluator::amplitude(extreme, .5, .5) == 0, "finite extreme amplitude interpolation");
+            auto scaled = parse(source).model;
+            scaled.amplitudes.push_back({"HUGE", false, {{0, 1e20}, {1, 1e20}}, {"test", 1, 1}});
+            scaled.steps[0].loads[0].actions[0].value = 1e20;
+            scaled.steps[0].loads[0].actions[0].amplitude = "HUGE";
+            rejects([&] { ModelCompiler{}.compile<float>(scaled); }, "precision");
+        }
         auto included = parse("*INCLUDE,INPUT=part.inc\n");
         check(included.model.parts[0].elements.size() == 2, "include");
         write_text(temp / "cycle.inc", "*INCLUDE,INPUT=cycle.inc\n");
@@ -343,6 +365,10 @@ int main(int argc, char **argv) {
                 "unsupported element");
         output_trajectories<float>(fixtures / "forced_tet.inp");
         output_trajectories<double>(fixtures / "forced_tet.inp");
+        for (auto fixture : {"forced_hex.inp", "mixed_hex_tet.inp"}) {
+            output_trajectories<float>(fixtures / fixture);
+            output_trajectories<double>(fixtures / fixture);
+        }
         numerical<float>(fixtures / "forced_tet.inp", temp);
         numerical<double>(fixtures / "forced_tet.inp", temp);
         rejects([&] { ModelStore::load<float>(temp / "d.sdbmodel"); }, "precision");

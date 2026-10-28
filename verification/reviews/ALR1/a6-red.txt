@@ -1,0 +1,2 @@
+sdb_run: model has no executable CPU capability
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\fixtures\abaqus\forced_hex.inp:13:1: C3D8 stored with formulation/integration; CPU kernel unavailable

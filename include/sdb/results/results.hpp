@@ -102,7 +102,8 @@ class ResultPublisher {
             }
         const ForceSnapshot<T> *derived = needs_forces ? &cpu.output_forces(state) : nullptr;
         auto &s = state.data();
-        auto u = s.displacement.read(), v = s.velocity.read(), f = derived ? derived->internal_force.read() : s.internal_force.read(),
+        auto u = s.displacement.read(), v = s.velocity.read(),
+             f = derived ? derived->internal_force.read() : s.internal_force.read(),
              ext = s.external_force.read(), contact = s.contact_force.read();
         auto stress = derived ? derived->stress.read() : s.stress.read();
         auto strain = derived ? derived->strain.read() : s.strain.read();
@@ -117,84 +118,101 @@ class ResultPublisher {
         ResultFrame frame;
         frame.info = info;
         std::uint64_t used = 0;
-        std::set<std::tuple<std::string, std::string, bool>> emitted;
+        std::set<std::tuple<std::string, std::string, bool, unsigned>> emitted;
         for (auto *request : due) {
             auto &r = *request;
             for (auto &name : r.variables) {
-                if (!emitted.emplace(name, r.region, r.history).second)
-                    continue;
-                ResultField field;
-                auto &d = field.descriptor;
-                d.name = name;
-                d.region = r.region;
-                d.history = r.history;
-                d.provenance = "CPU linear TET4; current displacement constitutive evaluation";
-                bool nodal = name == "U" || name == "V" || name == "A" || name == "RF";
-                bool global = name == "ALLKE" || name == "ALLSE";
-                d.location =
-                    global ? Location::Global : (nodal ? Location::Node : Location::IntegrationPoint);
-                d.components = global
-                                   ? std::vector<std::string>{name}
-                                   : (nodal ? std::vector<std::string>{"X", "Y", "Z"}
-                                            : std::vector<std::string>{"XX", "YY", "ZZ", "XY", "YZ", "ZX"});
-                if (!nodal && !global) {
-                    d.integration_point = 1;
-                    d.tensor_shear = name == "E";
+                unsigned points = 1;
+                if (name == "S" || name == "E")
+                    for (const auto &d : model.descriptors)
+                        points = std::max(points, d.points);
+                for (unsigned point = 1; point <= points; ++point) {
+                    if (!emitted.emplace(name, r.region, r.history, point).second)
+                        continue;
+                    ResultField field;
+                    auto &d = field.descriptor;
+                    d.name = name;
+                    d.region = r.region;
+                    d.history = r.history;
+                    d.provenance =
+                        cpu.plan().hex
+                            ? "CPU linear TET4/HEX8 full; current displacement constitutive evaluation"
+                            : "CPU linear TET4; current displacement constitutive evaluation";
+                    bool nodal = name == "U" || name == "V" || name == "A" || name == "RF";
+                    bool global = name == "ALLKE" || name == "ALLSE";
+                    d.location =
+                        global ? Location::Global : (nodal ? Location::Node : Location::IntegrationPoint);
+                    d.components =
+                        global ? std::vector<std::string>{name}
+                               : (nodal ? std::vector<std::string>{"X", "Y", "Z"}
+                                        : std::vector<std::string>{"XX", "YY", "ZZ", "XY", "YZ", "ZX"});
+                    if (!nodal && !global) {
+                        d.integration_point = point;
+                        d.tensor_shear = name == "E";
+                    }
+                    if (name == "V")
+                        d.provenance = "v(t-dt/2) + dt/2 * a(t); full-time reconstruction";
+                    if (name == "RF")
+                        d.provenance =
+                            "f_internal - f_applied - f_contact on constrained DOFs; zero elsewhere";
+                    std::vector<Index> ids;
+                    if (!r.region.empty())
+                        ids = model.region(nodal, r.region);
+                    else {
+                        std::size_t count = global ? 1 : (nodal ? model.mesh.nodes() : model.mesh.elements());
+                        ids.resize(count);
+                        for (Index i = 0; i < count; ++i)
+                            ids[i] = i;
+                    }
+                    if (!nodal && !global) {
+                        std::erase_if(
+                            ids, [&](Index e) { return model.mesh.element(e).integration_points < point; });
+                        if (ids.empty())
+                            continue;
+                    }
+                    auto width = d.components.size();
+                    auto need = std::uint64_t(ids.size()) * (8 + 8 * width);
+                    if (need > budget - used)
+                        throw std::length_error("result snapshot memory budget");
+                    used += need;
+                    field.values.reserve(ids.size() * width);
+                    field.ids.reserve(ids.size());
+                    for (auto i : ids) {
+                        field.ids.push_back(global ? 0 : Id(i) + 1);
+                        if (global) {
+                            double energy = 0;
+                            if (name == "ALLKE") {
+                                for (Index n = 0; n < model.mesh.nodes(); ++n)
+                                    for (unsigned c = 0; c < 3; ++c) {
+                                        auto speed = velocity(n, c);
+                                        energy += .5 * double(s.mass.read()(n)) * speed * speed;
+                                    }
+                            } else
+                                for (std::size_t e = 0; e < s.stress.size(); ++e)
+                                    for (unsigned c = 0; c < 6; ++c)
+                                        energy += .5 * double(cpu.plan().integration_weight.read()(e)) *
+                                                  double(stress(e, c)) * double(strain(e, c)) *
+                                                  (c < 3 ? 1 : 2);
+                            field.values.push_back(energy);
+                        } else if (nodal)
+                            for (unsigned c = 0; c < 3; ++c)
+                                field.values.push_back(
+                                    name == "U"
+                                        ? double(u(i, c))
+                                        : (name == "V"
+                                               ? velocity(i, c)
+                                               : (name == "A" ? acceleration(i, c)
+                                                              : (fixed(i, c) ? double(f(i, c) - ext(i, c) -
+                                                                                      contact(i, c))
+                                                                             : 0))));
+                        else
+                            for (unsigned c = 0; c < 6; ++c)
+                                field.values.push_back(
+                                    name == "S" ? double(stress(state.ip_offsets()[i] + point - 1, c))
+                                                : double(strain(state.ip_offsets()[i] + point - 1, c)));
+                    }
+                    frame.fields.push_back(std::move(field));
                 }
-                if (name == "V")
-                    d.provenance = "v(t-dt/2) + dt/2 * a(t); full-time reconstruction";
-                if (name == "RF")
-                    d.provenance = "f_internal - f_applied - f_contact on constrained DOFs; zero elsewhere";
-                std::vector<Index> ids;
-                if (!r.region.empty())
-                    ids = model.region(nodal, r.region);
-                else {
-                    std::size_t count = global ? 1 : (nodal ? model.mesh.nodes() : model.mesh.elements());
-                    ids.resize(count);
-                    for (Index i = 0; i < count; ++i)
-                        ids[i] = i;
-                }
-                auto width = d.components.size();
-                auto need = std::uint64_t(ids.size()) * (8 + 8 * width);
-                if (need > budget - used)
-                    throw std::length_error("result snapshot memory budget");
-                used += need;
-                field.values.reserve(ids.size() * width);
-                field.ids.reserve(ids.size());
-                for (auto i : ids) {
-                    field.ids.push_back(global ? 0 : Id(i) + 1);
-                    if (global) {
-                        double energy = 0;
-                        if (name == "ALLKE") {
-                            for (Index n = 0; n < model.mesh.nodes(); ++n)
-                                for (unsigned c = 0; c < 3; ++c) {
-                                    auto speed = velocity(n, c);
-                                    energy += .5 * double(s.mass.read()(n)) * speed * speed;
-                                }
-                        } else
-                            for (Index e = 0; e < model.mesh.elements(); ++e)
-                                for (unsigned c = 0; c < 6; ++c)
-                                    energy += .5 * double(cpu.plan().volume.read()(e)) *
-                                              double(stress(e, c)) * double(strain(e, c)) *
-                                              (c < 3 ? 1 : 2);
-                        field.values.push_back(energy);
-                    } else if (nodal)
-                        for (unsigned c = 0; c < 3; ++c)
-                            field.values.push_back(
-                                name == "U"
-                                    ? double(u(i, c))
-                                    : (name == "V"
-                                           ? velocity(i, c)
-                                           : (name == "A"
-                                                  ? acceleration(i, c)
-                                                  : (fixed(i, c) ? double(f(i, c) - ext(i, c) - contact(i, c))
-                                                                 : 0))));
-                    else
-                        for (unsigned c = 0; c < 6; ++c)
-                            field.values.push_back(name == "S" ? double(stress(i, c))
-                                                               : double(strain(i, c)));
-                }
-                frame.fields.push_back(std::move(field));
             }
         }
         return frame;
@@ -210,11 +228,11 @@ inline void validate_frame(const ResultFrame &f, const ResultModel &model,
     if (previous && (i.id <= previous->id || i.time <= previous->time || i.step < previous->step ||
                      (i.step == previous->step && i.increment <= previous->increment)))
         throw std::runtime_error("duplicate or nonmonotonic result frame");
-    std::set<std::tuple<std::string, std::string, bool>> keys;
+    std::set<std::tuple<std::string, std::string, bool, std::uint32_t, std::uint32_t>> keys;
     for (auto &field : f.fields) {
         auto &d = field.descriptor;
-        if (!keys.emplace(d.name, d.region, d.history).second || d.components.empty() ||
-            d.components.size() > 9 ||
+        if (!keys.emplace(d.name, d.region, d.history, d.integration_point, d.section_point).second ||
+            d.components.empty() || d.components.size() > 9 ||
             field.values.size() != product(field.ids.size(), d.components.size()) ||
             static_cast<unsigned>(d.location) > static_cast<unsigned>(Location::Global) ||
             static_cast<unsigned>(d.time_level) > 1)
@@ -229,6 +247,13 @@ inline void validate_frame(const ResultFrame &f, const ResultModel &model,
             } else if (id == 0 ||
                        id > (d.location == Location::Node ? model.nodes.size() : model.elements.size()))
                 throw std::runtime_error("result entity out of bounds");
+        }
+        if (d.location == Location::IntegrationPoint) {
+            if (d.integration_point == 0)
+                throw std::runtime_error("invalid integration point");
+            for (auto id : field.ids)
+                if (d.integration_point > model.descriptors.at(id - 1).points)
+                    throw std::runtime_error("integration point outside element");
         }
         for (auto v : field.values)
             if (!std::isfinite(v))
@@ -253,12 +278,15 @@ class ResultReader {
                           std::uint64_t limit = native::default_limit)
         : path_(path), limit_(limit) {
         std::ifstream in(path, std::ios::binary);
-        std::array<std::uint8_t,8> magic_bytes{}; native::read(in,magic_bytes);
+        std::array<std::uint8_t, 8> magic_bytes{};
+        native::read(in, magic_bytes);
         native::Reader probe{magic_bytes};
-        if(probe.integer<std::uint64_t>()==indexed_detail::magic) {
-            indexed_=std::make_shared<indexed_detail::File>(path,limit,allow_incomplete_tail);
-            model=indexed_->model;index.bind(indexed_);
-            valid_end=indexed_->valid_end;incomplete_tail=indexed_->incomplete_tail;
+        if (probe.integer<std::uint64_t>() == indexed_detail::magic) {
+            indexed_ = std::make_shared<indexed_detail::File>(path, limit, allow_incomplete_tail);
+            model = indexed_->model;
+            index.bind(indexed_);
+            valid_end = indexed_->valid_end;
+            incomplete_tail = indexed_->incomplete_tail;
         } else {
             in.seekg(0);
             native::prefix(in, result_magic);
@@ -274,7 +302,8 @@ class ResultReader {
             for (auto n : ns)
                 if (n >= model.nodes.size())
                     throw std::runtime_error("result mesh connectivity invalid");
-        if(indexed_) return;
+        if (indexed_)
+            return;
         valid_end = static_cast<std::uint64_t>(in.tellg());
         auto size = std::filesystem::file_size(path);
         while (valid_end < size) {
@@ -300,9 +329,10 @@ class ResultReader {
             throw std::runtime_error("incomplete result tail (explicit recovery required)");
     }
     bool indexed() const { return bool(indexed_); }
-    ResultReadStats read_stats() const { return indexed_?indexed_->stats():ResultReadStats{}; }
+    ResultReadStats read_stats() const { return indexed_ ? indexed_->stats() : ResultReadStats{}; }
     ResultFrame frame(std::size_t i) const {
-        if(indexed_) return indexed_->frame(i);
+        if (indexed_)
+            return indexed_->frame(i);
         auto rec = records_.at(i);
         std::ifstream in(path_, std::ios::binary);
         in.seekg(static_cast<std::streamoff>(rec.offset));
@@ -313,8 +343,14 @@ class ResultReader {
     std::size_t by_time(double time) const {
         if (!std::isfinite(time) || index.empty() || time < index.front().time || time > index.back().time)
             throw std::out_of_range("result time outside stored range");
-        std::size_t lo=0,hi=index.size();
-        while(lo<hi) {auto mid=lo+(hi-lo)/2;if(index[mid].time<time)lo=mid+1;else hi=mid;}
+        std::size_t lo = 0, hi = index.size();
+        while (lo < hi) {
+            auto mid = lo + (hi - lo) / 2;
+            if (index[mid].time < time)
+                lo = mid + 1;
+            else
+                hi = mid;
+        }
         return lo;
     }
     std::set<Id> region(bool node, const std::string &name) const {
@@ -342,31 +378,42 @@ class ResultReader {
             }
         throw std::invalid_argument("unknown result region: " + name);
     }
-    ResultField entity_field(std::size_t frame_index,const std::string &name,Id entity,
-                             const std::string &region_name="",bool history=false) const {
-        return field(frame_index,name,region_name,history,entity);
+    ResultField entity_field(std::size_t frame_index, const std::string &name, Id entity,
+                             const std::string &region_name = "", bool history = false,
+                             unsigned point = 1) const {
+        return field(frame_index, name, region_name, history, entity, point);
     }
     ResultField field(std::size_t frame_index, const std::string &name, const std::string &region_name = "",
-                      bool history = false, std::optional<Id> entity = {}) const {
-        auto normalized=upper(name);
+                      bool history = false, std::optional<Id> entity = {}, unsigned point = 1) const {
+        auto normalized = upper(name);
         std::function<std::set<Id>(const ResultDescriptor &)> selection;
-        if(!region_name.empty())selection=[&](const ResultDescriptor &d){
-            if(d.location==Location::Global)throw std::invalid_argument("global field cannot have a mesh region");
-            return region(d.location==Location::Node,region_name);
-        };
-        auto f = indexed_ ? indexed_->frame(frame_index,&normalized,history,entity,selection) : frame(frame_index);
-        if(entity && !indexed_) for(auto &v:f.fields) {
-            ResultField selected;selected.descriptor=v.descriptor;auto w=v.descriptor.components.size();
-            for(std::size_t i=0;i<v.ids.size();++i)if(v.ids[i]==*entity) {
-                selected.ids.push_back(*entity);
-                selected.values.insert(selected.values.end(),v.values.begin()+i*w,v.values.begin()+(i+1)*w);
+        if (!region_name.empty())
+            selection = [&](const ResultDescriptor &d) {
+                if (d.location == Location::Global)
+                    throw std::invalid_argument("global field cannot have a mesh region");
+                return region(d.location == Location::Node, region_name);
+            };
+        auto f = indexed_ ? indexed_->frame(frame_index, &normalized, history, entity, selection, point)
+                          : frame(frame_index);
+        if (entity && !indexed_)
+            for (auto &v : f.fields) {
+                ResultField selected;
+                selected.descriptor = v.descriptor;
+                auto w = v.descriptor.components.size();
+                for (std::size_t i = 0; i < v.ids.size(); ++i)
+                    if (v.ids[i] == *entity) {
+                        selected.ids.push_back(*entity);
+                        selected.values.insert(selected.values.end(), v.values.begin() + i * w,
+                                               v.values.begin() + (i + 1) * w);
+                    }
+                v = std::move(selected);
             }
-            v=std::move(selected);
-        }
         std::optional<ResultField> found;
         std::vector<const ResultField *> matching;
         for (auto &v : f.fields)
-            if (v.descriptor.name == upper(name) && v.descriptor.history == history) {
+            if (v.descriptor.name == upper(name) && v.descriptor.history == history &&
+                (v.descriptor.location != Location::IntegrationPoint ||
+                 v.descriptor.integration_point == point)) {
                 matching.push_back(&v);
                 if (v.descriptor.region == upper(region_name)) {
                     found = std::move(v);
@@ -383,7 +430,12 @@ class ResultReader {
             auto width = combined.descriptor.components.size();
             for (auto *part : matching) {
                 if (part->descriptor.components != combined.descriptor.components ||
-                    part->descriptor.location != combined.descriptor.location)
+                    part->descriptor.location != combined.descriptor.location ||
+                    part->descriptor.basis != combined.descriptor.basis ||
+                    part->descriptor.time_level != combined.descriptor.time_level ||
+                    part->descriptor.tensor_shear != combined.descriptor.tensor_shear ||
+                    part->descriptor.integration_point != combined.descriptor.integration_point ||
+                    part->descriptor.section_point != combined.descriptor.section_point)
                     throw std::runtime_error("incompatible regional field descriptors");
                 for (std::size_t i = 0; i < part->ids.size(); ++i) {
                     std::vector<double> values(part->values.begin() + i * width,
@@ -423,20 +475,24 @@ class ResultQuery {
   public:
     static std::vector<std::pair<double, double>>
     history(const ResultReader &reader, const std::string &field, Id entity, unsigned component = 0,
-            const std::string &region = "", bool history_request = false,
-            double time_begin=0, double time_end=std::numeric_limits<double>::max()) {
+            const std::string &region = "", bool history_request = false, double time_begin = 0,
+            double time_end = std::numeric_limits<double>::max(), unsigned point = 1) {
         if (!region.empty())
-            (void)reader.region(field == "U" || field == "V" || field == "A" || field == "RF", region);
-        if(!std::isfinite(time_begin) || !std::isfinite(time_end) || time_begin>time_end)
+            (void)reader.region(upper(field) == "U" || upper(field) == "V" || upper(field) == "A" ||
+                                    upper(field) == "RF",
+                                region);
+        if (!std::isfinite(time_begin) || !std::isfinite(time_end) || time_begin > time_end)
             throw std::invalid_argument("invalid history time interval");
         std::vector<std::pair<double, double>> values;
         for (std::size_t i = 0; i < reader.index.size(); ++i) {
-            auto time=reader.index[i].time;
-            if(time<time_begin)continue;
-            if(time>time_end)break;
+            auto time = reader.index[i].time;
+            if (time < time_begin)
+                continue;
+            if (time > time_end)
+                break;
             ResultField f;
             try {
-                f = reader.entity_field(i, field, entity, region, history_request);
+                f = reader.entity_field(i, field, entity, region, history_request, point);
             } catch (const std::out_of_range &) {
                 continue;
             }
@@ -476,7 +532,8 @@ class NativeResultStorage final : public IResultStorage {
         if (upper(path.extension().string()) == ".H5" || upper(path.extension().string()) == ".HDF5")
             throw std::invalid_argument("native backend requires a non-HDF5 suffix (.sdbres)");
         if (append) {
-            if (append_preflight) append_preflight();
+            if (append_preflight)
+                append_preflight();
             ResultReader existing(path, recover, limit);
             if (native::pack(existing.model, limit_) != native::pack(model_, limit_))
                 throw std::runtime_error("result append model/configuration mismatch");
@@ -484,16 +541,17 @@ class NativeResultStorage final : public IResultStorage {
                 std::filesystem::resize_file(path, existing.valid_end);
             if (!existing.index.empty())
                 last_ = existing.index.back();
-            if(existing.indexed()) indexed_=std::make_unique<indexed_detail::File>(path,limit_);
+            if (existing.indexed())
+                indexed_ = std::make_unique<indexed_detail::File>(path, limit_);
             out_.open(path, std::ios::binary | std::ios::app);
-            out_.seekp(0,std::ios::end);
+            out_.seekp(0, std::ios::end);
         } else {
             if (std::filesystem::exists(path))
                 throw std::runtime_error("result exists; use explicit append or a new output path");
             out_.open(path, std::ios::binary | std::ios::trunc);
-            if(indexed) {
-                indexed_detail::File::create(out_,model_,limit_);
-                indexed_=std::make_unique<indexed_detail::File>(path,limit_);
+            if (indexed) {
+                indexed_detail::File::create(out_, model_, limit_);
+                indexed_ = std::make_unique<indexed_detail::File>(path, limit_);
             } else {
                 native::prefix(out_, result_magic);
                 native::record(out_, 0, native::pack(model_, limit_));
@@ -508,7 +566,8 @@ class NativeResultStorage final : public IResultStorage {
             throw std::runtime_error("result writer is failed");
         validate_frame(frame, model_, last_);
         try {
-            if(indexed_) indexed_->append(out_,frame);
+            if (indexed_)
+                indexed_->append(out_, frame);
             else {
                 auto bytes = native::pack(frame, limit_);
                 native::record(out_, 1, bytes);

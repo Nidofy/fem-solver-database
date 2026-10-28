@@ -1,0 +1,46 @@
+*Heading
+Unit C3D8 brick, one free X DOF: mass=1/8, stiffness=200/9
+*Node
+1,0,0,0
+2,1,0,0
+3,1,1,0
+4,0,1,0
+5,0,0,1
+6,1,0,1
+7,1,1,1
+8,0,1,1
+9,-1,0,0
+*Element,type=C3D8,elset=SOLID
+100,1,2,3,4,5,6,7,8
+*Element,type=C3D4,elset=SOLID
+200,1,4,9,5
+*Nset,nset=FIXED
+1,3,4,5,6,7,8,9
+*Nset,nset=FREE
+2
+*Material,name=M
+*Density
+1
+*Elastic
+100,0
+*Solid Section,elset=SOLID,material=M
+,
+*Boundary
+FIXED,1,3
+FREE,2,3
+*Step,name=FORCE,nlgeom=NO
+*Dynamic,Explicit,Direct User Control
+0.0001,0.1
+*Cload
+FREE,1,0.001
+*Output,field,frequency=100
+*Node Output
+U,V,A,RF
+*Element Output
+S,E
+*Energy Output
+ALLKE,ALLSE
+*Output,history,frequency=50
+*Element Output,elset=SOLID
+S
+*End Step

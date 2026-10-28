@@ -10,10 +10,10 @@ using Args = std::map<std::string, std::string>;
 std::uint64_t mib(const std::string &text) {
     if (text.empty() || text.find_first_not_of("0123456789") != std::string::npos)
         throw std::invalid_argument("invalid memory budget");
-    auto n=std::stoull(text);
-    if (!n || n>std::numeric_limits<std::uint64_t>::max()/(1024*1024))
+    auto n = std::stoull(text);
+    if (!n || n > std::numeric_limits<std::uint64_t>::max() / (1024 * 1024))
         throw std::length_error("memory budget overflow or zero");
-    return n*1024*1024;
+    return n * 1024 * 1024;
 }
 template <class T> int run(const Args &a) {
     auto model = a.contains("--model")
@@ -37,27 +37,32 @@ template <class T> int run(const Args &a) {
     }
     if (!a.contains("--output"))
         throw std::invalid_argument("--output required");
-    auto limit =
-        a.contains("--buffer-mib") ? mib(a.at("--buffer-mib")) : native::default_limit;
+    auto limit = a.contains("--buffer-mib") ? mib(a.at("--buffer-mib")) : native::default_limit;
     if (a.contains("--append") && !a.contains("--restart"))
         throw std::invalid_argument("safe append requires --restart with a result link");
-    NativeResultStorage storage(a.at("--output"), ResultModel::from(model, cpu.configuration()),
-                                a.contains("--append"), a.contains("--recover-tail"), limit, [&] {
-        CheckpointLink::verify(a.at("--output"), a.at("--restart"), cpu, model,
-                               a.contains("--recover-tail"));
-    }, a.contains("--indexed"));
+    NativeResultStorage storage(
+        a.at("--output"), ResultModel::from(model, cpu.configuration()), a.contains("--append"),
+        a.contains("--recover-tail"), limit,
+        [&] {
+            CheckpointLink::verify(a.at("--output"), a.at("--restart"), cpu, model,
+                                   a.contains("--recover-tail"));
+        },
+        a.contains("--indexed"));
     ResultWriter writer(storage);
     if (auto last = storage.last(); last && last->time > cpu.state().data().time)
         throw std::runtime_error(
             "result file is ahead of checkpoint; use matching result prefix or new output");
     std::optional<AsyncResultWriter> async;
-    if (a.contains("--async-mib")) async.emplace(storage, mib(a.at("--async-mib")));
+    if (a.contains("--async-mib"))
+        async.emplace(storage, mib(a.at("--async-mib")));
     auto publish = [&] {
         auto last = async ? async->last() : storage.last();
         if (!last || cpu.state().data().time > last->time) {
-            auto frame=cpu.snapshot(limit);
-            if (async) async->write(std::move(frame));
-            else writer.write(frame);
+            auto frame = cpu.snapshot(limit);
+            if (async)
+                async->write(std::move(frame));
+            else
+                writer.write(frame);
         }
     };
     publish();
@@ -65,10 +70,12 @@ template <class T> int run(const Args &a) {
                                            : std::numeric_limits<std::uint64_t>::max();
     while (cpu.state().data().step < stop && cpu.advance())
         publish();
-    if (async) async->close();
-    else writer.flush();
+    if (async)
+        async->close();
+    else
+        writer.flush();
     if (a.contains("--checkpoint"))
-        CheckpointLink::publish(a.at("--output"),a.at("--checkpoint"),cpu,model);
+        CheckpointLink::publish(a.at("--output"), a.at("--checkpoint"), cpu, model);
     std::cout << std::setprecision(17) << "nodes=" << model.mesh.nodes()
               << " elements=" << model.mesh.elements() << " increments=" << cpu.state().data().step
               << " time=" << cpu.state().data().time << " precision=" << sizeof(T)
@@ -80,10 +87,10 @@ int main(int argc, char **argv) {
         Args a;
         const std::set<std::string> flags{"--indexed", "--append", "--recover-tail", "--inspect"};
         const std::set<std::string> value_options{
-            "--async-mib", "--input",     "--model",      "--save-model", "--backend",    "--precision",
-            "--output",    "--checkpoint", "--restart",    "--stop-after", "--buffer-mib",
-            "--read",      "--field",      "--region",     "--time",       "--entity",
-            "--component", "--vtk",        "--xdmf",       "--convert-v2"};
+            "--async-mib", "--ip",     "--input",      "--model",   "--save-model", "--backend",
+            "--precision", "--output", "--checkpoint", "--restart", "--stop-after", "--buffer-mib",
+            "--read",      "--field",  "--region",     "--time",    "--entity",     "--component",
+            "--vtk",       "--xdmf",   "--convert-v2"};
         for (int i = 1; i < argc; ++i) {
             std::string key = argv[i];
             if (flags.contains(key)) {
@@ -96,8 +103,7 @@ int main(int argc, char **argv) {
                 throw std::invalid_argument("unknown option/missing value: " + key);
         }
         if (a.contains("--read")) {
-            auto limit = a.contains("--buffer-mib") ? mib(a.at("--buffer-mib"))
-                                                    : native::default_limit;
+            auto limit = a.contains("--buffer-mib") ? mib(a.at("--buffer-mib")) : native::default_limit;
             ResultReader r(a.at("--read"), false, limit);
             std::cout << std::setprecision(17);
             if (a.contains("--vtk"))
@@ -111,14 +117,17 @@ int main(int argc, char **argv) {
                         r, a.at("--field"), std::stoull(a.at("--entity")),
                         a.contains("--component") ? static_cast<unsigned>(std::stoul(a.at("--component")))
                                                   : 0,
-                        region);
+                        region, false, 0, std::numeric_limits<double>::max(),
+                        a.contains("--ip") ? static_cast<unsigned>(std::stoul(a.at("--ip"))) : 1);
                     std::cout << "time,value\n";
                     for (auto [t, v] : values)
                         std::cout << t << ',' << v << '\n';
                 } else {
                     auto index =
                         a.contains("--time") ? r.by_time(std::stod(a.at("--time"))) : r.index.size() - 1;
-                    auto f = r.field(index, a.at("--field"), region);
+                    auto f =
+                        r.field(index, a.at("--field"), region, false, {},
+                                a.contains("--ip") ? static_cast<unsigned>(std::stoul(a.at("--ip"))) : 1);
                     std::cout << "time=" << r.index.at(index).time << " field=" << f.descriptor.name
                               << " entities=" << f.ids.size() << "\n";
                     for (auto v : f.values)

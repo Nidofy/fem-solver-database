@@ -288,11 +288,11 @@ class ModelCompiler {
                             d.section_points = static_cast<std::uint32_t>(count);
                         }
                     }
-                    if (d.token == "C3D4" && !s->properties.empty() &&
+                    if ((d.token == "C3D4" || d.token == "C3D8") && !s->properties.empty() &&
                         (s->properties.size() != 1 || s->properties[0] != 1))
                         fail(s->source, "3D solid section supports blank/unit data only");
                 }
-                if (d.token != "C3D4")
+                if (d.token != "C3D4" && d.token != "C3D8")
                     incapable(e.source,
                               d.token + " stored with formulation/integration; CPU kernel unavailable");
                 std::vector<Id> nodes;
@@ -332,7 +332,8 @@ class ModelCompiler {
                 fail(a.source, "empty amplitude");
             for (std::size_t i = 0; i < a.points.size(); ++i)
                 if (!std::isfinite(a.points[i].first) || !std::isfinite(a.points[i].second) ||
-                    (i && a.points[i].first <= a.points[i - 1].first))
+                    (i && (a.points[i].first <= a.points[i - 1].first ||
+                           !std::isfinite(a.points[i].first - a.points[i - 1].first))))
                     fail(a.source, "invalid amplitude table");
             if (!analysis.amplitudes.emplace(a.name, a).second)
                 fail(a.source, "duplicate amplitude");
@@ -355,6 +356,15 @@ class ModelCompiler {
                         fail(a.source, "invalid action DOF/value");
                     if (!a.amplitude.empty() && !analysis.amplitudes.contains(a.amplitude))
                         fail(a.source, "unknown amplitude: " + a.amplitude);
+                    double peak_scale = 1;
+                    if (!a.amplitude.empty()) {
+                        peak_scale = 0;
+                        for (const auto &p : analysis.amplitudes.at(a.amplitude).points)
+                            peak_scale = std::max(peak_scale, std::abs(p.second));
+                    }
+                    if (peak_scale > 0 &&
+                        std::abs(a.value) > double(std::numeric_limits<T>::max()) / peak_scale)
+                        fail(a.source, "scaled action exceeds selected precision range");
                     for (auto n : resolve(true, a.target, "", a.source))
                         for (auto c = a.first; c <= a.last; ++c) {
                             ActionKey key{n, c};
@@ -433,7 +443,10 @@ class LoadEvaluator {
         auto hi = std::upper_bound(a.points.begin(), a.points.end(), t,
                                    [](double v, const auto &p) { return v < p.first; });
         auto lo = hi - 1;
-        return lo->second + (hi->second - lo->second) * (t - lo->first) / (hi->first - lo->first);
+        auto value = lo->second + (hi->second - lo->second) * (t - lo->first) / (hi->first - lo->first);
+        if (std::isfinite(value))
+            return value; // preserve ordinary legacy rounding
+        return std::lerp(lo->second, hi->second, (t - lo->first) / (hi->first - lo->first));
     }
     template <class T>
     static void apply(const AnalysisDB &db, std::size_t step, double local, double total, StateDB<T> &state) {
@@ -441,7 +454,13 @@ class LoadEvaluator {
         auto f = state.data().external_force.write();
         for (auto &a : db.steps.at(step).loads) {
             double scale = a.amplitude.empty() ? 1 : amplitude(db.amplitudes.at(a.amplitude), local, total);
-            f(a.node, a.component) += static_cast<T>(scale * a.value);
+            double value = scale * a.value;
+            if (!std::isfinite(value) || std::abs(value) > double(std::numeric_limits<T>::max()))
+                throw std::runtime_error("load exceeds selected precision range");
+            auto sum = f(a.node, a.component) + static_cast<T>(value);
+            if (!std::isfinite(sum))
+                throw std::runtime_error("load accumulation exceeds selected precision range");
+            f(a.node, a.component) = sum;
         }
     }
 };

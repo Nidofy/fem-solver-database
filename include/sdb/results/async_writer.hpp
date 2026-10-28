@@ -20,27 +20,36 @@ class AsyncResultWriter {
     // validation tree scratch. Persistent model/storage and caller-owned frames
     // are outside this queue budget. No compression/reorder buffers are used.
     static std::uint64_t required_bytes(const ResultFrame &f) {
-        std::size_t n = sizeof(ResultFrame) + 128; // list node / bookkeeping allowance
+        std::size_t n = sizeof(ResultFrame) + 65536; // codec/footer/stream and list bookkeeping reserve
         auto add = [&](std::size_t v) { n = sum(n, v); };
         auto str = [&](const std::string &s) { add(sum(s.capacity(), 1)); };
         add(product(f.fields.capacity(), sizeof(ResultField)));
         for (const auto &field : f.fields) {
             const auto &d = field.descriptor;
-            str(d.name); str(d.region); str(d.basis); str(d.provenance);
+            str(d.name);
+            str(d.region);
+            str(d.basis);
+            str(d.provenance);
             add(product(d.components.capacity(), sizeof(std::string)));
-            for (auto &c : d.components) str(c);
+            for (auto &c : d.components)
+                str(c);
             add(product(field.ids.capacity(), sizeof(Id)));
             add(product(field.values.capacity(), sizeof(double)));
             // validate_frame builds per-field entity sets and one key per field.
             add(product(field.ids.size(), 64));
-            add(256); str(d.name); str(d.region);
+            add(256);
+            str(d.name);
+            str(d.region);
         }
         add(static_cast<std::size_t>(native::encoded_size(f, std::numeric_limits<std::size_t>::max())));
         return n;
     }
 
   private:
-    struct Entry { ResultFrame frame; std::uint64_t bytes; };
+    struct Entry {
+        ResultFrame frame;
+        std::uint64_t bytes;
+    };
     IResultStorage &storage_;
     const std::uint64_t budget_;
     mutable std::mutex mutex_;
@@ -54,104 +63,147 @@ class AsyncResultWriter {
     std::thread worker_;
 
     void healthy() const {
-        if (error_) std::rethrow_exception(error_);
-        if (stats_.cancelled) throw std::runtime_error("result writer cancelled");
+        if (error_)
+            std::rethrow_exception(error_);
+        if (stats_.cancelled)
+            throw std::runtime_error("result writer cancelled");
     }
     void work() noexcept {
         std::list<Entry> active;
         try {
             for (;;) {
                 std::unique_lock lock(mutex_);
-                changed_.wait(lock,[&] {
+                changed_.wait(lock, [&] {
                     return stopping_ || !queue_.empty() || flush_requested_ != flush_completed_;
                 });
                 if (stats_.cancelled) {
-                    queue_.clear(); stats_.resident_bytes=0; changed_.notify_all(); return;
+                    queue_.clear();
+                    stats_.resident_bytes = 0;
+                    changed_.notify_all();
+                    return;
                 }
                 if (!queue_.empty()) {
-                    active.splice(active.end(),queue_,queue_.begin());
-                    const auto bytes=active.front().bytes;
+                    active.splice(active.end(), queue_, queue_.begin());
+                    const auto bytes = active.front().bytes;
                     lock.unlock();
                     storage_.append(active.front().frame);
-                    lock.lock(); ++stats_.written; lock.unlock();
+                    lock.lock();
+                    ++stats_.written;
+                    lock.unlock();
                     storage_.flush();
-                    auto last=storage_.last();
+                    auto last = storage_.last();
                     active.clear(); // release memory BEFORE releasing admission budget
                     lock.lock();
-                    ++stats_.committed; last_=last; stats_.resident_bytes-=bytes;
+                    ++stats_.committed;
+                    last_ = last;
+                    stats_.resident_bytes -= bytes;
                     changed_.notify_all();
                 } else if (flush_requested_ != flush_completed_) {
-                    auto ticket=flush_requested_;
-                    lock.unlock(); storage_.flush(); lock.lock();
-                    flush_completed_=ticket; changed_.notify_all();
-                } else if (stopping_) return;
+                    auto ticket = flush_requested_;
+                    lock.unlock();
+                    storage_.flush();
+                    lock.lock();
+                    flush_completed_ = ticket;
+                    changed_.notify_all();
+                } else if (stopping_)
+                    return;
             }
         } catch (...) {
             active.clear();
             std::lock_guard lock(mutex_);
-            error_=std::current_exception(); stats_.failed=true;
-            queue_.clear(); stats_.resident_bytes=0; changed_.notify_all();
+            error_ = std::current_exception();
+            stats_.failed = true;
+            queue_.clear();
+            stats_.resident_bytes = 0;
+            changed_.notify_all();
         }
     }
 
   public:
     explicit AsyncResultWriter(IResultStorage &storage, std::uint64_t budget)
         : storage_(storage), budget_(budget), last_(storage.last()) {
-        if (!budget) throw std::invalid_argument("zero async result budget");
-        worker_=std::thread([this] { work(); });
+        if (!budget)
+            throw std::invalid_argument("zero async result budget");
+        worker_ = std::thread([this] { work(); });
     }
-    AsyncResultWriter(const AsyncResultWriter &)=delete;
-    AsyncResultWriter &operator=(const AsyncResultWriter &)=delete;
+    AsyncResultWriter(const AsyncResultWriter &) = delete;
+    AsyncResultWriter &operator=(const AsyncResultWriter &) = delete;
     ~AsyncResultWriter() {
         // Exceptions cannot escape destruction. Applications MUST call close()
         // to observe success/failure; destructor merely guarantees worker lifetime.
-        try { close(); } catch (...) {}
+        try {
+            close();
+        } catch (...) {
+        }
     }
     void write(ResultFrame &&frame) {
-        const auto bytes=frame.fields.empty() ? 0 : required_bytes(frame);
+        const auto bytes = frame.fields.empty() ? 0 : required_bytes(frame);
         std::unique_lock lock(mutex_);
         healthy();
-        if (stopping_ || closed_) throw std::logic_error("result writer closed");
-        if (!bytes) return;
-        if (bytes>budget_) throw std::length_error("frame exceeds async result budget");
-        changed_.wait(lock,[&] {
-            return error_ || stats_.cancelled || bytes<=budget_-stats_.resident_bytes;
-        });
+        if (stopping_ || closed_)
+            throw std::logic_error("result writer closed");
+        if (!bytes)
+            return;
+        if (bytes > budget_)
+            throw std::length_error("frame exceeds async result budget");
+        changed_.wait(lock,
+                      [&] { return error_ || stats_.cancelled || bytes <= budget_ - stats_.resident_bytes; });
         healthy();
         // The producer must not access frame after this ownership transfer.
-        queue_.push_back({std::move(frame),bytes});
-        ++stats_.queued; stats_.resident_bytes+=bytes;
-        stats_.peak_bytes=std::max(stats_.peak_bytes,stats_.resident_bytes);
+        queue_.push_back({std::move(frame), bytes});
+        ++stats_.queued;
+        stats_.resident_bytes += bytes;
+        stats_.peak_bytes = std::max(stats_.peak_bytes, stats_.resident_bytes);
         changed_.notify_all();
     }
     void flush() {
         std::unique_lock lock(mutex_);
         healthy();
-        if (closed_) return;
-        const auto ticket=++flush_requested_;
+        if (closed_)
+            return;
+        const auto ticket = ++flush_requested_;
         changed_.notify_all();
-        changed_.wait(lock,[&] { return error_ || stats_.cancelled || flush_completed_>=ticket; });
+        changed_.wait(lock, [&] { return error_ || stats_.cancelled || flush_completed_ >= ticket; });
         healthy();
     }
     void close() {
         std::exception_ptr failure;
-        try { flush(); } catch (...) { failure=std::current_exception(); }
-        {
-            std::lock_guard lock(mutex_); stopping_=true; changed_.notify_all();
+        try {
+            flush();
+        } catch (...) {
+            failure = std::current_exception();
         }
-        if (worker_.joinable()) worker_.join();
         {
-            std::lock_guard lock(mutex_); closed_=true;
+            std::lock_guard lock(mutex_);
+            stopping_ = true;
+            changed_.notify_all();
         }
-        if (failure) std::rethrow_exception(failure);
+        if (worker_.joinable())
+            worker_.join();
+        {
+            std::lock_guard lock(mutex_);
+            closed_ = true;
+        }
+        if (failure)
+            std::rethrow_exception(failure);
     }
     // May be called from a control thread to interrupt backpressure. An in-flight
     // storage operation is allowed to finish; close() joins and reports cancel.
     void cancel() {
         std::lock_guard lock(mutex_);
-        if (!closed_) { stats_.cancelled=true; stopping_=true; changed_.notify_all(); }
+        if (!closed_) {
+            stats_.cancelled = true;
+            stopping_ = true;
+            changed_.notify_all();
+        }
     }
-    Stats stats() const { std::lock_guard lock(mutex_); return stats_; }
-    std::optional<FrameInfo> last() const { std::lock_guard lock(mutex_); return last_; }
+    Stats stats() const {
+        std::lock_guard lock(mutex_);
+        return stats_;
+    }
+    std::optional<FrameInfo> last() const {
+        std::lock_guard lock(mutex_);
+        return last_;
+    }
 };
 } // namespace sdb::lifecycle
