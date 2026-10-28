@@ -238,5 +238,201 @@
     "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1",
     "git_dir_kind": "dev",
     "note": "surrounding whitespace of values is ignored"
+  },
+  {
+    "case": "r4-escaped-freeze_packet_sha-duplicate-invalid",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-escaped-freeze_packet_sha-duplicate-same",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-escaped-freeze_packet_sha-duplicate-different",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-escaped-freeze_packet_sha-only",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 15: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-escaped-batch_content_head_sha-duplicate-invalid",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-escaped-batch_content_head_sha-duplicate-same",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-escaped-batch_content_head_sha-duplicate-different",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-escaped-batch_content_head_sha-only",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 14: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-escaped-batch_base_sha-duplicate-invalid",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-escaped-batch_base_sha-duplicate-same",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-escaped-batch_base_sha-duplicate-different",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-escaped-batch_base_sha-only",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 7: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-unknown-escape",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-incomplete-unicode",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-escaped-quote",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-unclosed-key",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-multiline-key",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-single-quote-malformed",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 51: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)",
+    "git_dir_kind": "dev",
+    "note": "",
+    "expected_diagnostic": "unsupported quoted key syntax",
+    "diagnostic_matches": true
+  },
+  {
+    "case": "r4-single-quoted-literal-backslash",
+    "expected_exit": 0,
+    "actual_exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1",
+    "git_dir_kind": "dev",
+    "note": "single quotes do not interpret YAML escapes"
+  },
+  {
+    "case": "r4-quoted-value-backslash",
+    "expected_exit": 0,
+    "actual_exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1",
+    "git_dir_kind": "dev",
+    "note": "key restriction does not reject metadata values"
   }
 ]

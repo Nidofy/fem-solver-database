@@ -69,6 +69,10 @@ def load_manifest_strict(path: pathlib.Path) -> dict:
     text like `notes: |` containing `freeze_packet_sha: …` faked a required
     field). Quoted keys (`"key":` / `'key':`) are normalized to the bare name
     and take part in the SAME duplicate detection — never silently skipped.
+    This is a narrow, single-line key syntax, not a general YAML parser:
+    double-quoted keys containing escapes and malformed quoted keys are
+    rejected, including unknown keys, before identity-name filtering (R4-001).
+    Single-quoted backslashes are literal, as in YAML, not escape sequences.
 
     Returns {key: raw-value-after-quote-strip}. Raises SystemExit via fail() on
     duplicate keys, empty values, or a missing required key. Comment lines and
@@ -81,9 +85,13 @@ def load_manifest_strict(path: pathlib.Path) -> dict:
         stripped = raw_line.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        m = re.match(r"^\"([^\"]+)\"\s*:\s*(.*)$", stripped) or \
-            re.match(r"^'([^']+)'\s*:\s*(.*)$", stripped)
-        if m:
+        if stripped.startswith(('"', "'")):
+            m = (re.match(r'^"([^"\\]+)"\s*:\s*(.*)$', stripped)
+                 if stripped[0] == '"' else
+                 re.match(r"^'([^']+)'\s*:\s*(.*)$", stripped))
+            if not m:
+                fail(f"line {lineno}: unsupported quoted key syntax "
+                     "(keys must be single-line; double-quoted escapes are unsupported)")
             key, raw = m.group(1), m.group(2)
         else:
             m = re.match(r"^([A-Za-z0-9_]+)\s*:\s*(.*)$", stripped)

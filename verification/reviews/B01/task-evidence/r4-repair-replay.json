@@ -1,0 +1,496 @@
+[
+  {
+    "case": "r3-original-scalar-text-only-freeze",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: missing required identity field(s): freeze_packet_sha (the batch-freeze contract requires base, content head and freeze packet)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\r3-original-scalar-text-only-freeze.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "r3-original-nested-only-freeze",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: missing required identity field(s): freeze_packet_sha (the batch-freeze contract requires base, content head and freeze packet)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\r3-original-nested-only-freeze.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "r3-original-quoted-duplicate-invalid",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 52: duplicate identity key 'freeze_packet_sha' (first value 'b58dfff04b484f2ed15524d51883e5f979fd1bc1', repeated as 'invalid-sha')\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\r3-original-quoted-duplicate-invalid.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "r3-original-single-quoted-duplicate-invalid",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 52: duplicate identity key 'freeze_packet_sha' (first value 'b58dfff04b484f2ed15524d51883e5f979fd1bc1', repeated as 'invalid-sha')\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\r3-original-single-quoted-duplicate-invalid.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "minimal-pinned-valid",
+    "expected_exit": 0,
+    "actual_exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\minimal-pinned-valid.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "nested-only-batch_base_sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: missing required identity field(s): batch_base_sha (the batch-freeze contract requires base, content head and freeze packet)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\nested-only-batch_base_sha.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "folded-only-batch_base_sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: missing required identity field(s): batch_base_sha (the batch-freeze contract requires base, content head and freeze packet)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\folded-only-batch_base_sha.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "quoted-identical-batch_base_sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 4: duplicate identity key 'batch_base_sha' (first value 'aaa74afb3c264bbd7ca43555a7445c77994ccaa2', repeated as 'aaa74afb3c264bbd7ca43555a7445c77994ccaa2')\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\quoted-identical-batch_base_sha.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "mixed-quotes-batch_base_sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 4: duplicate identity key 'batch_base_sha' (first value 'aaa74afb3c264bbd7ca43555a7445c77994ccaa2', repeated as 'invalid-sha')\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\mixed-quotes-batch_base_sha.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "nested-only-batch_content_head_sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: missing required identity field(s): batch_content_head_sha (the batch-freeze contract requires base, content head and freeze packet)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\nested-only-batch_content_head_sha.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "folded-only-batch_content_head_sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: missing required identity field(s): batch_content_head_sha (the batch-freeze contract requires base, content head and freeze packet)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\folded-only-batch_content_head_sha.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "quoted-identical-batch_content_head_sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 4: duplicate identity key 'batch_content_head_sha' (first value '719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5', repeated as '719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5')\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\quoted-identical-batch_content_head_sha.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "mixed-quotes-batch_content_head_sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 4: duplicate identity key 'batch_content_head_sha' (first value '719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5', repeated as 'invalid-sha')\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\mixed-quotes-batch_content_head_sha.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "nested-only-freeze_packet_sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: missing required identity field(s): freeze_packet_sha (the batch-freeze contract requires base, content head and freeze packet)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\nested-only-freeze_packet_sha.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "folded-only-freeze_packet_sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: missing required identity field(s): freeze_packet_sha (the batch-freeze contract requires base, content head and freeze packet)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\folded-only-freeze_packet_sha.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "quoted-identical-freeze_packet_sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 4: duplicate identity key 'freeze_packet_sha' (first value 'b58dfff04b484f2ed15524d51883e5f979fd1bc1', repeated as 'b58dfff04b484f2ed15524d51883e5f979fd1bc1')\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\quoted-identical-freeze_packet_sha.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "mixed-quotes-freeze_packet_sha",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 4: duplicate identity key 'freeze_packet_sha' (first value 'b58dfff04b484f2ed15524d51883e5f979fd1bc1', repeated as 'invalid-sha')\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\mixed-quotes-freeze_packet_sha.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "nested-invalid-shadow",
+    "expected_exit": 0,
+    "actual_exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\nested-invalid-shadow.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "literal-explicit-indent-shadow",
+    "expected_exit": 0,
+    "actual_exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\literal-explicit-indent-shadow.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "all-single-quoted-keys",
+    "expected_exit": 0,
+    "actual_exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\all-single-quoted-keys.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "bom-valid",
+    "expected_exit": 0,
+    "actual_exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\bom-valid.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "tab-only-freeze",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: missing required identity field(s): freeze_packet_sha (the batch-freeze contract requires base, content head and freeze packet)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\tab-only-freeze.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "escaped-unicode-duplicate-freeze",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 4: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\escaped-unicode-duplicate-freeze.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "escaped-hex-duplicate-head",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 4: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\escaped-hex-duplicate-head.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "escaped-long-unicode-duplicate-base",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 4: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\escaped-long-unicode-duplicate-base.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  },
+  {
+    "case": "escaped-unicode-key-only",
+    "expected_exit": 1,
+    "actual_exit": 1,
+    "output": "IDENTITY FAIL: line 3: unsupported quoted key syntax (keys must be single-line; double-quoted escapes are unsupported)\n",
+    "command": [
+      "C:\\Program Files\\Python314\\python.exe",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2\\verification\\validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\escaped-unicode-key-only.yaml",
+      "--git-dir",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\solver_database_v2",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ]
+  }
+]

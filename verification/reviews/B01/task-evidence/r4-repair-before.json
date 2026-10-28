@@ -1,0 +1,50 @@
+[
+  {
+    "case": "escaped-unicode-duplicate-freeze",
+    "command": [
+      "python",
+      "verification/validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\escaped-unicode-duplicate-freeze.yaml",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ],
+    "exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1\n"
+  },
+  {
+    "case": "escaped-hex-duplicate-head",
+    "command": [
+      "python",
+      "verification/validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\escaped-hex-duplicate-head.yaml",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ],
+    "exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1\n"
+  },
+  {
+    "case": "escaped-long-unicode-duplicate-base",
+    "command": [
+      "python",
+      "verification/validate_batch_identity.py",
+      "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\sdb-review-b01-r4-handoff\\reports\\merged-r4-evidence\\escaped-long-unicode-duplicate-base.yaml",
+      "--expect-base",
+      "aaa74afb3c264bbd7ca43555a7445c77994ccaa2",
+      "--expect-head",
+      "719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5",
+      "--expect-freeze",
+      "b58dfff04b484f2ed15524d51883e5f979fd1bc1"
+    ],
+    "exit": 0,
+    "output": "IDENTITY OK: base=aaa74afb3c264bbd7ca43555a7445c77994ccaa2 head=719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 freeze=b58dfff04b484f2ed15524d51883e5f979fd1bc1\n"
+  }
+]

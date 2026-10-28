@@ -1,10 +1,11 @@
-"""Replayable identity-validator controls (round-2 + round-3 repair evidence).
+"""Replayable identity-validator controls (round-2 + round-3 + round-4 repair evidence).
 
 Covers the original positive/negative controls, the A-002 expected-identity
 mismatch case, the A-005 fail-open replay on a real BATCH_HEAD checkout, the
 parsing edges (missing/empty/quoted/duplicate keys), and the R3-001 structural
 rules (nested mappings / block scalars never define identity; quoted keys join
-the duplicate-checked namespace).
+the duplicate-checked namespace). Round 4 explicitly rejects unsupported
+double-quoted key escapes and malformed quoted keys before name filtering.
 
 Run from the repository root:
   python verification/reviews/B01/task-evidence/identity-controls.py
@@ -55,12 +56,13 @@ def main() -> int:
                    capture_output=True, check=True)
     controls = []
 
-    def case(name, text, git_dir, expected_exit, expect=None, note=""):
+    def case(name, text, git_dir, expected_exit, expect=None, note="", diagnostic=""):
         exit_code, output = run(text, git_dir, expect)
         controls.append({"case": name, "expected_exit": expected_exit, "actual_exit": exit_code,
                          "output": output, "git_dir_kind": "dev" if git_dir == str(REPO) else "batch-head",
-                         "note": note})
-        ok = "PASS" if exit_code == expected_exit else "FAIL"
+                         "note": note, **({"expected_diagnostic": diagnostic,
+                         "diagnostic_matches": diagnostic in output} if diagnostic else {})})
+        ok = "PASS" if exit_code == expected_exit and (not diagnostic or diagnostic in output) else "FAIL"
         print(f"{ok} {name}: exit {exit_code} (expected {expected_exit})")
 
     pos_expect = {"base": BASE, "head": HEAD, "freeze": FREEZE}
@@ -154,9 +156,40 @@ def main() -> int:
                                                            f"freeze_packet_sha:  {FREEZE}  "),
          str(REPO), 0, pos_expect, note="surrounding whitespace of values is ignored")
 
+
+    # R4-001: explicitly reject unsupported double-quoted escapes BEFORE
+    # unknown-key filtering. Keep literal single-quoted backslashes distinct.
+    escaped_keys = [(r'\u0066reeze_packet_sha', 'freeze_packet_sha', FREEZE),
+                    (r'batch_content_head_\x73ha', 'batch_content_head_sha', HEAD),
+                    (r'\U00000062atch_base_sha', 'batch_base_sha', BASE)]
+    for encoded, key, value in escaped_keys:
+        for kind, repeated in [('invalid', 'invalid-sha'), ('same', value),
+                               ('different', BASE if value != BASE else FREEZE)]:
+            case(f'r4-escaped-{key}-duplicate-{kind}',
+                 original + f'"{encoded}": {repeated}\n', str(REPO), 1, pos_expect,
+                 diagnostic='unsupported quoted key syntax')
+        case(f'r4-escaped-{key}-only', original.replace(f'{key}: {value}',
+             f'"{encoded}": {value}'), str(REPO), 1, pos_expect,
+             diagnostic='unsupported quoted key syntax')
+    for name, line in [
+        ('unknown-escape', r'"other\q": ignored'),
+        ('incomplete-unicode', r'"\u006": ignored'),
+        ('escaped-quote', r'"other\"name": ignored'),
+        ('unclosed-key', '"freeze_packet_sha: invalid-sha'),
+        ('multiline-key', '"freeze_packet_\nsha": invalid-sha'),
+        ('single-quote-malformed', "'freeze_packet_sha: invalid-sha"),
+    ]:
+        case('r4-' + name, original + line + '\n', str(REPO), 1, pos_expect,
+             diagnostic='unsupported quoted key syntax')
+    case('r4-single-quoted-literal-backslash',
+         original + r"'\u0066reeze_packet_sha': literal-unknown-key" + '\n',
+         str(REPO), 0, pos_expect, note='single quotes do not interpret YAML escapes')
+    case('r4-quoted-value-backslash', original + 'note: "C:\\folder"\n',
+         str(REPO), 0, pos_expect, note='key restriction does not reject metadata values')
+
     (HERE / "identity-controls.json").write_text(json.dumps(controls, indent=2) + "\n", encoding="utf-8")
     shutil.rmtree(batch_head, ignore_errors=True)
-    failed = [c["case"] for c in controls if c["actual_exit"] != c["expected_exit"]]
+    failed = [c["case"] for c in controls if c["actual_exit"] != c["expected_exit"] or not c.get("diagnostic_matches", True)]
     print(f"controls: {len(controls) - len(failed)}/{len(controls)} behaved as expected")
     return 1 if failed else 0
 
