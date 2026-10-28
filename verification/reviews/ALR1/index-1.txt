@@ -1,0 +1,1 @@
+frames=100000 write_ms=12251.1 open_ms=4.883 query_read_bytes=25178 value_bytes=120

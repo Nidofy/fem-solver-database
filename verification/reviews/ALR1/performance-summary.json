@@ -1,0 +1,1985 @@
+{
+  "repetitions": 3,
+  "cache": "OS cache not evicted; reopen is warm-cache",
+  "execution_policy": "serial",
+  "stages": {
+    "forced_tet.inp/32bit/sync": {
+      "precision": {
+        "median": 4,
+        "min": 4,
+        "max": 4
+      },
+      "nodes": {
+        "median": 5,
+        "min": 5,
+        "max": 5
+      },
+      "elements": {
+        "median": 2,
+        "min": 2,
+        "max": 2
+      },
+      "increments": {
+        "median": 2000,
+        "min": 2000,
+        "max": 2000
+      },
+      "frames": {
+        "median": 21,
+        "min": 21,
+        "max": 21
+      },
+      "parse_ms": {
+        "median": 0.428,
+        "min": 0.389,
+        "max": 0.647
+      },
+      "compile_ms": {
+        "median": 0.076,
+        "min": 0.074,
+        "max": 0.149
+      },
+      "plan_ms": {
+        "median": 0.026,
+        "min": 0.015,
+        "max": 0.033
+      },
+      "initialize_ms": {
+        "median": 0.006,
+        "min": 0.005,
+        "max": 0.014
+      },
+      "storage_setup_ms": {
+        "median": 6.258,
+        "min": 6.209,
+        "max": 9.965
+      },
+      "first_step_ms": {
+        "median": 0.002,
+        "min": 0.001,
+        "max": 0.004
+      },
+      "steady_step_mean_ms": {
+        "median": 9.05452726e-05,
+        "min": 8.55427714e-05,
+        "max": 0.000153576788
+      },
+      "snapshot_total_ms": {
+        "median": 0.185,
+        "min": 0.182,
+        "max": 0.284
+      },
+      "standalone_v1_encode_20_ms": {
+        "median": 0.061,
+        "min": 0.058,
+        "max": 0.092
+      },
+      "write_or_admit_ms": {
+        "median": 1.734,
+        "min": 1.674,
+        "max": 2.948
+      },
+      "end_to_end_output_ms": {
+        "median": 9.053,
+        "min": 8.878,
+        "max": 14.601
+      },
+      "run_with_output_ms": {
+        "median": 2.259,
+        "min": 2.186,
+        "max": 3.793
+      },
+      "flush_ms": {
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "checkpoint_ms": {
+        "median": 8.173,
+        "min": 6.791,
+        "max": 22.393
+      },
+      "warm_cache_reopen_ms": {
+        "median": 0.133,
+        "min": 0.129,
+        "max": 0.255
+      },
+      "random_20_frames_ms": {
+        "median": 1.123,
+        "min": 1.071,
+        "max": 1.75
+      },
+      "node_history_ms": {
+        "median": 1.177,
+        "min": 1.157,
+        "max": 2.036
+      },
+      "restart_load_ms": {
+        "median": 0.087,
+        "min": 0.082,
+        "max": 0.205
+      },
+      "open_read_bytes": {
+        "median": 2285,
+        "min": 2285,
+        "max": 2285
+      },
+      "query_read_bytes": {
+        "median": 217372,
+        "min": 217372,
+        "max": 217372
+      },
+      "decoded_value_bytes": {
+        "median": 16760,
+        "min": 16760,
+        "max": 16760
+      },
+      "file_bytes": {
+        "median": 83324,
+        "min": 83324,
+        "max": 83324
+      },
+      "v1_encoded_bytes": {
+        "median": 52900,
+        "min": 52900,
+        "max": 52900
+      },
+      "queue_peak_charged_bytes": {
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "process_peak_bytes": {
+        "median": 6717440,
+        "min": 6705152,
+        "max": 7188480
+      }
+    },
+    "forced_tet.inp/64bit/sync": {
+      "precision": {
+        "median": 8,
+        "min": 8,
+        "max": 8
+      },
+      "nodes": {
+        "median": 5,
+        "min": 5,
+        "max": 5
+      },
+      "elements": {
+        "median": 2,
+        "min": 2,
+        "max": 2
+      },
+      "increments": {
+        "median": 2000,
+        "min": 2000,
+        "max": 2000
+      },
+      "frames": {
+        "median": 21,
+        "min": 21,
+        "max": 21
+      },
+      "parse_ms": {
+        "median": 0.238,
+        "min": 0.197,
+        "max": 0.889
+      },
+      "compile_ms": {
+        "median": 0.047,
+        "min": 0.046,
+        "max": 0.092
+      },
+      "plan_ms": {
+        "median": 0.011,
+        "min": 0.011,
+        "max": 0.024
+      },
+      "initialize_ms": {
+        "median": 0.004,
+        "min": 0.004,
+        "max": 0.008
+      },
+      "storage_setup_ms": {
+        "median": 4.847,
+        "min": 3.585,
+        "max": 16.939
+      },
+      "first_step_ms": {
+        "median": 0.001,
+        "min": 0,
+        "max": 0.004
+      },
+      "steady_step_mean_ms": {
+        "median": 0.000106053027,
+        "min": 9.90495248e-05,
+        "max": 0.000209104552
+      },
+      "snapshot_total_ms": {
+        "median": 0.179,
+        "min": 0.171,
+        "max": 0.328
+      },
+      "standalone_v1_encode_20_ms": {
+        "median": 0.06,
+        "min": 0.059,
+        "max": 0.09
+      },
+      "write_or_admit_ms": {
+        "median": 1.714,
+        "min": 1.711,
+        "max": 2.785
+      },
+      "end_to_end_output_ms": {
+        "median": 7.395,
+        "min": 6.088,
+        "max": 21.672
+      },
+      "run_with_output_ms": {
+        "median": 2.247,
+        "min": 2.244,
+        "max": 3.72
+      },
+      "flush_ms": {
+        "median": 0.001,
+        "min": 0,
+        "max": 0.001
+      },
+      "checkpoint_ms": {
+        "median": 6.884,
+        "min": 6.8,
+        "max": 24.541
+      },
+      "warm_cache_reopen_ms": {
+        "median": 0.138,
+        "min": 0.113,
+        "max": 0.299
+      },
+      "random_20_frames_ms": {
+        "median": 1.098,
+        "min": 1.094,
+        "max": 2.106
+      },
+      "node_history_ms": {
+        "median": 1.153,
+        "min": 1.148,
+        "max": 3.451
+      },
+      "restart_load_ms": {
+        "median": 0.083,
+        "min": 0.081,
+        "max": 0.253
+      },
+      "open_read_bytes": {
+        "median": 2285,
+        "min": 2285,
+        "max": 2285
+      },
+      "query_read_bytes": {
+        "median": 217372,
+        "min": 217372,
+        "max": 217372
+      },
+      "decoded_value_bytes": {
+        "median": 16760,
+        "min": 16760,
+        "max": 16760
+      },
+      "file_bytes": {
+        "median": 83324,
+        "min": 83324,
+        "max": 83324
+      },
+      "v1_encoded_bytes": {
+        "median": 52900,
+        "min": 52900,
+        "max": 52900
+      },
+      "queue_peak_charged_bytes": {
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "process_peak_bytes": {
+        "median": 6905856,
+        "min": 6905856,
+        "max": 7364608
+      }
+    },
+    "forced_tet.inp/32bit/async": {
+      "precision": {
+        "median": 4,
+        "min": 4,
+        "max": 4
+      },
+      "nodes": {
+        "median": 5,
+        "min": 5,
+        "max": 5
+      },
+      "elements": {
+        "median": 2,
+        "min": 2,
+        "max": 2
+      },
+      "increments": {
+        "median": 2000,
+        "min": 2000,
+        "max": 2000
+      },
+      "frames": {
+        "median": 21,
+        "min": 21,
+        "max": 21
+      },
+      "parse_ms": {
+        "median": 0.204,
+        "min": 0.186,
+        "max": 0.316
+      },
+      "compile_ms": {
+        "median": 0.037,
+        "min": 0.036,
+        "max": 0.056
+      },
+      "plan_ms": {
+        "median": 0.005,
+        "min": 0.005,
+        "max": 0.008
+      },
+      "initialize_ms": {
+        "median": 0.002,
+        "min": 0.002,
+        "max": 0.005
+      },
+      "storage_setup_ms": {
+        "median": 4.15,
+        "min": 3.617,
+        "max": 15.853
+      },
+      "first_step_ms": {
+        "median": 0,
+        "min": 0,
+        "max": 0.001
+      },
+      "steady_step_mean_ms": {
+        "median": 0.000110055028,
+        "min": 8.70435218e-05,
+        "max": 0.000140570285
+      },
+      "snapshot_total_ms": {
+        "median": 0.336,
+        "min": 0.255,
+        "max": 0.394
+      },
+      "standalone_v1_encode_20_ms": {
+        "median": 0.059,
+        "min": 0.058,
+        "max": 0.064
+      },
+      "write_or_admit_ms": {
+        "median": 0.195,
+        "min": 0.099,
+        "max": 0.587
+      },
+      "end_to_end_output_ms": {
+        "median": 6.314,
+        "min": 5.831,
+        "max": 19.857
+      },
+      "run_with_output_ms": {
+        "median": 0.82,
+        "min": 0.793,
+        "max": 1.494
+      },
+      "flush_ms": {
+        "median": 1.164,
+        "min": 1.121,
+        "max": 2.128
+      },
+      "checkpoint_ms": {
+        "median": 5.73,
+        "min": 5.711,
+        "max": 10.801
+      },
+      "warm_cache_reopen_ms": {
+        "median": 0.112,
+        "min": 0.11,
+        "max": 0.193
+      },
+      "random_20_frames_ms": {
+        "median": 1.138,
+        "min": 1.122,
+        "max": 1.831
+      },
+      "node_history_ms": {
+        "median": 1.174,
+        "min": 1.143,
+        "max": 1.869
+      },
+      "restart_load_ms": {
+        "median": 0.106,
+        "min": 0.091,
+        "max": 0.219
+      },
+      "open_read_bytes": {
+        "median": 2285,
+        "min": 2285,
+        "max": 2285
+      },
+      "query_read_bytes": {
+        "median": 217372,
+        "min": 217372,
+        "max": 217372
+      },
+      "decoded_value_bytes": {
+        "median": 16760,
+        "min": 16760,
+        "max": 16760
+      },
+      "file_bytes": {
+        "median": 83324,
+        "min": 83324,
+        "max": 83324
+      },
+      "v1_encoded_bytes": {
+        "median": 52900,
+        "min": 52900,
+        "max": 52900
+      },
+      "queue_peak_charged_bytes": {
+        "median": 1034085,
+        "min": 1034085,
+        "max": 1034085
+      },
+      "process_peak_bytes": {
+        "median": 7143424,
+        "min": 7118848,
+        "max": 7647232
+      }
+    },
+    "forced_tet.inp/64bit/async": {
+      "precision": {
+        "median": 8,
+        "min": 8,
+        "max": 8
+      },
+      "nodes": {
+        "median": 5,
+        "min": 5,
+        "max": 5
+      },
+      "elements": {
+        "median": 2,
+        "min": 2,
+        "max": 2
+      },
+      "increments": {
+        "median": 2000,
+        "min": 2000,
+        "max": 2000
+      },
+      "frames": {
+        "median": 21,
+        "min": 21,
+        "max": 21
+      },
+      "parse_ms": {
+        "median": 0.217,
+        "min": 0.204,
+        "max": 0.483
+      },
+      "compile_ms": {
+        "median": 0.038,
+        "min": 0.035,
+        "max": 0.061
+      },
+      "plan_ms": {
+        "median": 0.006,
+        "min": 0.006,
+        "max": 0.01
+      },
+      "initialize_ms": {
+        "median": 0.002,
+        "min": 0.002,
+        "max": 0.003
+      },
+      "storage_setup_ms": {
+        "median": 4.501,
+        "min": 3.524,
+        "max": 13.622
+      },
+      "first_step_ms": {
+        "median": 0.001,
+        "min": 0.001,
+        "max": 0.001
+      },
+      "steady_step_mean_ms": {
+        "median": 0.00012056028,
+        "min": 0.00011905953,
+        "max": 0.000141070535
+      },
+      "snapshot_total_ms": {
+        "median": 0.302,
+        "min": 0.226,
+        "max": 0.393
+      },
+      "standalone_v1_encode_20_ms": {
+        "median": 0.061,
+        "min": 0.061,
+        "max": 0.065
+      },
+      "write_or_admit_ms": {
+        "median": 0.208,
+        "min": 0.081,
+        "max": 0.418
+      },
+      "end_to_end_output_ms": {
+        "median": 6.774,
+        "min": 5.705,
+        "max": 26.027
+      },
+      "run_with_output_ms": {
+        "median": 0.841,
+        "min": 0.804,
+        "max": 1.344
+      },
+      "flush_ms": {
+        "median": 1.182,
+        "min": 1.117,
+        "max": 10.504
+      },
+      "checkpoint_ms": {
+        "median": 7.23,
+        "min": 6.169,
+        "max": 11.484
+      },
+      "warm_cache_reopen_ms": {
+        "median": 0.109,
+        "min": 0.103,
+        "max": 0.187
+      },
+      "random_20_frames_ms": {
+        "median": 1.111,
+        "min": 1.098,
+        "max": 1.703
+      },
+      "node_history_ms": {
+        "median": 1.154,
+        "min": 1.14,
+        "max": 1.82
+      },
+      "restart_load_ms": {
+        "median": 0.073,
+        "min": 0.071,
+        "max": 0.16
+      },
+      "open_read_bytes": {
+        "median": 2285,
+        "min": 2285,
+        "max": 2285
+      },
+      "query_read_bytes": {
+        "median": 217372,
+        "min": 217372,
+        "max": 217372
+      },
+      "decoded_value_bytes": {
+        "median": 16760,
+        "min": 16760,
+        "max": 16760
+      },
+      "file_bytes": {
+        "median": 83324,
+        "min": 83324,
+        "max": 83324
+      },
+      "v1_encoded_bytes": {
+        "median": 52900,
+        "min": 52900,
+        "max": 52900
+      },
+      "queue_peak_charged_bytes": {
+        "median": 1034085,
+        "min": 1034085,
+        "max": 1034085
+      },
+      "process_peak_bytes": {
+        "median": 7176192,
+        "min": 7127040,
+        "max": 7692288
+      }
+    },
+    "forced_hex.inp/32bit/sync": {
+      "precision": {
+        "median": 4,
+        "min": 4,
+        "max": 4
+      },
+      "nodes": {
+        "median": 8,
+        "min": 8,
+        "max": 8
+      },
+      "elements": {
+        "median": 1,
+        "min": 1,
+        "max": 1
+      },
+      "increments": {
+        "median": 1000,
+        "min": 1000,
+        "max": 1000
+      },
+      "frames": {
+        "median": 21,
+        "min": 21,
+        "max": 21
+      },
+      "parse_ms": {
+        "median": 0.238,
+        "min": 0.198,
+        "max": 0.344
+      },
+      "compile_ms": {
+        "median": 0.035,
+        "min": 0.035,
+        "max": 0.051
+      },
+      "plan_ms": {
+        "median": 0.016,
+        "min": 0.015,
+        "max": 0.031
+      },
+      "initialize_ms": {
+        "median": 0.003,
+        "min": 0.003,
+        "max": 0.004
+      },
+      "storage_setup_ms": {
+        "median": 4.363,
+        "min": 4.054,
+        "max": 20.295
+      },
+      "first_step_ms": {
+        "median": 0.001,
+        "min": 0,
+        "max": 0.002
+      },
+      "steady_step_mean_ms": {
+        "median": 0.00028028028,
+        "min": 0.000275275275,
+        "max": 0.000464464464
+      },
+      "snapshot_total_ms": {
+        "median": 0.22,
+        "min": 0.203,
+        "max": 0.516
+      },
+      "standalone_v1_encode_20_ms": {
+        "median": 0.184,
+        "min": 0.182,
+        "max": 0.206
+      },
+      "write_or_admit_ms": {
+        "median": 3.033,
+        "min": 2.979,
+        "max": 7.341
+      },
+      "end_to_end_output_ms": {
+        "median": 8.305,
+        "min": 7.867,
+        "max": 29.298
+      },
+      "run_with_output_ms": {
+        "median": 3.651,
+        "min": 3.561,
+        "max": 8.573
+      },
+      "flush_ms": {
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "checkpoint_ms": {
+        "median": 7.74,
+        "min": 6.969,
+        "max": 19.017
+      },
+      "warm_cache_reopen_ms": {
+        "median": 0.112,
+        "min": 0.106,
+        "max": 0.18
+      },
+      "random_20_frames_ms": {
+        "median": 2.203,
+        "min": 2.089,
+        "max": 3.385
+      },
+      "node_history_ms": {
+        "median": 1.647,
+        "min": 1.623,
+        "max": 2.82
+      },
+      "restart_load_ms": {
+        "median": 0.116,
+        "min": 0.111,
+        "max": 0.246
+      },
+      "open_read_bytes": {
+        "median": 2587,
+        "min": 2587,
+        "max": 2587
+      },
+      "query_read_bytes": {
+        "median": 343017,
+        "min": 343017,
+        "max": 343017
+      },
+      "decoded_value_bytes": {
+        "median": 26864,
+        "min": 26864,
+        "max": 26864
+      },
+      "file_bytes": {
+        "median": 163543,
+        "min": 163543,
+        "max": 163543
+      },
+      "v1_encoded_bytes": {
+        "median": 178360,
+        "min": 178360,
+        "max": 178360
+      },
+      "queue_peak_charged_bytes": {
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "process_peak_bytes": {
+        "median": 7348224,
+        "min": 7213056,
+        "max": 7733248
+      }
+    },
+    "forced_hex.inp/64bit/sync": {
+      "precision": {
+        "median": 8,
+        "min": 8,
+        "max": 8
+      },
+      "nodes": {
+        "median": 8,
+        "min": 8,
+        "max": 8
+      },
+      "elements": {
+        "median": 1,
+        "min": 1,
+        "max": 1
+      },
+      "increments": {
+        "median": 1000,
+        "min": 1000,
+        "max": 1000
+      },
+      "frames": {
+        "median": 21,
+        "min": 21,
+        "max": 21
+      },
+      "parse_ms": {
+        "median": 0.217,
+        "min": 0.201,
+        "max": 0.313
+      },
+      "compile_ms": {
+        "median": 0.037,
+        "min": 0.036,
+        "max": 0.05
+      },
+      "plan_ms": {
+        "median": 0.015,
+        "min": 0.014,
+        "max": 0.032
+      },
+      "initialize_ms": {
+        "median": 0.003,
+        "min": 0.003,
+        "max": 0.004
+      },
+      "storage_setup_ms": {
+        "median": 4.865,
+        "min": 3.953,
+        "max": 23.243
+      },
+      "first_step_ms": {
+        "median": 0.001,
+        "min": 0.001,
+        "max": 0.002
+      },
+      "steady_step_mean_ms": {
+        "median": 0.000286286286,
+        "min": 0.000267267267,
+        "max": 0.000432432432
+      },
+      "snapshot_total_ms": {
+        "median": 0.236,
+        "min": 0.223,
+        "max": 0.399
+      },
+      "standalone_v1_encode_20_ms": {
+        "median": 0.187,
+        "min": 0.181,
+        "max": 0.276
+      },
+      "write_or_admit_ms": {
+        "median": 3.011,
+        "min": 2.956,
+        "max": 4.872
+      },
+      "end_to_end_output_ms": {
+        "median": 8.689,
+        "min": 7.828,
+        "max": 29.51
+      },
+      "run_with_output_ms": {
+        "median": 3.62,
+        "min": 3.553,
+        "max": 5.868
+      },
+      "flush_ms": {
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "checkpoint_ms": {
+        "median": 7.251,
+        "min": 6.574,
+        "max": 37.717
+      },
+      "warm_cache_reopen_ms": {
+        "median": 0.125,
+        "min": 0.108,
+        "max": 0.196
+      },
+      "random_20_frames_ms": {
+        "median": 2.112,
+        "min": 2.088,
+        "max": 3.444
+      },
+      "node_history_ms": {
+        "median": 1.505,
+        "min": 1.496,
+        "max": 2.62
+      },
+      "restart_load_ms": {
+        "median": 0.092,
+        "min": 0.091,
+        "max": 0.353
+      },
+      "open_read_bytes": {
+        "median": 2587,
+        "min": 2587,
+        "max": 2587
+      },
+      "query_read_bytes": {
+        "median": 343017,
+        "min": 343017,
+        "max": 343017
+      },
+      "decoded_value_bytes": {
+        "median": 26864,
+        "min": 26864,
+        "max": 26864
+      },
+      "file_bytes": {
+        "median": 163543,
+        "min": 163543,
+        "max": 163543
+      },
+      "v1_encoded_bytes": {
+        "median": 178360,
+        "min": 178360,
+        "max": 178360
+      },
+      "queue_peak_charged_bytes": {
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "process_peak_bytes": {
+        "median": 7348224,
+        "min": 7229440,
+        "max": 7778304
+      }
+    },
+    "forced_hex.inp/32bit/async": {
+      "precision": {
+        "median": 4,
+        "min": 4,
+        "max": 4
+      },
+      "nodes": {
+        "median": 8,
+        "min": 8,
+        "max": 8
+      },
+      "elements": {
+        "median": 1,
+        "min": 1,
+        "max": 1
+      },
+      "increments": {
+        "median": 1000,
+        "min": 1000,
+        "max": 1000
+      },
+      "frames": {
+        "median": 21,
+        "min": 21,
+        "max": 21
+      },
+      "parse_ms": {
+        "median": 0.221,
+        "min": 0.207,
+        "max": 0.421
+      },
+      "compile_ms": {
+        "median": 0.038,
+        "min": 0.036,
+        "max": 0.066
+      },
+      "plan_ms": {
+        "median": 0.01,
+        "min": 0.009,
+        "max": 0.017
+      },
+      "initialize_ms": {
+        "median": 0.003,
+        "min": 0.003,
+        "max": 0.006
+      },
+      "storage_setup_ms": {
+        "median": 4.308,
+        "min": 4.039,
+        "max": 19.257
+      },
+      "first_step_ms": {
+        "median": 0.001,
+        "min": 0.001,
+        "max": 0.001
+      },
+      "steady_step_mean_ms": {
+        "median": 0.000438438438,
+        "min": 0.000298298298,
+        "max": 0.000505505506
+      },
+      "snapshot_total_ms": {
+        "median": 0.342,
+        "min": 0.323,
+        "max": 0.546
+      },
+      "standalone_v1_encode_20_ms": {
+        "median": 0.188,
+        "min": 0.161,
+        "max": 0.266
+      },
+      "write_or_admit_ms": {
+        "median": 0.883,
+        "min": 0.784,
+        "max": 1.877
+      },
+      "end_to_end_output_ms": {
+        "median": 7.952,
+        "min": 7.662,
+        "max": 25.666
+      },
+      "run_with_output_ms": {
+        "median": 1.649,
+        "min": 1.602,
+        "max": 3.06
+      },
+      "flush_ms": {
+        "median": 1.749,
+        "min": 1.74,
+        "max": 2.839
+      },
+      "checkpoint_ms": {
+        "median": 7.151,
+        "min": 5.989,
+        "max": 12.298
+      },
+      "warm_cache_reopen_ms": {
+        "median": 0.145,
+        "min": 0.106,
+        "max": 0.205
+      },
+      "random_20_frames_ms": {
+        "median": 2.162,
+        "min": 2.146,
+        "max": 6.407
+      },
+      "node_history_ms": {
+        "median": 1.501,
+        "min": 1.498,
+        "max": 2.849
+      },
+      "restart_load_ms": {
+        "median": 0.129,
+        "min": 0.099,
+        "max": 0.459
+      },
+      "open_read_bytes": {
+        "median": 2587,
+        "min": 2587,
+        "max": 2587
+      },
+      "query_read_bytes": {
+        "median": 343017,
+        "min": 343017,
+        "max": 343017
+      },
+      "decoded_value_bytes": {
+        "median": 26864,
+        "min": 26864,
+        "max": 26864
+      },
+      "file_bytes": {
+        "median": 163543,
+        "min": 163543,
+        "max": 163543
+      },
+      "v1_encoded_bytes": {
+        "median": 178360,
+        "min": 178360,
+        "max": 178360
+      },
+      "queue_peak_charged_bytes": {
+        "median": 1027338,
+        "min": 1027338,
+        "max": 1027338
+      },
+      "process_peak_bytes": {
+        "median": 7421952,
+        "min": 7356416,
+        "max": 7950336
+      }
+    },
+    "forced_hex.inp/64bit/async": {
+      "precision": {
+        "median": 8,
+        "min": 8,
+        "max": 8
+      },
+      "nodes": {
+        "median": 8,
+        "min": 8,
+        "max": 8
+      },
+      "elements": {
+        "median": 1,
+        "min": 1,
+        "max": 1
+      },
+      "increments": {
+        "median": 1000,
+        "min": 1000,
+        "max": 1000
+      },
+      "frames": {
+        "median": 21,
+        "min": 21,
+        "max": 21
+      },
+      "parse_ms": {
+        "median": 0.257,
+        "min": 0.203,
+        "max": 0.383
+      },
+      "compile_ms": {
+        "median": 0.039,
+        "min": 0.035,
+        "max": 0.062
+      },
+      "plan_ms": {
+        "median": 0.01,
+        "min": 0.01,
+        "max": 0.017
+      },
+      "initialize_ms": {
+        "median": 0.003,
+        "min": 0.003,
+        "max": 0.005
+      },
+      "storage_setup_ms": {
+        "median": 5.043,
+        "min": 3.484,
+        "max": 9.056
+      },
+      "first_step_ms": {
+        "median": 0.001,
+        "min": 0.001,
+        "max": 0.001
+      },
+      "steady_step_mean_ms": {
+        "median": 0.000427427427,
+        "min": 0.000364364364,
+        "max": 0.000497497497
+      },
+      "snapshot_total_ms": {
+        "median": 0.343,
+        "min": 0.324,
+        "max": 5.645
+      },
+      "standalone_v1_encode_20_ms": {
+        "median": 0.182,
+        "min": 0.111,
+        "max": 0.234
+      },
+      "write_or_admit_ms": {
+        "median": 1.563,
+        "min": 0.78,
+        "max": 5.298
+      },
+      "end_to_end_output_ms": {
+        "median": 8.766,
+        "min": 8.327,
+        "max": 24.111
+      },
+      "run_with_output_ms": {
+        "median": 2.46,
+        "min": 1.573,
+        "max": 11.574
+      },
+      "flush_ms": {
+        "median": 2.132,
+        "min": 1.841,
+        "max": 3.014
+      },
+      "checkpoint_ms": {
+        "median": 6.408,
+        "min": 6.067,
+        "max": 10.053
+      },
+      "warm_cache_reopen_ms": {
+        "median": 0.109,
+        "min": 0.109,
+        "max": 0.161
+      },
+      "random_20_frames_ms": {
+        "median": 2.216,
+        "min": 2.201,
+        "max": 3.223
+      },
+      "node_history_ms": {
+        "median": 1.595,
+        "min": 1.524,
+        "max": 2.408
+      },
+      "restart_load_ms": {
+        "median": 0.115,
+        "min": 0.1,
+        "max": 0.21
+      },
+      "open_read_bytes": {
+        "median": 2587,
+        "min": 2587,
+        "max": 2587
+      },
+      "query_read_bytes": {
+        "median": 343017,
+        "min": 343017,
+        "max": 343017
+      },
+      "decoded_value_bytes": {
+        "median": 26864,
+        "min": 26864,
+        "max": 26864
+      },
+      "file_bytes": {
+        "median": 163543,
+        "min": 163543,
+        "max": 163543
+      },
+      "v1_encoded_bytes": {
+        "median": 178360,
+        "min": 178360,
+        "max": 178360
+      },
+      "queue_peak_charged_bytes": {
+        "median": 1027338,
+        "min": 1027338,
+        "max": 1027338
+      },
+      "process_peak_bytes": {
+        "median": 7479296,
+        "min": 7389184,
+        "max": 7954432
+      }
+    },
+    "mixed_hex_tet.inp/32bit/sync": {
+      "precision": {
+        "median": 4,
+        "min": 4,
+        "max": 4
+      },
+      "nodes": {
+        "median": 9,
+        "min": 9,
+        "max": 9
+      },
+      "elements": {
+        "median": 2,
+        "min": 2,
+        "max": 2
+      },
+      "increments": {
+        "median": 1000,
+        "min": 1000,
+        "max": 1000
+      },
+      "frames": {
+        "median": 21,
+        "min": 21,
+        "max": 21
+      },
+      "parse_ms": {
+        "median": 0.241,
+        "min": 0.225,
+        "max": 0.377
+      },
+      "compile_ms": {
+        "median": 0.044,
+        "min": 0.041,
+        "max": 0.065
+      },
+      "plan_ms": {
+        "median": 0.01,
+        "min": 0.009,
+        "max": 0.015
+      },
+      "initialize_ms": {
+        "median": 0.003,
+        "min": 0.003,
+        "max": 0.004
+      },
+      "storage_setup_ms": {
+        "median": 4.908,
+        "min": 4.289,
+        "max": 8.858
+      },
+      "first_step_ms": {
+        "median": 0.002,
+        "min": 0.002,
+        "max": 0.002
+      },
+      "steady_step_mean_ms": {
+        "median": 0.000286286286,
+        "min": 0.000285285285,
+        "max": 0.000458458458
+      },
+      "snapshot_total_ms": {
+        "median": 0.241,
+        "min": 0.206,
+        "max": 0.335
+      },
+      "standalone_v1_encode_20_ms": {
+        "median": 0.189,
+        "min": 0.189,
+        "max": 0.285
+      },
+      "write_or_admit_ms": {
+        "median": 3.117,
+        "min": 3.049,
+        "max": 6.608
+      },
+      "end_to_end_output_ms": {
+        "median": 8.936,
+        "min": 8.211,
+        "max": 16.876
+      },
+      "run_with_output_ms": {
+        "median": 3.746,
+        "min": 3.627,
+        "max": 7.557
+      },
+      "flush_ms": {
+        "median": 0,
+        "min": 0,
+        "max": 0.001
+      },
+      "checkpoint_ms": {
+        "median": 6.765,
+        "min": 6.476,
+        "max": 29.223
+      },
+      "warm_cache_reopen_ms": {
+        "median": 0.224,
+        "min": 0.119,
+        "max": 0.301
+      },
+      "random_20_frames_ms": {
+        "median": 2.169,
+        "min": 2.139,
+        "max": 3.86
+      },
+      "node_history_ms": {
+        "median": 1.506,
+        "min": 1.501,
+        "max": 2.816
+      },
+      "restart_load_ms": {
+        "median": 0.099,
+        "min": 0.091,
+        "max": 0.667
+      },
+      "open_read_bytes": {
+        "median": 3045,
+        "min": 3045,
+        "max": 3045
+      },
+      "query_read_bytes": {
+        "median": 347587,
+        "min": 347587,
+        "max": 347587
+      },
+      "decoded_value_bytes": {
+        "median": 30200,
+        "min": 30200,
+        "max": 30200
+      },
+      "file_bytes": {
+        "median": 167817,
+        "min": 167817,
+        "max": 167817
+      },
+      "v1_encoded_bytes": {
+        "median": 184280,
+        "min": 184280,
+        "max": 184280
+      },
+      "queue_peak_charged_bytes": {
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "process_peak_bytes": {
+        "median": 7479296,
+        "min": 7389184,
+        "max": 7954432
+      }
+    },
+    "mixed_hex_tet.inp/64bit/sync": {
+      "precision": {
+        "median": 8,
+        "min": 8,
+        "max": 8
+      },
+      "nodes": {
+        "median": 9,
+        "min": 9,
+        "max": 9
+      },
+      "elements": {
+        "median": 2,
+        "min": 2,
+        "max": 2
+      },
+      "increments": {
+        "median": 1000,
+        "min": 1000,
+        "max": 1000
+      },
+      "frames": {
+        "median": 21,
+        "min": 21,
+        "max": 21
+      },
+      "parse_ms": {
+        "median": 0.246,
+        "min": 0.204,
+        "max": 0.33
+      },
+      "compile_ms": {
+        "median": 0.04,
+        "min": 0.038,
+        "max": 0.061
+      },
+      "plan_ms": {
+        "median": 0.01,
+        "min": 0.01,
+        "max": 0.016
+      },
+      "initialize_ms": {
+        "median": 0.003,
+        "min": 0.003,
+        "max": 0.004
+      },
+      "storage_setup_ms": {
+        "median": 4.872,
+        "min": 3.562,
+        "max": 9.214
+      },
+      "first_step_ms": {
+        "median": 0.001,
+        "min": 0,
+        "max": 0.003
+      },
+      "steady_step_mean_ms": {
+        "median": 0.000315315315,
+        "min": 0.000287287287,
+        "max": 0.000515515516
+      },
+      "snapshot_total_ms": {
+        "median": 0.194,
+        "min": 0.19,
+        "max": 0.446
+      },
+      "standalone_v1_encode_20_ms": {
+        "median": 0.195,
+        "min": 0.186,
+        "max": 0.289
+      },
+      "write_or_admit_ms": {
+        "median": 3.09,
+        "min": 3.045,
+        "max": 5.384
+      },
+      "end_to_end_output_ms": {
+        "median": 8.842,
+        "min": 7.451,
+        "max": 16.17
+      },
+      "run_with_output_ms": {
+        "median": 3.673,
+        "min": 3.63,
+        "max": 6.546
+      },
+      "flush_ms": {
+        "median": 0,
+        "min": 0,
+        "max": 0.001
+      },
+      "checkpoint_ms": {
+        "median": 6.041,
+        "min": 5.793,
+        "max": 18.016
+      },
+      "warm_cache_reopen_ms": {
+        "median": 0.142,
+        "min": 0.116,
+        "max": 0.269
+      },
+      "random_20_frames_ms": {
+        "median": 2.179,
+        "min": 2.119,
+        "max": 5.112
+      },
+      "node_history_ms": {
+        "median": 1.538,
+        "min": 1.51,
+        "max": 10.195
+      },
+      "restart_load_ms": {
+        "median": 0.12,
+        "min": 0.092,
+        "max": 0.3
+      },
+      "open_read_bytes": {
+        "median": 3045,
+        "min": 3045,
+        "max": 3045
+      },
+      "query_read_bytes": {
+        "median": 347587,
+        "min": 347587,
+        "max": 347587
+      },
+      "decoded_value_bytes": {
+        "median": 30200,
+        "min": 30200,
+        "max": 30200
+      },
+      "file_bytes": {
+        "median": 167817,
+        "min": 167817,
+        "max": 167817
+      },
+      "v1_encoded_bytes": {
+        "median": 184280,
+        "min": 184280,
+        "max": 184280
+      },
+      "queue_peak_charged_bytes": {
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "process_peak_bytes": {
+        "median": 7479296,
+        "min": 7389184,
+        "max": 7999488
+      }
+    },
+    "mixed_hex_tet.inp/32bit/async": {
+      "precision": {
+        "median": 4,
+        "min": 4,
+        "max": 4
+      },
+      "nodes": {
+        "median": 9,
+        "min": 9,
+        "max": 9
+      },
+      "elements": {
+        "median": 2,
+        "min": 2,
+        "max": 2
+      },
+      "increments": {
+        "median": 1000,
+        "min": 1000,
+        "max": 1000
+      },
+      "frames": {
+        "median": 21,
+        "min": 21,
+        "max": 21
+      },
+      "parse_ms": {
+        "median": 0.226,
+        "min": 0.204,
+        "max": 0.406
+      },
+      "compile_ms": {
+        "median": 0.042,
+        "min": 0.042,
+        "max": 0.068
+      },
+      "plan_ms": {
+        "median": 0.009,
+        "min": 0.009,
+        "max": 0.016
+      },
+      "initialize_ms": {
+        "median": 0.003,
+        "min": 0.003,
+        "max": 0.005
+      },
+      "storage_setup_ms": {
+        "median": 4.341,
+        "min": 4.058,
+        "max": 8.159
+      },
+      "first_step_ms": {
+        "median": 0.001,
+        "min": 0.001,
+        "max": 0.002
+      },
+      "steady_step_mean_ms": {
+        "median": 0.000454454454,
+        "min": 0.00033033033,
+        "max": 0.000537537538
+      },
+      "snapshot_total_ms": {
+        "median": 0.386,
+        "min": 0.297,
+        "max": 0.521
+      },
+      "standalone_v1_encode_20_ms": {
+        "median": 0.212,
+        "min": 0.186,
+        "max": 0.296
+      },
+      "write_or_admit_ms": {
+        "median": 0.939,
+        "min": 0.88,
+        "max": 1.244
+      },
+      "end_to_end_output_ms": {
+        "median": 8.169,
+        "min": 7.649,
+        "max": 13.708
+      },
+      "run_with_output_ms": {
+        "median": 1.814,
+        "min": 1.653,
+        "max": 2.415
+      },
+      "flush_ms": {
+        "median": 1.734,
+        "min": 1.68,
+        "max": 2.639
+      },
+      "checkpoint_ms": {
+        "median": 7.558,
+        "min": 6.337,
+        "max": 17.422
+      },
+      "warm_cache_reopen_ms": {
+        "median": 0.112,
+        "min": 0.11,
+        "max": 0.205
+      },
+      "random_20_frames_ms": {
+        "median": 2.153,
+        "min": 2.081,
+        "max": 6.121
+      },
+      "node_history_ms": {
+        "median": 1.545,
+        "min": 1.495,
+        "max": 2.646
+      },
+      "restart_load_ms": {
+        "median": 0.096,
+        "min": 0.084,
+        "max": 0.254
+      },
+      "open_read_bytes": {
+        "median": 3045,
+        "min": 3045,
+        "max": 3045
+      },
+      "query_read_bytes": {
+        "median": 347587,
+        "min": 347587,
+        "max": 347587
+      },
+      "decoded_value_bytes": {
+        "median": 30200,
+        "min": 30200,
+        "max": 30200
+      },
+      "file_bytes": {
+        "median": 167817,
+        "min": 167817,
+        "max": 167817
+      },
+      "v1_encoded_bytes": {
+        "median": 184280,
+        "min": 184280,
+        "max": 184280
+      },
+      "queue_peak_charged_bytes": {
+        "median": 1034458,
+        "min": 1034458,
+        "max": 1034458
+      },
+      "process_peak_bytes": {
+        "median": 7593984,
+        "min": 7495680,
+        "max": 8097792
+      }
+    },
+    "mixed_hex_tet.inp/64bit/async": {
+      "precision": {
+        "median": 8,
+        "min": 8,
+        "max": 8
+      },
+      "nodes": {
+        "median": 9,
+        "min": 9,
+        "max": 9
+      },
+      "elements": {
+        "median": 2,
+        "min": 2,
+        "max": 2
+      },
+      "increments": {
+        "median": 1000,
+        "min": 1000,
+        "max": 1000
+      },
+      "frames": {
+        "median": 21,
+        "min": 21,
+        "max": 21
+      },
+      "parse_ms": {
+        "median": 0.217,
+        "min": 0.202,
+        "max": 0.34
+      },
+      "compile_ms": {
+        "median": 0.04,
+        "min": 0.039,
+        "max": 0.064
+      },
+      "plan_ms": {
+        "median": 0.014,
+        "min": 0.01,
+        "max": 0.016
+      },
+      "initialize_ms": {
+        "median": 0.005,
+        "min": 0.004,
+        "max": 0.006
+      },
+      "storage_setup_ms": {
+        "median": 4.597,
+        "min": 4.413,
+        "max": 12.467
+      },
+      "first_step_ms": {
+        "median": 0.001,
+        "min": 0.001,
+        "max": 0.002
+      },
+      "steady_step_mean_ms": {
+        "median": 0.000427427427,
+        "min": 0.000306306306,
+        "max": 0.000478478478
+      },
+      "snapshot_total_ms": {
+        "median": 0.304,
+        "min": 0.282,
+        "max": 0.549
+      },
+      "standalone_v1_encode_20_ms": {
+        "median": 0.2,
+        "min": 0.111,
+        "max": 0.321
+      },
+      "write_or_admit_ms": {
+        "median": 1.008,
+        "min": 0.904,
+        "max": 1.293
+      },
+      "end_to_end_output_ms": {
+        "median": 8.475,
+        "min": 8.291,
+        "max": 18.085
+      },
+      "run_with_output_ms": {
+        "median": 1.707,
+        "min": 1.695,
+        "max": 2.459
+      },
+      "flush_ms": {
+        "median": 1.922,
+        "min": 1.899,
+        "max": 2.735
+      },
+      "checkpoint_ms": {
+        "median": 7.236,
+        "min": 6.294,
+        "max": 10.439
+      },
+      "warm_cache_reopen_ms": {
+        "median": 0.156,
+        "min": 0.116,
+        "max": 0.177
+      },
+      "random_20_frames_ms": {
+        "median": 2.351,
+        "min": 2.13,
+        "max": 4.156
+      },
+      "node_history_ms": {
+        "median": 1.606,
+        "min": 1.515,
+        "max": 2.723
+      },
+      "restart_load_ms": {
+        "median": 0.151,
+        "min": 0.094,
+        "max": 0.301
+      },
+      "open_read_bytes": {
+        "median": 3045,
+        "min": 3045,
+        "max": 3045
+      },
+      "query_read_bytes": {
+        "median": 347587,
+        "min": 347587,
+        "max": 347587
+      },
+      "decoded_value_bytes": {
+        "median": 30200,
+        "min": 30200,
+        "max": 30200
+      },
+      "file_bytes": {
+        "median": 167817,
+        "min": 167817,
+        "max": 167817
+      },
+      "v1_encoded_bytes": {
+        "median": 184280,
+        "min": 184280,
+        "max": 184280
+      },
+      "queue_peak_charged_bytes": {
+        "median": 1034458,
+        "min": 1034458,
+        "max": 1034458
+      },
+      "process_peak_bytes": {
+        "median": 7630848,
+        "min": 7581696,
+        "max": 8097792
+      }
+    }
+  },
+  "large_legacy_tet": {
+    "omp_compiled": {
+      "median": 1,
+      "min": 1,
+      "max": 1
+    },
+    "omp_max_threads": {
+      "median": 4,
+      "min": 4,
+      "max": 4
+    },
+    "nodes": {
+      "median": 20000,
+      "min": 20000,
+      "max": 20000
+    },
+    "elements": {
+      "median": 5000,
+      "min": 5000,
+      "max": 5000
+    },
+    "plan_increments": {
+      "median": 21,
+      "min": 21,
+      "max": 21
+    },
+    "executed_increments": {
+      "median": 10,
+      "min": 10,
+      "max": 10
+    },
+    "frames_written": {
+      "median": 1,
+      "min": 1,
+      "max": 1
+    },
+    "run_setup_ms": {
+      "median": 1.866,
+      "min": 1.775,
+      "max": 1.958
+    },
+    "initialize_ms": {
+      "median": 0.225,
+      "min": 0.218,
+      "max": 0.234
+    },
+    "kernel_only_ms": {
+      "median": 0.128,
+      "min": 0.127,
+      "max": 0.129
+    },
+    "budget_bytes": {
+      "median": 268435456,
+      "min": 268435456,
+      "max": 268435456
+    },
+    "peak_process_bytes": {
+      "median": 32956416,
+      "min": 32956416,
+      "max": 33009664
+    },
+    "compile_ms": {
+      "median": 11.567,
+      "min": 11.486,
+      "max": 11.866
+    },
+    "kernel_ms": {
+      "median": 0.223,
+      "min": 0.221,
+      "max": 0.225
+    },
+    "nondue_snapshot_ms": {
+      "median": 0.007,
+      "min": 0.006,
+      "max": 0.01
+    },
+    "steady_kernel_ms": {
+      "median": 1.638,
+      "min": 1.637,
+      "max": 1.645
+    },
+    "steady_kernel_per_increment_ms": {
+      "median": 0.20475,
+      "min": 0.204625,
+      "max": 0.205625
+    },
+    "force_evaluations": {
+      "median": 12,
+      "min": 12,
+      "max": 12
+    },
+    "snapshot_ms": {
+      "median": 0.15,
+      "min": 0.133,
+      "max": 0.16
+    },
+    "native_write_ms": {
+      "median": 28.625,
+      "min": 28.356,
+      "max": 32.163
+    },
+    "reader_scan_query_ms": {
+      "median": 32.973,
+      "min": 32.414,
+      "max": 33.369
+    },
+    "restart_write_ms": {
+      "median": 38.127,
+      "min": 36.582,
+      "max": 38.531
+    },
+    "restart_restore_ms": {
+      "median": 33.766,
+      "min": 33.287,
+      "max": 34.088
+    },
+    "result_bytes": {
+      "median": 3210375,
+      "min": 3210375,
+      "max": 3210375
+    },
+    "restart_bytes": {
+      "median": 3748181,
+      "min": 3748181,
+      "max": 3748181
+    }
+  },
+  "indexed_100000_frames": {
+    "frames": {
+      "median": 100000.0,
+      "min": 100000.0,
+      "max": 100000.0
+    },
+    "write_ms": {
+      "median": 10448.7,
+      "min": 10393.8,
+      "max": 12251.1
+    },
+    "open_ms": {
+      "median": 4.883,
+      "min": 4.443,
+      "max": 5.116
+    },
+    "query_read_bytes": {
+      "median": 25178.0,
+      "min": 25178.0,
+      "max": 25178.0
+    },
+    "value_bytes": {
+      "median": 120.0,
+      "min": 120.0,
+      "max": 120.0
+    }
+  }
+}

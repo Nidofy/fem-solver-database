@@ -1,0 +1,7 @@
+{
+  "exit_code": 0,
+  "scope": "whole indexed_results_contracts process; sampled PeakWorkingSet64",
+  "peak_working_set_bytes": 67702784,
+  "runtime_commit": "ca4b682e8181584c62bb1f5afe4e97a4f0276300",
+  "elapsed_ms": 10888.4683
+}

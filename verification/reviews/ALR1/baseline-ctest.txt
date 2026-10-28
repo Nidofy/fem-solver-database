@@ -1,0 +1,51 @@
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01
+    Start 1: general_contact_contracts
+1/8 Test #1: general_contact_contracts ........Exit code 0xc0000139***Exception:  63.73 sec
+
+    Start 2: general_contact_demo
+2/8 Test #2: general_contact_demo .............Exit code 0xc0000139***Exception:   1.55 sec
+
+    Start 3: general_contact_geometry
+3/8 Test #3: general_contact_geometry .........Exit code 0xc0000139***Exception:   0.64 sec
+
+    Start 4: general_contact_domain_demo
+4/8 Test #4: general_contact_domain_demo ......Exit code 0xc0000139***Exception:   0.75 sec
+
+    Start 5: lifecycle_contracts
+5/8 Test #5: lifecycle_contracts ..............Exit code 0xc0000139***Exception:   0.47 sec
+
+    Start 6: lifecycle_process_pipeline
+6/8 Test #6: lifecycle_process_pipeline .......***Failed    0.89 sec
+Traceback (most recent call last):
+  File "D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\pipeline.py", line 26, in <module>
+    print(invoke("--input", fixture, "--backend", "cpu", "--precision", precision,
+          ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                 "--output", result, "--save-model", model).strip())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\pipeline.py", line 16, in invoke
+    raise AssertionError(f"command {args}: {p.returncode}\n{p.stdout}\n{p.stderr}")
+AssertionError: command ('--input', 'D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus/forced_tet.inp', '--backend', 'cpu', '--precision', 'float', '--output', WindowsPath('D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01/pipeline-scratch/float.sdbres'), '--save-model', WindowsPath('D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01/pipeline-scratch/float.sdbmodel')): 3221225785
+
+
+
+    Start 7: database_contracts
+7/8 Test #7: database_contracts ...............Exit code 0xc0000139***Exception:   0.49 sec
+
+    Start 8: explicit_numerics
+8/8 Test #8: explicit_numerics ................Exit code 0xc0000139***Exception:   0.44 sec
+
+
+0% tests passed, 8 tests failed out of 8
+
+Total Test time (real) =  69.10 sec
+
+The following tests FAILED:
+	  1 - general_contact_contracts (Exit code 0xc0000139)
+	  2 - general_contact_demo (Exit code 0xc0000139)
+	  3 - general_contact_geometry (Exit code 0xc0000139)
+	  4 - general_contact_domain_demo (Exit code 0xc0000139)
+	  5 - lifecycle_contracts (Exit code 0xc0000139)
+	  6 - lifecycle_process_pipeline (Failed)
+	  7 - database_contracts (Exit code 0xc0000139)
+	  8 - explicit_numerics (Exit code 0xc0000139)
+Errors while running CTest

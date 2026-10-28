@@ -1,0 +1,2 @@
+frames=100000 write_ms=10448.7 open_ms=5.116 query_read_bytes=25178 value_bytes=120
+indexed results PASS

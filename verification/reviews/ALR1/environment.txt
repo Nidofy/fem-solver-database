@@ -1,0 +1,20 @@
+Client date: 2026-10-29, Asia/Shanghai
+cmake version 4.3.1-msvc1
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+g++.exe (x86_64-win32-seh-rev0, Built by MinGW-Builds project) 15.2.0
+Copyright (C) 2025 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Python 3.14.0
+Processor: Intel(R) Core(TM) Ultra 9 285H
+NUMBER_OF_PROCESSORS=16
+OS=Microsoft Windows NT 10.0.26200.0
+OMP_NUM_THREADS=4 for OpenMP contracts; CpuRun lifecycle execution remains serial
+Release GCC flags: -O3 -DNDEBUG -std=gnu++20; SDB_OPENMP ON/OFF
+MSVC RelWithDebInfo: /fsanitize=address; SDB_OPENMP OFF; no UBSan/TSan
+nvcc_PATH=False
+nvidia_smi_PATH=False
+default_CUDA_directory=False
+CIM hardware queries denied; physical GPU absence is not asserted. No CUDA compile/device PASS.

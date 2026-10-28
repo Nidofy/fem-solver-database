@@ -1,0 +1,25 @@
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01
+      Start  1: general_contact_contracts
+ 1/10 Test  #1: general_contact_contracts ........   Passed    0.11 sec
+      Start  2: general_contact_demo
+ 2/10 Test  #2: general_contact_demo .............   Passed    0.14 sec
+      Start  3: general_contact_geometry
+ 3/10 Test  #3: general_contact_geometry .........   Passed    0.22 sec
+      Start  4: general_contact_domain_demo
+ 4/10 Test  #4: general_contact_domain_demo ......   Passed    0.09 sec
+      Start  5: lifecycle_contracts
+ 5/10 Test  #5: lifecycle_contracts ..............   Passed    0.46 sec
+      Start  6: indexed_results_contracts
+ 6/10 Test  #6: indexed_results_contracts ........   Passed   14.10 sec
+      Start  7: async_results_contracts
+ 7/10 Test  #7: async_results_contracts ..........   Passed    0.10 sec
+      Start  8: lifecycle_process_pipeline
+ 8/10 Test  #8: lifecycle_process_pipeline .......   Passed    0.76 sec
+      Start  9: database_contracts
+ 9/10 Test  #9: database_contracts ...............   Passed    0.11 sec
+      Start 10: explicit_numerics
+10/10 Test #10: explicit_numerics ................   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Total Test time (real) =  16.13 sec
