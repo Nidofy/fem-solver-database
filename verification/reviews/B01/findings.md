@@ -252,3 +252,44 @@ self-granted re-review.
   `report-provenance.md`); the historical self-incriminating quote in
   findings.md is preserved as history. Round-3 report recorded with
   provenance (no CRLF; blob == original bytes).
+
+
+# Round 4 — review and direct repair (2026-10-28)
+
+Independent single GPT-6 Astra High review of 63b24fc: **CHANGES_REQUESTED / FAIL**.
+The report is preserved as `merged-incremental-review-r4.md`; no fifth-round
+independent PASS is claimed. R3-002 is reviewer-CLOSED. A-002/A-004/A-006/O-004
+remain closed. R3-001/A-005 had residual quoted-key escape handling, R4-001.
+
+| Finding | Severity | Current implementation disposition | Evidence |
+|---|---|---|---|
+| B01-R4-001 (R3-001/A-005 residual) | C2 | FIXED_VERIFIED (implementer tests; independent closure pending) | `d01ea18cb3c8d0ce8a6a32fc6849969f9fb2bda0`; identity-controls.json 50/50; r4-repair-replay.json 26/26 |
+| B01-R4-002 (stale session handoff) | C3 | FIXED_VERIFIED (documentation checked) | refreshed SESSION_HANDOFF, CONTINUOUS_STATUS, BATCH_HISTORY |
+
+Three original escaped duplicate fixtures were reproduced before editing:
+all exit 0 despite externally pinned identities. After the fix all exit 1
+with `unsupported quoted key syntax`. Rather than implement full YAML,
+the validator rejects double-quoted escapes and malformed quoted keys before
+unknown-key filtering. Plain quoted keys retain the same duplicate checks;
+single-quoted backslashes remain literal unknown-key text. The 20 new controls
+include same/different/invalid duplicate values, escaped-only fields,
+unsupported/incomplete escapes, escaped quotes, multiline/unclosed keys and
+positive controls for literal single-quoted backslashes/metadata values.
+Eighteen new negative controls also assert their specific diagnostic.
+
+Evidence: `task-evidence/r4-repair-before.json`, `r4-repair-replay.json`,
+`identity-controls.py`, `identity-controls.json`. Runtime diff against 719c3fb
+is empty for include/src/tests/examples/CMakeLists.txt/cmake. Benchmark diff
+against 63b24fc is empty; historical benchmark timing fixes remain present.
+No C++ build, CTest, physics, benchmark, ASan/UBSan/CUDA/Linux or parent-solver
+verification was run for this Python/documentation repair. Historical passes
+are not recounted as current tests; production is not locally verified.
+
+The user's latest instruction explicitly requests direct repair followed by
+a GLM next-development prompt. Accordingly, GLM may begin isolated B02
+candidate development from this fixed B01 baseline after takeover checks,
+without waiting for another chat round. This does not declare B01 ACCEPTED,
+fabricate an independent PASS, or authorize stable-branch merge/push.
+Formal B01 state remains REPAIRED_PENDING_GATE; independent closure/acceptance
+is required before stable integration. This user-authorized candidate-development
+exception supersedes the older blanket instruction to stop all B02 work.

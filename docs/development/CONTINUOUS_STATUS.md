@@ -3,7 +3,7 @@
 Updated after every task and review milestone. Cross-session handoff details:
 SESSION_HANDOFF.md.
 
-- Current batch: **B01 — REPAIRED_PENDING_GATE, round 3** (2026-10-26)
+- Current batch: **B01 — REPAIRED_PENDING_GATE, round 4 repair** (2026-10-28)
 - Batch base SHA: `aaa74afb3c264bbd7ca43555a7445c77994ccaa2`
 - Batch content HEAD (reviewed object, unchanged by repair): `719c3fb`
   (full: `719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5`)
@@ -19,6 +19,9 @@ SESSION_HANDOFF.md.
   `c5c44e7` (column-0 parsing + quoted-key duplicate detection, 30 controls),
   `85d1667` (wording + round-3 report provenance), packet `63b24fc`
   (= NEXT_FIX_HEAD_SHA).
+- Round-4 merged review on `63b24fc`: FAIL (R4-001/C2; R4-002/C3).
+  Direct fix `d01ea18cb3c8d0ce8a6a32fc6849969f9fb2bda0`: 50/50 controls and 26/26 reviewer fixtures
+  pass in implementer verification; independent closure remains pending.
 - Working branch: `dev/glm-b01`
 - Dual review: Reviewer A (GPT-6 Astra, `03` prompt) → CHANGES_REQUESTED/FAIL;
   Reviewer B (GPT-6 Astra, user-authorized Opus substitute, `04` prompt) →
@@ -42,14 +45,15 @@ SESSION_HANDOFF.md.
   stop 733 checkpoint); identity validator positive/negative controls pass.
 - Repair diff BATCH_HEAD..FIX_HEAD touches no runtime solver code.
 
-## Next steps (external)
+## Next steps (user-authorized isolated development)
 
-1. Coordinators run the round-4 targeted incremental re-review
-   (`d6c67de..NEXT_FIX_HEAD` above; scope in repair-report.md round-3 section:
-   parser/controls replay + ledger wording; runtime diff stays empty).
-2. Gate passes → user authorizes stable merge (GLM does not merge by itself).
-3. B02 pool: R1.03 / R1.04 / R2.04(fast-path decision informed by B02c
-   measurement: View overhead ≤1.3%, no raw fast-path justified yet).
+1. GLM verifies the fixed handoff SHA and replays identity controls.
+2. The user's latest instruction permits isolated B02 candidate development
+   from this fixed baseline: R1.03 / R1.04, then measurement-led R2.04.
+3. B01 remains REPAIRED_PENDING_GATE until independent closure/acceptance;
+   no automatic stable merge/push or invented fifth-round PASS.
+4. Historical numerical/build results are unchanged evidence, not rerun in
+   this Python/documentation repair. Current repair has no runtime/benchmark diff.
 
 ## EXTENDED_IDLE candidate (produced under masterplan §3 rules)
 
