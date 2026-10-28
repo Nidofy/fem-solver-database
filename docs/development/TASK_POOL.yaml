@@ -6,37 +6,37 @@
 schema_version: 2
 program: fem-solver-database-v2
 current_batch: B01
-batch_state: REPAIRED_PENDING_GATE # R4 repair self-verified; independent closure pending
+batch_state: ACCEPTED # independent R5 PASS + user-authorized integration, 2026-10-28
 batch_base_sha: aaa74afb3c264bbd7ca43555a7445c77994ccaa2
 batch_content_head_sha: 719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5 # repaired B01-O-001/A-002: freeze-time value was a nonexistent hash
 tasks:
   - id: R0.01
     title: Freeze repository baseline and inspect source reality
-    status: IMPLEMENTED_SELF_TESTED  # repaired 2026-10-24; pending incremental re-review gate
+    status: ACCEPTED # independent R5 closure; CUDA remains separately blocked
     commit: bef76e3
     evidence: verification/reviews/B01/task-evidence/R0.01.md
   - id: R0.02
     title: Reproducible CPU build and test matrix
-    status: IMPLEMENTED_SELF_TESTED  # repaired 2026-10-24; pending incremental re-review gate
+    status: ACCEPTED # independent R5 closure; CUDA remains separately blocked
     commit: a3779f0
     evidence: verification/reviews/B01/task-evidence/R0.02.md
   - id: R0.03
     title: Task ledger, status notes and ADR tracking
-    status: IMPLEMENTED_SELF_TESTED  # repaired 2026-10-24; pending incremental re-review gate
+    status: ACCEPTED # independent R5 closure; CUDA remains separately blocked
     commit: 12ffe5b
   - id: R1.01
     title: Avoid redundant force evaluation on non-output timesteps
-    status: IMPLEMENTED_SELF_TESTED  # repaired 2026-10-24; pending incremental re-review gate
+    status: ACCEPTED # independent R5 closure; CUDA remains separately blocked
     commit: fcc3c80
     evidence: verification/reviews/B01/task-evidence/R1.01.md
   - id: R1.02
     title: Physical time-layer and read-only output publication contract
-    status: IMPLEMENTED_SELF_TESTED  # repaired 2026-10-24; pending incremental re-review gate
+    status: ACCEPTED # independent R5 closure; CUDA remains separately blocked
     commit: 0447789
     evidence: verification/reviews/B01/task-evidence/R1.02.md
   - id: R0.04
     title: Separate cold, steady-state, and IO benchmarks
-    status: IMPLEMENTED_SELF_TESTED  # repaired 2026-10-24; pending incremental re-review gate
+    status: ACCEPTED # independent R5 closure; CUDA remains separately blocked
     commit: d83ee85
     evidence: verification/reviews/B01/task-evidence/R0.04.md
   - id: R0.05
@@ -59,6 +59,5 @@ tasks:
     depends_on: [R0.04]
 next_ready: [R1.03, R1.04, R2.04]
 
-# 2026-10-28 user authorization: after fixed-baseline takeover checks, GLM may
-# begin isolated B02 candidate development (R1.03/R1.04/R2.04); do not mark
-# B01 ACCEPTED or perform stable merge/push on the strength of self-tests.
+# 2026-10-28: independent R5 gate passed; user authorized B01 merge/push.
+# Next batch may start from accepted stable tip; B02c remains unaccepted.

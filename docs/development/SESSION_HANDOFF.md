@@ -3,56 +3,43 @@
 A fresh session MUST re-verify against real Git state before trusting this
 file: `git status --porcelain=v1 -b`, `git log --oneline -12`, task pool.
 
-## Current position (2026-10-28, after round-4 review and direct repair)
+## Current position (2026-10-28, independent R5 PASS and B01 acceptance)
 
-- Branch: `dev/glm-b01`. B01 state: **REPAIRED_PENDING_GATE**. The independent
-  round-4 report on `63b24fc14c728af03b1089c864bab95c5bfa8d9b` was FAIL;
-  it is preserved, not rewritten into PASS.
-- R4-001/C2 parser repair: `d01ea18cb3c8d0ce8a6a32fc6849969f9fb2bda0`. R4-002/C3 stale handoff refreshed in
-  the subsequent documentation commit. Resolve current HEAD with Git;
-  the code-fix SHA and documentation tip are distinct identities.
-- Current implementer verification: official controls **50/50**; all original
-  round-4 reviewer fixtures **26/26** (including the three previously accepted
-  escaped duplicate keys, now exit 1). No fifth-round independent review exists.
-- BATCH_BASE `aaa74afb3c264bbd7ca43555a7445c77994ccaa2`;
-  BATCH_HEAD `719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5`;
-  freeze `b58dfff04b484f2ed15524d51883e5f979fd1bc1`.
-- Repair milestones: round 1 `02e1ee4`, round 2 `d6c67de`, round 3 `63b24fc`,
-  round 4 code fix above. Repair history includes validator/control code,
-  documentation AND historical lifecycle benchmark timing changes. The solver
-  runtime include/src/tests/examples/CMakeLists.txt/cmake stays byte-identical
-  to BATCH_HEAD; this repair introduces no benchmark or schema changes.
-- Round 1/2 used two isolated Astra reviewers (B substituted for unavailable
-  Opus). Round 3/4 used one user-authorized merged Astra High reviewer.
-  Report copies are LF-normalized content-equal; raw and Git-blob SHA-256
-  are separately recorded in `verification/reviews/B01/report-provenance.md`.
-- R3-002 CLOSED by round-4 reviewer. R4-001 and R4-002 are now developer
-  FIXED_VERIFIED; independent closure is pending, not presumed.
+- **B01 ACCEPTED** for the documented standalone CPU scope. Independent single
+  GPT-6 Astra High R5 reviewed `15771815c016af66d064e5f4d66dc1dbc6b0a74a`
+  and returned PASS / READY_TO_MERGE. R4-001/C2, R4-002/C3 and R3-001/A-005
+  residual are CLOSED; no new finding.
+- R5 actual checks: official 50/50, original R4 26/26, new independent 34/34;
+  12/12 report hashes and 6/6 normalized matches. Report/evidence are recorded
+  in verification/reviews/B01/acceptance.md; no C++/physics rerun is claimed.
+- The user explicitly authorized merge and GitHub push after a passing review.
+  Acceptance artifacts/ledgers are added after the reviewed tip; target is
+  codex/standalone-database. Resolve local/remote refs for actual integrated
+  HEAD rather than assuming the reviewed tip includes acceptance documents.
+- BATCH_BASE aaa74afb3c264bbd7ca43555a7445c77994ccaa2;
+  BATCH_HEAD 719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5;
+  freeze b58dfff04b484f2ed15524d51883e5f979fd1bc1.
+- Fix milestones: round1 02e1ee4, round2 d6c67de, round3 63b24fc, round4
+  parser d01ea18 and ledger 1577181. Runtime paths remain byte-identical
+  to BATCH_HEAD. Earlier benchmark timing changes exist; R4/R5 increments
+  add no benchmark/runtime/schema change.
+- R1–R4 reports retain their original verdicts; R5 closes the final residual.
+  R1/2 used two isolated Astra reviewers (Opus substitute disclosed); R3/4/5
+  used single user-authorized reviewers. Raw/blob dual hashes and normalized
+  content equality are recorded in report-provenance.md.
 
-## Next-development authorization and commands
+## Next development
 
-The user explicitly requested direct repair and a prompt for GLM next-round
-development. After verifying the fixed SHA and replaying controls, GLM may
-start **isolated B02 candidate development** from the fixed B01 baseline.
-Do not stall merely because the older template requires acceptance before
-all development. This limited exception does NOT authorize stable merge,
-push, or changing B01 to ACCEPTED without an actual acceptance decision.
-Use the coordinator's `sdb-b01-r4-repair-handoff/GLM_NEXT_DEVELOPMENT_PROMPT.md`
-for the exact frozen handoff tip and candidate-work instructions.
-
-1. Verify branch/status/ancestry; preserve user changes. Read findings and
-   repair-report round-4 section and the unmodified round-4 report.
-2. Run `python verification/reviews/B01/task-evidence/identity-controls.py`.
-   Always externally pin base/head/freeze when invoking the identity validator;
-   generic consistency alone cannot identify the intended batch.
-3. Reuse a suitable isolated B02 worktree if one exists; otherwise branch from
-   the fixed handoff SHA. Freeze B01 while developing R1.03/R1.04, then assess
-   R2.04 measurement evidence before proposing any specialized fast path.
-4. B02c `dev/glm-b02-candidate`, base `aaa74af`, head `b87fb53`, remains a
-   distinct frozen candidate, not accepted or automatically merged. Read its
-   evidence if relevant; do not silently combine it with the new B02 branch.
-5. Keep B01 formal acceptance and any stable integration separate from B02
-   candidate implementation. No protected branch merge/push authorization.
+1. Read Git refs/status and B01 acceptance. Continue B02 in a suitable isolated
+   worktree from the accepted stable tip, with R1.03/R1.04 and measurement-led
+   R2.04; do not restart the now-closed B01 repair loop.
+2. Keep external fixed base/head/freeze expectations for identity validation.
+   `python verification/reviews/B01/task-evidence/identity-controls.py` is
+   the 50-control suite; the final archive preserves independent probes.
+3. ../sdb-b02c / dev/glm-b02-candidate at b87fb53 remains a separate frozen
+   unaccepted candidate; evidence may inform R2.04, no automatic merge.
+4. B01 acceptance does not authorize unreviewed B02 stable integration or
+   parent-solver changes. Preserve CUDA/UBSan/production limitations.
 
 ## Environment facts (verified 2026-10-24)
 

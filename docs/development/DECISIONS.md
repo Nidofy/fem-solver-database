@@ -6,7 +6,7 @@ PROPOSED with isolated prototype before becoming default paths.
 
 ## ADR-0001 — Publication-driven force evaluation becomes lazy (R1.01)
 
-- Status: ACCEPTED within GLM self-test scope (pending B01 batch review)
+- Status: ACCEPTED in B01 after independent R5 closure and user authorization (2026-10-28)
 - Decision: `ResultPublisher::publish()` computes the set of due output
   requests first; it evaluates constitutive state (`CpuExplicit::forces`) only
   when (a) at least one request is due AND (b) at least one due variable needs
@@ -22,7 +22,7 @@ PROPOSED with isolated prototype before becoming default paths.
 
 ## ADR-0002 — Time-layer contract for output publication (R1.02)
 
-- Status: ACCEPTED within GLM self-test scope (pending B01 batch review)
+- Status: ACCEPTED in B01 after independent R5 closure and user authorization (2026-10-28)
 - Decision: codify (tests, not new behavior) that publication at increment n
   of step s reports a coherent physical time layer: U at t[n]; S/E at t[n] via
   current-displacement re-evaluation; V reconstructed to full time
@@ -37,7 +37,7 @@ PROPOSED with isolated prototype before becoming default paths.
 
 ## ADR-0003 — Force-evaluation counter instrumentation (supports R1.01)
 
-- Status: ACCEPTED within GLM self-test scope (pending B01 batch review)
+- Status: ACCEPTED in B01 after independent R5 closure and user authorization (2026-10-28)
 - Decision: `CpuExplicit::forces()` counts completed evaluations
   (`force_evaluations()`); `CpuRun` forwards it. Test-only observable, zero
   hot-path cost (one increment per call), no ABI break (header-only template).

@@ -293,3 +293,21 @@ fabricate an independent PASS, or authorize stable-branch merge/push.
 Formal B01 state remains REPAIRED_PENDING_GATE; independent closure/acceptance
 is required before stable integration. This user-authorized candidate-development
 exception supersedes the older blanket instruction to stop all B02 work.
+
+
+# Round 5 — independent closure and user-authorized acceptance (2026-10-28)
+
+The independent single GPT-6 Astra High review of
+`15771815c016af66d064e5f4d66dc1dbc6b0a74a` returned
+**PASS / READY_TO_MERGE / READY_FOR_ACCEPTANCE**. R4-001/C2,
+R4-002/C3 and the R3-001/A-005 residual are CLOSED; no new findings.
+Actual checks: official 50/50, original R4 fixtures 26/26, independent new
+boundaries 34/34. No new C++/numerical/benchmark/sanitizer claim is made.
+
+The user explicitly authorized merge and GitHub push after a passing review.
+B01 is now **ACCEPTED** for the recorded scope; previous pending/self-test
+statements above are historical, not the current gate. Original reports and
+FAIL verdicts remain unchanged. See acceptance.md, the R5 original report,
+report-provenance.md and final-r5-evidence.zip for evidence and continuing
+CUDA/UBSan/production limitations. Only documentation/review artifacts are
+added after the reviewed code tip.

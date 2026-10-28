@@ -9,7 +9,7 @@ byte-identical to the originals. Earlier ledger text claiming plain
 "verbatim / hashes match" was inaccurate and is corrected by this record
 (finding B01-O-004); reviewer history and verdicts are unchanged.
 
-## Hash table (SHA-256; computed 2026-10-25 with the commands below)
+## Hash table (SHA-256; initial records 2026-10-25, extended through R5 on 2026-10-28)
 
 | Report | Original file (handoff dir) | Original bytes / sha256 | Git blob sha256 (after CRLF→LF) | Normalized == original content |
 |---|---|---|---|---|
@@ -19,6 +19,7 @@ byte-identical to the originals. Earlier ledger text claiming plain
 | B round-2 | `sdb-review-b01-incremental-handoff/reports/opus-incremental-review.md` | 11448 / `731dd74e41ee335ace9fac867c81b1f670576712cc2e3e22c7d0222574beab22` | `731dd74e41ee335ace9fac867c81b1f670576712cc2e3e22c7d0222574beab22` | yes (no CRLF; blob == original) |
 | R3 merged | `sdb-review-b01-r3-handoff/reports/merged-incremental-review-r3.md` | 16887 / `3c41df931f436fdbc96aff5ed90d1d52a88d71df112aff06cce347a5490dfa32` | `3c41df931f436fdbc96aff5ed90d1d52a88d71df112aff06cce347a5490dfa32` | yes (no CRLF; blob == original; single merged reviewer authorized by the user, GPT-6 Astra High — not a dual-lane review) |
 | R4 merged | `sdb-review-b01-r4-handoff/reports/merged-incremental-review-r4.md` | 13337 / `e1d0188401b7b5030fc8c2f9a571799e2af24a30a5450b49f95579b97575e580` | `e1d0188401b7b5030fc8c2f9a571799e2af24a30a5450b49f95579b97575e580` | yes (LF original; single GPT-6 Astra High reviewer) |
+| R5 independent | `sdb-review-b01-final-r5/merged-incremental-review-r5.md` | 11085 / `5c92f3a756215f8b4696dd58bb86c3438c99e6bc03cb85d2f4bb9a165403e263` | `5c92f3a756215f8b4696dd58bb86c3438c99e6bc03cb85d2f4bb9a165403e263` | yes (LF original; independent single GPT-6 Astra High final gate) |
 
 ## Machine-replayable verification
 

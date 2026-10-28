@@ -3,7 +3,7 @@
 Updated after every task and review milestone. Cross-session handoff details:
 SESSION_HANDOFF.md.
 
-- Current batch: **B01 — REPAIRED_PENDING_GATE, round 4 repair** (2026-10-28)
+- Current batch: **B01 — ACCEPTED, independent round-5 gate passed** (2026-10-28)
 - Batch base SHA: `aaa74afb3c264bbd7ca43555a7445c77994ccaa2`
 - Batch content HEAD (reviewed object, unchanged by repair): `719c3fb`
   (full: `719c3fbbe4db1a4dfa0f9d324c3a376f885f47e5`)
@@ -21,8 +21,12 @@ SESSION_HANDOFF.md.
   (= NEXT_FIX_HEAD_SHA).
 - Round-4 merged review on `63b24fc`: FAIL (R4-001/C2; R4-002/C3).
   Direct fix `d01ea18cb3c8d0ce8a6a32fc6849969f9fb2bda0`: 50/50 controls and 26/26 reviewer fixtures
-  pass in implementer verification; independent closure remains pending.
-- Working branch: `dev/glm-b01`
+  pass in implementer verification (historical pre-R5 state).
+- Independent R5 on `15771815c016af66d064e5f4d66dc1dbc6b0a74a`: PASS /
+  READY_TO_MERGE. R4-001/R4-002 CLOSED; 50/50 official, 26/26 original,
+  34/34 independent controls. User authorized merge/push after PASS.
+  Evidence/scope: `verification/reviews/B01/acceptance.md`.
+- Implementation branch: `dev/glm-b01`; stable integration target: `codex/standalone-database`.
 - Dual review: Reviewer A (GPT-6 Astra, `03` prompt) → CHANGES_REQUESTED/FAIL;
   Reviewer B (GPT-6 Astra, user-authorized Opus substitute, `04` prompt) →
   REQUEST_CHANGES/HOLD. Reports are content-exact copies: LF-normalized content equals the originals; original-byte and Git-blob SHA-256 are recorded separately in `verification/reviews/B01/report-provenance.md`. All 7 findings + 2 errata → FIXED_VERIFIED; ledger in
@@ -32,7 +36,7 @@ SESSION_HANDOFF.md.
 
 | Task | Status | Notes |
 |---|---|---|
-| R0.01–R0.04, R1.01, R1.02 | IMPLEMENTED_SELF_TESTED (batch repaired, pending gate) | evidence corrected per findings |
+| R0.01–R0.04, R1.01, R1.02 | ACCEPTED (independent R5 gate + user authorization) | evidence corrected per findings |
 | R0.05 CUDA probe | BLOCKED_ENV | unchanged |
 
 ## Last full regression (at repair head, 2026-10-24)
@@ -45,15 +49,15 @@ SESSION_HANDOFF.md.
   stop 733 checkpoint); identity validator positive/negative controls pass.
 - Repair diff BATCH_HEAD..FIX_HEAD touches no runtime solver code.
 
-## Next steps (user-authorized isolated development)
+## Next steps after B01 acceptance
 
-1. GLM verifies the fixed handoff SHA and replays identity controls.
-2. The user's latest instruction permits isolated B02 candidate development
-   from this fixed baseline: R1.03 / R1.04, then measurement-led R2.04.
-3. B01 remains REPAIRED_PENDING_GATE until independent closure/acceptance;
-   no automatic stable merge/push or invented fifth-round PASS.
-4. Historical numerical/build results are unchanged evidence, not rerun in
-   this Python/documentation repair. Current repair has no runtime/benchmark diff.
+1. Fast-forward the reviewed B01 tip plus acceptance record into
+   codex/standalone-database and push under user authorization. Query Git refs
+   for actual completion SHA; do not infer it from this text.
+2. GLM may start B02 from the accepted stable tip: R1.03/R1.04, then
+   measurement-led R2.04. The old B02c is not automatically merged.
+3. R5 verified Python/documentation gates only; historical CTest/physics
+   evidence and environment limitations retain their original scope.
 
 ## EXTENDED_IDLE candidate (produced under masterplan §3 rules)
 
