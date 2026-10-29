@@ -185,9 +185,10 @@ struct ModelIR {
     std::vector<OpaqueBlock> opaque;
     std::vector<IRHistoryBinding> history_bindings;
     ModelFoundation foundation;
+    ModelExtensions extensions;
     template <class F> void visit(F f) {
         f(schema);
-        if (schema != 1 && schema != 2 && schema != 3)
+        if (schema != 1 && schema != 2 && schema != 3 && schema != 4)
             throw std::runtime_error("unsupported ModelIR schema");
         f(units, assembly, mode, parts, instances, sets, materials, sections, surfaces, amplitudes,
           initial_boundaries, steps, opaque);
@@ -196,6 +197,8 @@ struct ModelIR {
             throw std::runtime_error("history bindings require ModelIR schema 2");
         if (schema >= 3) f(foundation);
         else if (!foundation.empty()) throw std::runtime_error("foundation requires ModelIR schema 3");
+        if(schema>=4) f(extensions);
+        else if(!extensions.empty()) throw std::runtime_error("model extensions require ModelIR schema 4");
     }
 };
 struct SourceEntry {

@@ -139,6 +139,47 @@ inline void face(Writer &w, FaceId f) {
     w.integer(f.local);
     w.integer(static_cast<std::uint8_t>(f.side));
 }
+
+// Extension manifest is checked byte-for-byte before decoding any values. Required
+// fields are bounded scalar blocks; Reconstruct/Omit retain declared initial data.
+template<class Sink> void write_registered(const RegisteredState &state, Sink sink) {
+    state.validate();
+    const auto manifest = state.manifest(); sink(200u, manifest);
+    for (std::size_t index=0; index<state.entries().size(); ++index) {
+        const auto &entry = *state.entries()[index];
+        if (entry.descriptor().restart != RestartPolicy::Required) continue;
+        std::size_t offset = 0;
+        do {
+            auto count = std::min<std::size_t>(4096, entry.scalar_count()-offset);
+            Writer block; block.integer<std::uint64_t>(index); block.integer<std::uint64_t>(offset);
+            block.integer<std::uint64_t>(count);
+            auto values = entry.block(offset,count); block.bytes.insert(block.bytes.end(),values.begin(),values.end());
+            sink(201u,block.bytes); offset += count;
+        } while (offset < entry.scalar_count());
+    }
+}
+template<class Source> void read_registered(RegisteredState &state, Source source) {
+    const auto manifest = state.manifest();
+    auto actual = source(200u, manifest.size());
+    if (actual.size() != manifest.size() || !std::equal(actual.begin(),actual.end(),manifest.begin()))
+        throw std::runtime_error("registered state schema/initialization/layout mismatch");
+    for (std::size_t index=0; index<state.entries().size(); ++index) {
+        const auto &entry = *state.entries()[index];
+        if (entry.descriptor().restart != RestartPolicy::Required) continue;
+        std::size_t offset = 0;
+        do {
+            auto bytes = source(201u, 4096u*9u+24u); Reader block{bytes};
+            if (block.integer<std::uint64_t>() != index || block.integer<std::uint64_t>() != offset)
+                throw std::runtime_error("registered state field/offset mismatch");
+            auto count = block.integer<std::uint64_t>();
+            if (count > 4096 || count > entry.scalar_count()-offset || (offset<entry.scalar_count() && !count))
+                throw std::runtime_error("registered state scalar block length");
+            state.restore_block(index,block.bytes.subspan(block.pos),offset,static_cast<std::size_t>(count));
+            offset += static_cast<std::size_t>(count);
+        } while (offset < entry.scalar_count());
+    }
+    state.validate();
+}
 inline FaceId face(Reader &r) {
     FaceId f;
     f.element = r.integer<Id>();
@@ -276,7 +317,8 @@ void save_checkpoint(const std::filesystem::path &path, const MeshDB<T> &mesh, c
         throw std::invalid_argument("invalid checkpoint metadata");
     Writer file, header;
     file.integer<std::uint64_t>(0x325642444253ull); // S B D B V 2
-    header.integer<std::uint32_t>(2);
+    const bool extensions = state.registered_fields() && !state.registered_fields()->empty();
+    header.integer<std::uint32_t>(extensions ? 3 : 2);
     header.integer<std::uint8_t>(sizeof(T));
     header.integer<std::uint8_t>(sizeof(Index));
     header.integer<std::uint16_t>(0x0102);
@@ -286,12 +328,17 @@ void save_checkpoint(const std::filesystem::path &path, const MeshDB<T> &mesh, c
     header.scalar(state.data().dt);
     header.integer<std::uint8_t>(state.data().rotation.has_value());
     header.integer<std::uint8_t>(contact != nullptr);
+    if (extensions) header.integer(state.registered_fields()->fingerprint());
     file.chunk(0, header);
     atomic_stream_write(path, [&](std::ostream &out) {
         stream_bytes(out, file.bytes);
         file.bytes.clear();
         std::uint32_t id = 1;
         state.data().fields([&](const auto &field) { stream_field(out, id++, field); });
+        if (extensions) write_registered(*state.registered_fields(), [&](std::uint32_t kind, const auto &bytes) {
+            Writer block; block.bytes.assign(bytes.begin(),bytes.end()); Writer record; record.chunk(kind,block);
+            stream_bytes(out,record.bytes);
+        });
         if (contact) {
             Writer block;
             auto history = contact->snapshot();
@@ -336,7 +383,9 @@ void load_checkpoint(const std::filesystem::path &path, const MeshDB<T> &mesh, S
     if (file.integer<std::uint64_t>() != 0x325642444253ull)
         throw std::runtime_error("checkpoint magic");
     auto header = file.chunk(0);
-    if (header.integer<std::uint32_t>() != 2 || header.integer<std::uint8_t>() != sizeof(T) ||
+    const auto schema = header.integer<std::uint32_t>();
+    const bool extensions = state.registered_fields() && !state.registered_fields()->empty();
+    if (schema != (extensions ? 3u : 2u) || header.integer<std::uint8_t>() != sizeof(T) ||
         header.integer<std::uint8_t>() != sizeof(Index) || header.integer<std::uint16_t>() != 0x0102)
         throw std::runtime_error("checkpoint format/precision/index/endian mismatch");
     if (header.integer<std::uint64_t>() != mesh.fingerprint() || state.model_id() != mesh.fingerprint())
@@ -344,11 +393,14 @@ void load_checkpoint(const std::filesystem::path &path, const MeshDB<T> &mesh, S
     const auto step = header.integer<std::uint64_t>();
     const auto time = header.scalar<double>(), dt = header.scalar<double>();
     const auto rotation = header.integer<std::uint8_t>(), contacts = header.integer<std::uint8_t>();
+    if (extensions && header.integer<std::uint64_t>() != state.registered_fields()->fingerprint())
+        throw std::runtime_error("checkpoint registered state identity mismatch");
     header.end();
     if (rotation > 1 || contacts > 1 || bool(contacts) != (contact != nullptr) || !std::isfinite(time) ||
         !std::isfinite(dt) || time < 0 || dt < 0 || (step && dt == 0))
         throw std::runtime_error("invalid checkpoint metadata");
     StateDB<T> restored(mesh, rotation != 0);
+    restored.copy_registered_layout(state);
     auto &data = restored.data();
     data.step = step;
     data.time = time;
@@ -373,6 +425,11 @@ void load_checkpoint(const std::filesystem::path &path, const MeshDB<T> &mesh, S
                 v(i, c) = value;
             }
         block.end();
+    });
+    if (extensions) read_registered(*data.registered, [&](std::uint32_t kind, std::size_t limit) {
+        auto block = file.chunk(kind);
+        if (block.bytes.size() > limit) throw std::length_error("checkpoint registered block budget");
+        return block.bytes;
     });
     auto mass = data.mass.read(), inverse = data.inverse_mass.read();
     for (std::size_t i = 0; i < mass.count; ++i)

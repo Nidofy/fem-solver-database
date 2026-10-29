@@ -26,7 +26,8 @@ class RestartDB {
             throw std::invalid_argument("restart model mismatch");
         // Schema 3 remains byte-compatible for translation-only states. Schema 4
         // requires all six rotation fields after the existing fourteen fields.
-        info.state_schema = state.data().rotation ? 4 : 3;
+        const bool extensions = state.registered_fields() && !state.registered_fields()->empty();
+        info.state_schema = extensions ? 5 : (state.data().rotation ? 4 : 3);
         info.precision = sizeof(T);
         info.model_schema = model.definition.schema;
         info.mesh = model.mesh.fingerprint();
@@ -37,6 +38,12 @@ class RestartDB {
         native::atomic_stream(path, [&](auto &out) {
             native::prefix(out, restart_magic);
             native::record(out, 0, native::pack(info));
+            if (extensions) {
+                native::Writer binding;
+                binding.integer(state.registered_fields()->fingerprint());
+                binding.integer<std::uint8_t>(state.data().rotation.has_value());
+                native::record(out,199,binding.bytes);
+            }
             std::uint32_t id = 1;
             state.data().fields([&](const auto &field) {
                 using F = std::decay_t<decltype(field)>;
@@ -61,6 +68,8 @@ class RestartDB {
                 } while (offset < total);
                 ++id;
             });
+            if (extensions) checkpoint_detail::write_registered(*state.registered_fields(),
+                [&](std::uint32_t kind, const auto &bytes) { native::record(out,kind,bytes); });
             native::record(out, 0xffffffffu, {});
         });
     }
@@ -75,12 +84,21 @@ class RestartDB {
         std::ifstream in(path, std::ios::binary);
         native::prefix(in, restart_magic);
         auto info = native::unpack<RestartInfo>(native::record(in, 0, 4096));
-        if (info.state_schema != (state.data().rotation ? 4u : 3u) || info.model_schema != model.definition.schema || info.solver_version != 1 ||
+        const bool extensions = state.registered_fields() && !state.registered_fields()->empty();
+        if (info.state_schema != (extensions ? 5u : (state.data().rotation ? 4u : 3u)) || info.model_schema != model.definition.schema || info.solver_version != 1 ||
             info.precision != sizeof(T) || info.mesh != model.mesh.fingerprint() ||
             info.definition != ModelStore::identity(model) || info.configuration != configuration ||
-            info.time < 0 || info.dt <= 0)
+            !std::isfinite(info.time) || !std::isfinite(info.dt) || info.time < 0 || info.dt <= 0)
             throw std::runtime_error("restart schema/model/solver/precision/configuration mismatch");
+        if (extensions) {
+            auto bytes = native::record(in,199,9); native::Reader binding{bytes};
+            if (binding.integer<std::uint64_t>() != state.registered_fields()->fingerprint() ||
+                binding.integer<std::uint8_t>() != std::uint8_t(state.data().rotation.has_value()))
+                throw std::runtime_error("restart registered state identity/rotation mismatch");
+            binding.end();
+        }
         StateDB<T> next(model.mesh, state.data().rotation.has_value());
+        next.copy_registered_layout(state);
         auto &data = next.data();
         data.step = info.total_increment;
         data.time = info.time;
@@ -117,6 +135,8 @@ class RestartDB {
             } while (offset < total);
             ++id;
         });
+        if (extensions) checkpoint_detail::read_registered(*data.registered,
+            [&](std::uint32_t kind, std::size_t limit) { return native::record(in,kind,limit); });
         auto end = native::record(in, 0xffffffffu, 0);
         (void)end;
         native::end(in);

@@ -146,7 +146,9 @@ template <class T> class CpuRun {
         RestartDB::save(path, model_, state_, info);
     }
     void restore(const std::filesystem::path &path) {
-        StateDB<T> restored(model_.mesh);
+        if (state_.in_trial()) throw std::logic_error("restore requires committed state");
+        StateDB<T> restored(model_.mesh, state_.data().rotation.has_value());
+        restored.copy_registered_layout(state_);
         auto info = RestartDB::load(path, model_, restored, config_);
         if (info.step >= plans_.size() || info.increment > plans_[info.step].increments)
             throw std::runtime_error("restart cursor out of range");
@@ -168,8 +170,14 @@ template <class T> class CpuRun {
     }
     // Explicit v2 conversion is tied to the chosen compiled model; v2 itself had no analysis identity.
     void import_v2(const std::filesystem::path &path) {
+        if (state_.in_trial()) throw std::logic_error("import requires committed state");
+        if (const auto *registered = state_.registered_fields())
+            for (const auto &entry : registered->entries())
+                if (entry->descriptor().restart == RestartPolicy::Required)
+                    throw std::runtime_error("v2 import requires explicit migration for registered required state");
         StateDB<T> candidate(model_.mesh);
         load_checkpoint(path, model_.mesh, candidate);
+        candidate.copy_registered_layout(state_);
         auto &s = candidate.data();
         std::uint64_t remain = s.step;
         std::uint64_t candidate_step = 0;

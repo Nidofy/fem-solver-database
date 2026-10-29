@@ -234,4 +234,112 @@ template<class T,class Resolve> void resolve_foundation(const ModelIR &ir,Compil
         out.activations.push_back({a.id,std::move(ids)});
     }
 }
+template<class T,class ScopedResolve> void resolve_extensions(const ModelIR &ir,CompiledFoundation &out,
+    const SourceMap &sources,const std::vector<std::uint8_t> &node_dofs,ScopedResolve scoped_resolve) {
+    const auto &x=ir.extensions;
+    if(x.topology_numbering_version!=topology_numbering_version) throw std::invalid_argument("unknown topology numbering version");
+    x.sample_axis.validate(); out.extensions=x; out.step_count=ir.steps.size(); out.element_count=sources.elements.size();
+    std::set<ConstraintId> constraints;
+    for(auto &e:ir.foundation.equations) constraints.insert(e.id);
+    for(auto &e:ir.foundation.ties) constraints.insert(e.id);
+    for(auto &e:ir.foundation.rigids) constraints.insert(e.id);
+    std::set<std::string> names;
+    for(const auto &c:x.couplings) {
+        if(!c.id.valid() || c.name.empty() || !constraints.insert(c.id).second || !names.insert(c.name).second ||
+           c.kind>CouplingKind::Distributing || !c.dof_mask || c.dof_mask>63 || c.nodes.empty()==c.surface.empty()) fail(c.source,"invalid/duplicate coupling contract");
+        (void)out.coordinate(c.coordinate);
+        ResolvedCoupling r{c.id,sources.node_id(c.reference),{}, {}};
+        if(!c.nodes.empty()) for(auto n:scoped_resolve(true,"",c.nodes,c.source)) r.nodes.push_back(NodeId(n));
+        else {
+            auto it=out.surface_nodes.find(c.surface); if(it==out.surface_nodes.end()) fail(c.source,"unknown coupling surface"); r.nodes=it->second;
+        }
+        if(r.nodes.empty() || std::find(r.nodes.begin(),r.nodes.end(),r.reference)!=r.nodes.end()) fail(c.source,"empty coupling or reference in dependent region");
+        for(unsigned d=0;d<6;++d) if(c.dof_mask&(1u<<d)) {
+            if(d>=node_dofs.at(r.reference.value())) fail(c.source,"coupling reference DOF unavailable");
+            for(auto n:r.nodes) if(d>=node_dofs.at(n.value())) fail(c.source,"coupling dependent DOF unavailable");
+        }
+        if(c.kind==CouplingKind::Kinematic) {
+            if(!c.weights.empty()) fail(c.source,"kinematic coupling cannot carry distributing weights");
+        } else {
+            std::map<NodeId,double> weights; double peak=0;
+            for(const auto &w:c.weights) {
+                foundation_real<T>(w.weight,c.source);
+                auto n=sources.node_id(w.node);
+                if(!(w.weight>0) || !weights.emplace(n,w.weight).second || std::find(r.nodes.begin(),r.nodes.end(),n)==r.nodes.end()) fail(c.source,"invalid/duplicate coupling weight node/value");
+                peak=std::max(peak,w.weight);
+            }
+            if(weights.size()!=r.nodes.size()) fail(c.source,"distributing coupling requires every node weight");
+            double sum=0; for(auto n:r.nodes) sum+=weights.at(n)/peak;
+            for(auto n:r.nodes) { auto v=(weights.at(n)/peak)/sum; if(!(v>0)) fail(c.source,"coupling normalized weight underflow"); r.weights.push_back(v); }
+        }
+        out.couplings.push_back(std::move(r));
+    }
+    names.clear();
+    for(const auto &p:x.amplitude_policies) {
+        auto a=std::find_if(ir.amplitudes.begin(),ir.amplitudes.end(),[&](const auto &v){return v.name==p.amplitude;});
+        if(a==ir.amplitudes.end() || !names.insert(p.amplitude).second || p.time>AmplitudeTimeDomain::Total ||
+           p.interpolation>InterpolationPolicy::Constant || p.extrapolation>ExtrapolationPolicy::Linear ||
+           a->total_time!=(p.time==AmplitudeTimeDomain::Total) ||
+           (p.extrapolation==ExtrapolationPolicy::Linear && (p.interpolation!=InterpolationPolicy::Linear || a->points.size()<2))) fail(p.source,"invalid amplitude policy/reference/time");
+    }
+    names.clear(); std::set<std::uint64_t> ids;
+    std::set<std::pair<ElementId,std::string>> targets;
+    for(const auto &d:x.property_distributions) {
+        if(d.id==UINT64_MAX || d.name.empty() || d.region.empty() || !ids.insert(d.id).second || !names.insert(d.name).second || d.kind>PropertyValueKind::Table) fail(d.source,"invalid/duplicate property distribution");
+        auto mi=out.material_ids.find(d.material); if(mi==out.material_ids.end()) fail(d.source,"unknown property material");
+        const auto &m=out.material(mi->second);
+        auto parameter=std::find_if(m.parameters.begin(),m.parameters.end(),[&](const auto &v){return v.name==d.parameter;});
+        if(parameter==m.parameters.end()) fail(d.source,"unknown distributed material parameter");
+        if(d.orientation.valid()) (void)out.orientation(d.orientation);
+        if(d.kind==PropertyValueKind::Constant) {
+            if(!d.table.empty() || d.constant.name!=d.parameter || d.constant.scalar!=parameter->scalar || d.constant.shape!=parameter->shape || d.constant.units!=parameter->units || d.constant.bounded!=parameter->bounded || (parameter->bounded && (d.constant.minimum!=parameter->minimum || d.constant.maximum!=parameter->maximum))) fail(d.source,"property constant descriptor mismatch");
+            auto value=d.constant; value.bounded=parameter->bounded; value.minimum=parameter->minimum; value.maximum=parameter->maximum;
+            ModelFoundation test; MaterialDefinition material; material.material=d.material; material.schema_id=m.schema_id; material.parameters={value}; material.source=d.source; test.material_definitions={material}; (void)validate_foundation<T>(test);
+        } else {
+            if(semantic_hash(d.constant)!=semantic_hash(MaterialParameter{})) fail(d.source,"table distribution has inactive constant payload");
+            auto table=std::find_if(m.tables.begin(),m.tables.end(),[&](const auto &v){return v.name==d.table;});
+            std::uint64_t count=1; for(auto n:parameter->shape) count=foundation_product(count,n,d.source);
+            if(table==m.tables.end() || table->components!=count || table->units!=parameter->units || (parameter->scalar!=ScalarType::Float32 && parameter->scalar!=ScalarType::Float64)) fail(d.source,"property table descriptor mismatch");
+            for(auto value:table->values) {
+                if(parameter->scalar==ScalarType::Float32) foundation_real<float>(value,d.source);
+                if(parameter->bounded && (value<parameter->minimum || value>parameter->maximum)) fail(d.source,"property table value out of parameter bounds");
+            }
+        }
+        ResolvedProperty r{d.id,mi->second,{}};
+        for(auto e:scoped_resolve(false,d.scope,d.region,d.source)) {
+            if(out.element_materials.at(e)!=mi->second || !targets.emplace(ElementId(e),d.parameter).second) fail(d.source,"property distribution material mismatch/overlap");
+            r.elements.push_back(ElementId(e));
+        }
+        if(r.elements.empty()) fail(d.source,"empty property distribution");
+        out.properties.push_back(std::move(r));
+    }
+    std::map<std::uint64_t,IRInitialCondition> active,identity;
+    for(const auto &i:ir.foundation.initial_conditions) {active.emplace(i.id,i);identity.emplace(i.id,i);}
+    std::map<std::pair<StepId,std::uint64_t>,const IRInitialEvent*> events;
+    for(const auto &e:x.initial_events) {
+        const auto &i=e.condition;
+        out.require_step(e.step); auto n=sources.node_id(i.node); (void)out.coordinate(i.coordinate); foundation_real<T>(i.value,i.source);
+        if(e.update>LoadUpdate::Remove || i.quantity>InitialQuantity::Temperature || static_cast<unsigned>(i.dof)>=node_dofs.at(n.value()) ||
+           (i.quantity==InitialQuantity::Temperature && i.dof!=Dof::X) || !events.emplace(std::make_pair(e.step,i.id),&e).second) fail(i.source,"invalid/duplicate initial event");
+        auto [it,inserted]=identity.emplace(i.id,i);
+        if(!inserted && (it->second.node!=i.node || it->second.quantity!=i.quantity || it->second.dof!=i.dof || it->second.coordinate!=i.coordinate)) fail(i.source,"initial event identity changed target/basis");
+    }
+    for(const auto &[key,e]:events) {
+        (void)key; const auto &i=e->condition;
+        if(e->update==LoadUpdate::Remove) {if(!active.erase(i.id)) fail(i.source,"remove inactive initial condition");}
+        else if(e->update==LoadUpdate::Replace) active[i.id]=i;
+        else {
+            auto it=active.find(i.id);
+            if(it==active.end() || !it->second.valid || !i.valid) fail(i.source,"add requires valid active initial condition");
+            auto sum=it->second.value+i.value; foundation_real<T>(sum,i.source); it->second.value=sum;
+        }
+        std::set<std::tuple<SourceKey,InitialQuantity,Dof>> occupied;
+        for(const auto &[id,v]:active) { (void)id; if(!occupied.emplace(v.node,v.quantity,v.dof).second) fail(i.source,"overlapping effective initial conditions"); }
+    }
+    ids.clear();
+    for(const auto &p:x.activation_policies) {
+        auto a=std::find_if(ir.foundation.activations.begin(),ir.foundation.activations.end(),[&](const auto &v){return v.id==p.activation;});
+        if(a==ir.foundation.activations.end() || !a->active || !ids.insert(p.activation).second || p.reactivation>ReactivationPolicy::WithStrain) fail(p.source,"invalid activation policy/reference");
+    }
+}
 } // namespace sdb::lifecycle

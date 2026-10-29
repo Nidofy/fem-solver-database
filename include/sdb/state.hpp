@@ -1,5 +1,6 @@
 #pragma once
 #include "model.hpp"
+#include "registered_state.hpp"
 #include <optional>
 
 namespace sdb {
@@ -21,6 +22,8 @@ template <class T> struct StateData {
     Field<T, 6> stress, strain;
     Field<T> history;
     std::optional<RotationState<T>> rotation;
+    // Disengaged for the default mechanical state: no extension allocations.
+    std::optional<RegisteredState> registered;
     std::uint64_t step = 0;
     double time = 0, dt = 0;
     template <class F> void fields(F &&f) {
@@ -167,8 +170,61 @@ template <class T> class StateDB {
         throw std::out_of_range("unknown history variable");
     }
     std::uint64_t model_id() const noexcept { return model_id_; }
+    template<class F> F &register_field(FieldDescriptor descriptor, std::size_t count,
+            std::string schema_id, std::uint32_t schema_version = 1,
+            std::vector<typename F::value_type> initial = {}, std::uint64_t basis_id = 0) {
+        if (in_trial()) throw std::logic_error("cannot register state during trial");
+        descriptor.validate();
+        std::size_t expected;
+        if (descriptor.association == Association::Node && descriptor.location == FieldLocation::Entity)
+            expected = node_count_;
+        else if (descriptor.association == Association::Element) {
+            if (descriptor.location == FieldLocation::Entity) expected = ip_offsets_.size()-1;
+            else if (descriptor.location == FieldLocation::IntegrationPoint || descriptor.location == FieldLocation::SectionPoint)
+                expected = ip_offsets_.back();
+            else throw std::invalid_argument("registered element-node addressing unsupported");
+        } else if (descriptor.association == Association::Global && descriptor.location == FieldLocation::Entity)
+            expected = 1;
+        else throw std::invalid_argument("registered state association/location unsupported");
+        if (count != expected) throw std::invalid_argument("registered state entity/sample count mismatch");
+        if (!data_.registered) {
+            RegisteredState next;
+            auto &field = next.template add<F>(std::move(descriptor),count,std::move(schema_id),schema_version,std::move(initial),basis_id);
+            data_.registered.emplace(std::move(next));
+            return field;
+        }
+        return data_.registered->template add<F>(std::move(descriptor),count,std::move(schema_id),schema_version,std::move(initial),basis_id);
+    }
+    void freeze_registered_fields() {
+        if (in_trial()) throw std::logic_error("cannot freeze state during trial");
+        if (data_.registered) data_.registered->freeze();
+    }
+    const RegisteredState *registered_fields() const noexcept {
+        return data_.registered ? &*data_.registered : nullptr;
+    }
+    template<class F> F &registered_field(const std::string &name) {
+        if (!data_.registered) throw std::out_of_range("no registered fields");
+        return data_.registered->template get<F>(name);
+    }
+    template<class F> const F &registered_field(const std::string &name) const {
+        if (!data_.registered) throw std::out_of_range("no registered fields");
+        return data_.registered->template get<F>(name);
+    }
+    Field<std::uint8_t> &registered_validity(const std::string &name) {
+        if (!data_.registered) throw std::out_of_range("no registered fields");
+        return data_.registered->find(name).validity_field();
+    }
+    // Restore creates initialized, independent extension storage before publication.
+    void copy_registered_layout(const StateDB &source) {
+        if (in_trial()) throw std::logic_error("cannot replace registered layout during trial");
+        if (model_id_ != source.model_id_ || node_count_ != source.node_count_)
+            throw std::invalid_argument("registered layout model mismatch");
+        if (source.data_.registered) data_.registered = source.data_.registered->initialized_copy();
+        else data_.registered.reset();
+    }
     bool in_trial() const noexcept { return backup_.has_value(); }
     void validate_shape() const {
+        if (data_.registered) data_.registered->validate_shape();
         if (data_.displacement.size() != node_count_)
             throw std::logic_error("node field shape changed");
         const auto n = data_.displacement.size(), e = ip_offsets_.size() - 1;
@@ -189,6 +245,7 @@ template <class T> class StateDB {
     void begin_trial() {
         if (backup_)
             throw std::logic_error("trial already active");
+        validate_shape();
         backup_ = data_;
     }
     void commit() {

@@ -156,15 +156,20 @@ class File {
         if (native::pack(d.info) != native::pack(f.info))
             throw std::runtime_error("indexed frame identity mismatch");
         std::set<std::tuple<std::string, std::string, bool, std::uint32_t, std::uint32_t>> keys;
-        std::set<std::tuple<std::string,std::string,bool,std::string,std::uint32_t>> typed_keys;
+        std::set<std::tuple<std::string,std::string,bool,std::string,std::uint32_t,std::uint64_t>> typed_keys;
+        std::map<std::tuple<std::string,std::string,bool,std::string,std::uint32_t>,native::Bytes> schemas;
         for (auto &field : d.fields) {
             auto &desc = field.descriptor;
             if (field.typed) {
                 auto &p = *field.typed;
                 validate_typed_payload(p);
+                auto schema_key=std::make_tuple(desc.name,desc.region,desc.history,p.schema_id,p.schema_version);
+                auto signature=native::pack(p.schema);
+                auto [schema_it,added]=schemas.emplace(schema_key,signature);
+                if(!added && schema_it->second!=signature) throw std::runtime_error("indexed conflicting schema basis groups");
                 if (!p.addresses.empty() || !p.validity.empty() || desc.name != p.schema.name ||
                     desc.components != p.schema.components || desc.basis != p.schema.basis ||
-                    !typed_keys.emplace(desc.name,desc.region,desc.history,p.schema_id,p.schema_version).second)
+                    !typed_keys.emplace(desc.name,desc.region,desc.history,p.schema_id,p.schema_version,p.basis_id).second)
                     throw std::runtime_error("indexed typed directory metadata");
             } else if (!keys.emplace(desc.name, desc.region, desc.history, desc.integration_point,
                               desc.section_point)
@@ -383,7 +388,7 @@ class File {
                       std::optional<Id> entity = {},
                       std::function<std::set<Id>(const ResultDescriptor &)> region = {},
                       unsigned point = 1, std::optional<ResultAddress> exact = {}, bool typed_query = false,
-                      const std::string *schema_id = nullptr, const std::string *stored_region = nullptr) const {
+                      const std::string *schema_id = nullptr, const std::string *stored_region = nullptr,std::optional<std::uint64_t> basis_id={}) const {
         auto f = frame_footer(index);
         auto d = directory(f, valid_end);
         ResultFrame result;
@@ -391,7 +396,8 @@ class File {
         result.binding = d.binding;
         auto budget = limit_;
         for (auto &v : d.fields)
-            if ((!stored_region || v.descriptor.region == *stored_region) &&
+            if ((!basis_id || (v.typed && v.typed->basis_id==*basis_id)) &&
+                (!stored_region || v.descriptor.region == *stored_region) &&
                 (!schema_id || (v.typed && v.typed->schema_id == *schema_id)) &&
                 (!name || (v.descriptor.name == *name && (typed_query ? bool(v.typed) : !v.typed) &&
                           (typed_query || v.descriptor.history == history) &&

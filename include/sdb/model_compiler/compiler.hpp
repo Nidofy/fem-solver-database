@@ -8,22 +8,13 @@ namespace sdb::lifecycle {
 // Abaqus face label membership/order, distinct from outward-oriented kernel face order.
 inline std::vector<unsigned> abaqus_face(const ElementDescriptor &d, const std::string &name,
                                          const Source &at = {}) {
-    static const unsigned tet[4][3] = {{0, 1, 2}, {0, 3, 1}, {1, 3, 2}, {2, 3, 0}};
-    static const unsigned hex[6][4] = {{0, 1, 2, 3}, {4, 7, 6, 5}, {0, 4, 5, 1},
-                                       {1, 5, 6, 2}, {2, 6, 7, 3}, {3, 7, 4, 0}};
-    if (d.formulation == Formulation::Shell) {
-        if (name == "SPOS")
-            return {0, 1, 2, 3};
-        if (name == "SNEG")
-            return {3, 2, 1, 0};
-    }
-    if (name.size() == 2 && name[0] == 'S' && name[1] >= '1') {
-        unsigned n = static_cast<unsigned>(name[1] - '1');
-        if (d.shape == Topology::Tet4 && n < 4)
-            return {tet[n], tet[n] + 3};
-        if (d.shape == Topology::Hex8 && n < 6)
-            return {hex[n], hex[n] + 4};
-    }
+    try {
+        if(d.formulation==Formulation::Shell && (name=="SPOS" || name=="SNEG"))
+            return topology_face_nodes(d.shape,0,FaceOrdering::Abaqus,name=="SNEG"?-1:1);
+        if(name.size()==2 && name[0]=='S' && name[1]>='1' && (d.shape==Topology::Tet4 || d.shape==Topology::Hex8))
+            return topology_face_nodes(d.shape,static_cast<unsigned>(name[1]-'1'),FaceOrdering::Abaqus);
+    } catch(const std::exception &) {}
+
     fail(at, "invalid surface face " + name + " for " + d.token);
 }
 // Semantic identity ignores source text location and ordering of identity-keyed
@@ -58,6 +49,11 @@ inline ModelIR canonical_definition(ModelIR ir) {
     by_event(f.nodal_loads); by_event(f.face_loads); by_event(f.body_loads);
     std::sort(f.material_definitions.begin(),f.material_definitions.end(),[](auto &a,auto &b){return a.material<b.material;});
     for(auto &m:f.material_definitions) { by_name(m.parameters); by_name(m.tables); }
+    auto &x=ir.extensions; by_id(x.couplings); by_id(x.property_distributions);
+    std::sort(x.amplitude_policies.begin(),x.amplitude_policies.end(),[](auto &a,auto &b){return a.amplitude<b.amplitude;});
+    std::sort(x.initial_events.begin(),x.initial_events.end(),[](auto &a,auto &b){return std::tie(a.step,a.condition.id)<std::tie(b.step,b.condition.id);});
+    std::sort(x.activation_policies.begin(),x.activation_policies.end(),[](auto &a,auto &b){return a.activation<b.activation;});
+    for(auto &c:x.couplings) std::sort(c.weights.begin(),c.weights.end(),[](auto &a,auto &b){return a.node<b.node;});
     return ir;
 }
 inline std::uint64_t canonical_semantic_hash(const ModelIR &ir) { return semantic_hash(canonical_definition(ir)); }
@@ -94,7 +90,68 @@ template <class T> struct CompiledModel {
     std::uint64_t semantic_identity() const { return canonical_semantic_hash(definition); }
     std::uint64_t analysis_identity() const {
         auto ir=canonical_definition(definition);
-        return semantic_hash(AnalysisIdentity{ir.amplitudes,ir.initial_boundaries,ir.steps,ir.foundation.nodal_loads,ir.foundation.face_loads,ir.foundation.body_loads,ir.foundation.initial_conditions,ir.foundation.activations});
+        AnalysisIdentity base{ir.amplitudes,ir.initial_boundaries,ir.steps,ir.foundation.nodal_loads,ir.foundation.face_loads,ir.foundation.body_loads,ir.foundation.initial_conditions,ir.foundation.activations};
+        if(ir.schema<4) return semantic_hash(base);
+        return semantic_hash(std::array<std::uint64_t,5>{semantic_hash(base),semantic_hash(ir.extensions.amplitude_policies),semantic_hash(ir.extensions.initial_events),semantic_hash(ir.extensions.activation_policies),semantic_hash(ir.extensions.sample_axis)});
+    }
+    const IRInstance &instance(InstanceId id) const {
+        if(!id.valid()) throw std::out_of_range("invalid instance ID");
+        std::vector<const IRInstance*> instances; for(const auto &i:definition.instances) instances.push_back(&i);
+        std::sort(instances.begin(),instances.end(),[](auto a,auto b){return a->name<b->name;});
+        return *instances.at(id.value());
+    }
+    InstanceId instance_id(const std::string &name) const {
+        std::vector<std::string> names; for(const auto &i:definition.instances) names.push_back(i.name); std::sort(names.begin(),names.end());
+        auto it=std::lower_bound(names.begin(),names.end(),name); if(it==names.end() || *it!=name) throw std::out_of_range("unknown instance name"); return InstanceId(index_of(static_cast<std::size_t>(it-names.begin())));
+    }
+    const IRStep &step(StepId id) const { foundation.require_step(id); return definition.steps.at(id.value()); }
+    StepId step_id(const std::string &name) const {
+        for(std::size_t i=0;i<definition.steps.size();++i) if(definition.steps[i].name==name) return StepId(index_of(i));
+        throw std::out_of_range("unknown step name");
+    }
+    MaterialId material_id(const std::string &name) const { return foundation.material_ids.at(name); }
+    SurfaceId surface_id(const std::string &name) const { return foundation.surface_ids.at(name); }
+    double amplitude_value(const std::string &name,double local,double total) const {
+        const auto &a=analysis.amplitudes.at(name); const auto *p=foundation.amplitude_policy(name);
+        if(!std::isfinite(local) || !std::isfinite(total)) throw std::invalid_argument("nonfinite amplitude query time");
+        const double t=a.total_time?total:local;
+        const auto interpolation=p?p->interpolation:InterpolationPolicy::Linear;
+        const auto extrapolation=p?p->extrapolation:ExtrapolationPolicy::Clamp;
+        const auto &points=a.points;
+        if(t<points.front().first || t>points.back().first) {
+            if(extrapolation==ExtrapolationPolicy::Reject) throw std::out_of_range("amplitude query outside table");
+            if(extrapolation==ExtrapolationPolicy::Clamp) return t<points.front().first?points.front().second:points.back().second;
+        }
+        if(t==points.back().first) return points.back().second;
+        auto hi=std::upper_bound(points.begin(),points.end(),t,[](double time,const auto &v){return time<v.first;});
+        if(hi==points.begin()) ++hi;
+        if(hi==points.end()) --hi;
+        auto lo=hi-1;
+        if(interpolation==InterpolationPolicy::Constant) return lo->second;
+        double ratio=(t-lo->first)/(hi->first-lo->first);
+        double result=std::lerp(lo->second,hi->second,ratio);
+        if(!std::isfinite(result)) throw std::overflow_error("amplitude interpolation/extrapolation overflow");
+        return result;
+    }
+    double load_amplitude(const std::string &name,StepId introduced,StepId current,double local,double total) const {
+        foundation.require_step(introduced); foundation.require_step(current);
+        if(introduced>current) throw std::invalid_argument("load introduced after query step");
+        if(name.empty()) return 1;
+        // A propagated step-time amplitude holds its originating step's final value.
+        return amplitude_value(name,introduced==current?local:definition.steps[introduced.value()].period,total);
+    }
+    std::vector<LoadContribution> effective_load_values(StepId current,double local,double total) const {
+        std::vector<LoadContribution> values;
+        for(const auto &load:foundation.effective_loads(current)) for(auto introduced:load.contributions) {
+            auto contribution=foundation.load_contribution(load.id,introduced);
+            auto factor=load_amplitude(contribution.definition.amplitude,introduced,current,local,total);
+            contribution.scalar*=factor; foundation_real<T>(contribution.scalar,contribution.definition.source);
+            for(auto &v:contribution.vector) {v*=factor;foundation_real<T>(v,contribution.definition.source);}
+            // Coordinate/follower metadata remains explicit; this cold query applies
+            // amplitudes only and never invents a deformed geometry transformation.
+            values.push_back(std::move(contribution));
+        }
+        return values;
     }
     void require_cpu() const {
         if (!report.executable_cpu) {
@@ -108,7 +165,7 @@ template <class T> struct CompiledModel {
 class ModelCompiler {
   public:
     template <class T> CompiledModel<T> compile(ModelIR ir) const {
-        if (ir.schema != 1 && ir.schema != 2 && ir.schema != 3)
+        if (ir.schema != 1 && ir.schema != 2 && ir.schema != 3 && ir.schema != 4)
             throw std::runtime_error("unsupported ModelIR schema");
         if (ir.schema == 1 && !ir.history_bindings.empty())
             throw std::runtime_error("history bindings require ModelIR schema 2");
@@ -116,6 +173,7 @@ class ModelCompiler {
             throw std::runtime_error("invalid ModelIR root/mode");
         if (ir.schema < 3 && !ir.foundation.empty())
             throw std::runtime_error("foundation requires ModelIR schema 3");
+        if(ir.schema<4 && !ir.extensions.empty()) throw std::runtime_error("model extensions require ModelIR schema 4");
         auto foundation = validate_foundation<T>(ir.foundation);
         ModelBuilder<T> b;
         std::vector<std::uint8_t> node_dofs;
@@ -134,6 +192,10 @@ class ModelCompiler {
         if (!ir.foundation.empty()) {
             b.set_storage_contract(semantic_hash(ir.foundation));
             incapable({}, "schema-3 foundation semantics are storage-only; CPU kernel unavailable");
+        }
+        if(ir.schema>=4) {
+            b.set_storage_contract(semantic_hash(std::array<std::uint64_t,2>{semantic_hash(ir.foundation),semantic_hash(ir.extensions)}));
+            incapable({},"schema-4 model extensions are storage-only; CPU kernel unavailable");
         }
         for (auto &o : ir.opaque)
             incapable(o.source, "opaque unsupported semantics: " + o.keyword);
@@ -158,6 +220,7 @@ class ModelCompiler {
         if (contexts.empty())
             throw std::runtime_error("no root mesh or instantiated part");
         std::map<std::pair<bool, std::string>, std::map<Id, Index>> lookup;
+        std::vector<const IRElement*> coupling_elements;
         for (auto &[name, c] : contexts) {
             b.add_part(c.id);
             std::uint8_t dofs = 3;
@@ -219,6 +282,7 @@ class ModelCompiler {
                 if (!lookup[{false, name}].emplace(e.label, index).second)
                     fail(e.source, "duplicate element label");
                 source.add(false, {{c.part->name, name, e.label}, Id(index) + 1, index, e.source});
+                if(!ir.extensions.couplings.empty()) coupling_elements.push_back(&e);
             }
         }
         using Key = std::tuple<bool, std::string, std::string>;
@@ -501,10 +565,17 @@ class ModelCompiler {
             if(cs.empty()) fail(s.source,"uninstantiated surface scope");
             for (auto &ctx : cs) {
                 std::vector<FaceId> faces;
+                std::set<NodeId> surface_node_set;
+                const auto semantic_surface=(ctx.empty()?"":ctx+".")+s.name;
+                const bool collect_nodes=std::any_of(ir.extensions.couplings.begin(),ir.extensions.couplings.end(),[&](const auto &c){return c.surface==semantic_surface;});
                 for (auto &[target, face] : s.faces)
                     for (auto e : resolve(false, target, ctx, s.source)) {
                         auto &d = descriptions.at(e);
-                        (void)abaqus_face(d, face, s.source);
+                        auto local_nodes=abaqus_face(d, face, s.source);
+                        if(collect_nodes) {
+                            const auto &entry=source.elements.at(e); const auto *element=coupling_elements.at(e);
+                            for(auto local:local_nodes) surface_node_set.insert(source.node_id({entry.key.part,entry.key.instance,element->nodes.at(local)}));
+                        }
                         faces.push_back({Id(e) + 1,
                                          static_cast<std::uint16_t>(
                                              d.formulation == Formulation::Shell ? 0 : face[1] - '1'),
@@ -513,6 +584,7 @@ class ModelCompiler {
                 auto surface_name=(ctx.empty()?"":ctx+".")+s.name;
                 if(faces.empty() || !foundation.surface_ids.emplace(surface_name,SurfaceId(index_of(foundation.surface_ids.size()))).second)
                     fail(s.source,"empty/duplicate semantic surface");
+                if(collect_nodes) foundation.surface_nodes.emplace(surface_name,std::vector<NodeId>(surface_node_set.begin(),surface_node_set.end()));
                 b.add_surface(setid++, std::move(faces));
             }
         }
@@ -606,6 +678,28 @@ class ModelCompiler {
         if (ir.steps.empty())
             incapable(ir.parts.front().source, "no executable analysis step");
         resolve_foundation<T>(ir,foundation,source,node_dofs,resolve);
+        foundation.element_materials.resize(source.elements.size()); foundation.element_orientations.resize(source.elements.size());
+        for(const auto &s:sections) foundation.element_materials.at(s.element)=MaterialId(s.material);
+        for(const auto &s:foundation.sections) {
+            OrientationId orientation;
+            auto find_orientation=[&](const auto &records){for(const auto &record:records) if(record.assignment.id==s.id) orientation=record.assignment.orientation;};
+            find_orientation(ir.foundation.solid_sections); find_orientation(ir.foundation.shell_sections); find_orientation(ir.foundation.beam_sections);
+            for(auto e:s.elements) foundation.element_orientations.at(e.value())=orientation;
+        }
+        auto scoped_resolve=[&](bool node,const std::string &scope,const std::string &target,const Source &at) {
+            if(scope.empty()) return resolve(node,target,"",at);
+            if(!parts.contains(scope)) fail(at,"unknown property region scope");
+            auto dot=target.find('.');
+            if(dot!=target.npos) {
+                auto instance=contexts.find(target.substr(0,dot));
+                if(instance==contexts.end() || instance->second.part->name!=scope) fail(at,"qualified property region outside scope");
+                return resolve(node,target,"",at);
+            }
+            std::vector<Index> ids;
+            for(const auto &[name,c]:contexts) if(c.part->name==scope) {auto more=resolve(node,target,name,at);ids.insert(ids.end(),more.begin(),more.end());}
+            std::sort(ids.begin(),ids.end());ids.erase(std::unique(ids.begin(),ids.end()),ids.end()); return ids;
+        };
+        resolve_extensions<T>(ir,foundation,source,node_dofs,scoped_resolve);
         auto mesh = b.finalize();
         CompiledModel<T> result(std::move(ir), std::move(mesh));
         result.sources = std::move(source);

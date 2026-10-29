@@ -2,6 +2,7 @@
 #include "field.hpp"
 #include "schema.hpp"
 #include "types.hpp"
+#include "topology.hpp"
 #include <array>
 #include <bit>
 #include <cmath>
@@ -19,35 +20,6 @@ inline Index index_of(std::size_t n) {
     if (n >= invalid_index)
         throw std::length_error("32-bit index exhausted");
     return static_cast<Index>(n);
-}
-enum class Topology : std::uint8_t { Point1, Beam2, Tri3, Quad4, Tet4, Hex8, Polygon };
-inline unsigned arity(Topology t) {
-    switch (t) {
-    case Topology::Point1:
-        return 1;
-    case Topology::Beam2:
-        return 2;
-    case Topology::Tri3:
-        return 3;
-    case Topology::Quad4:
-    case Topology::Tet4:
-        return 4;
-    case Topology::Hex8:
-        return 8;
-    case Topology::Polygon:
-        return 0;
-    }
-    throw std::invalid_argument("unknown topology");
-}
-inline unsigned face_count(Topology t) {
-    switch (t) {
-    case Topology::Tet4:
-        return 4;
-    case Topology::Hex8:
-        return 6;
-    default:
-        return 1;
-    }
 }
 struct FaceId {
     Id element = 0;
@@ -200,6 +172,14 @@ template <class T> class MeshDB {
         return NodeId(node_index(label.value()));
     }
     const Element &element(ElementId i) const { return element(i.value()); }
+    std::span<const Index> connectivity(ElementId i) const { return connectivity(i.value()); }
+    std::uint8_t dofs(NodeId i) const { return dofs(i.value()); }
+    ExternalLabel external_label(ElementId i) const { return ExternalLabel::checked(element(i).id); }
+    ElementId element(ExternalLabel label) const {
+        if (!label.valid()) throw std::invalid_argument("invalid typed external label");
+        return ElementId(element_index(label.value()));
+    }
+    SamplePoint sample_point(ElementId i, std::size_t point) const { return sample_point(i.value(), point); }
     void validate_face(FaceId f) const {
         const auto &e = element(element_index(f.element));
         if (f.local >= face_count(e.topology) || (f.side != 1 && f.side != -1))

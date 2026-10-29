@@ -1,6 +1,7 @@
 #pragma once
 #include "../model_ir/foundation_validate.hpp"
 #include <numbers>
+#include <optional>
 #include <fstream>
 #include <charconv>
 #include <cctype>
@@ -213,6 +214,18 @@ class AbaqusInpReader final : public IModelReader {
         bool output_pending = false, output_context = false;
         std::uint64_t frequency = 1, intervals = 0;
         std::string scope;
+        std::optional<std::size_t> pending_coupling;
+        std::uint32_t next_constraint=0;
+        std::map<std::string,LoadId> pressure_ids;
+        auto source_key=[&](std::string target,const Source &at) {
+            SourceKey key; target=upper(target); auto dot=target.find('.');
+            if(dot!=target.npos) {
+                if(dot==0 || target.find('.',dot+1)!=target.npos) fail(at,"invalid scoped source node");
+                key.instance=target.substr(0,dot); target=target.substr(dot+1);
+            }
+            if(!is_label(target)) fail(at,"node sets are outside this keyword's controlled subset");
+            key.label=label(target,at); return key;
+        };
         auto unsupported = [&](const Block &b, const std::string &why) {
             if (options.mode == ImportMode::Solve)
                 fail(b.at, why);
@@ -225,6 +238,7 @@ class AbaqusInpReader final : public IModelReader {
             result.report.diagnostics.push_back({b.at, why, true});
         };
         for (auto &b : blocks) {
+            if(pending_coupling && b.key!="KINEMATIC") fail(b.at,"COUPLING must immediately precede supported KINEMATIC");
             if ((b.key == "OUTPUT" || b.key == "END STEP") && output_pending)
                 fail(b.at, "OUTPUT must be followed by explicit variable requests (including FREQUENCY=0)");
             auto param = [&](const std::string &key, const std::string &fallback = "") {
@@ -413,16 +427,53 @@ class AbaqusInpReader final : public IModelReader {
                                 members.push_back(upper(v));
                 }
                 add_members(nodes, required(nodes ? "NSET" : "ELSET"), members, b.at, param("INSTANCE"));
+            } else if (b.key == "COUPLING") {
+                params({"CONSTRAINT NAME","REF NODE","SURFACE"});
+                if(in_part || in_instance || step || !b.data.empty()) fail(b.at,"COUPLING supports root/assembly and no data lines");
+                IRCoupling c; c.id=ConstraintId(next_constraint++); c.name=required("CONSTRAINT NAME");
+                c.reference=source_key(required("REF NODE"),b.at); c.surface=required("SURFACE"); c.source=b.at;
+                c.dof_mask=0; m.extensions.couplings.push_back(c); pending_coupling=m.extensions.couplings.size()-1; m.schema=4;
+            } else if (b.key == "KINEMATIC") {
+                params({});
+                if(!pending_coupling) fail(b.at,"KINEMATIC without COUPLING");
+                auto &c=m.extensions.couplings.at(*pending_coupling);
+                if(b.data.empty()) fail(b.at,"KINEMATIC subset requires explicit translational DOFs");
+                for(const auto &l:b.data) {
+                    auto f=fields(l); count(f,1,2,l.at);
+                    auto first=label(f[0],l.at),last=f.size()==1 || f[1].empty()?first:label(f[1],l.at);
+                    if(first>last || last>3) fail(l.at,"KINEMATIC input subset supports DOFs 1..3");
+                    for(auto d=first;d<=last;++d) {auto bit=static_cast<std::uint8_t>(1u<<(d-1));if(c.dof_mask&bit) fail(l.at,"duplicate KINEMATIC DOF");c.dof_mask|=bit;}
+                }
+                pending_coupling.reset();
+            } else if (b.key == "INITIAL CONDITIONS") {
+                params({"TYPE"});
+                if(step || in_part || in_instance || in_assembly || required("TYPE")!="VELOCITY" || b.data.empty()) fail(b.at,"INITIAL CONDITIONS supports model-level VELOCITY only");
+                for(const auto &l:b.data) {
+                    auto f=fields(l); count(f,3,3,l.at); auto dof=label(f[1],l.at); if(dof>6) fail(l.at,"initial velocity DOF must be 1..6");
+                    IRInitialCondition i; i.id=m.foundation.initial_conditions.size(); i.node=source_key(f[0],l.at); i.dof=static_cast<Dof>(dof-1); i.value=number(f[2],l.at); i.source=l.at;
+                    m.foundation.initial_conditions.push_back(i);
+                }
+                m.schema=std::max(m.schema,3u);
+            } else if (b.key == "DSLOAD") {
+                params({"OP","AMPLITUDE"});
+                if(!step || in_part || in_assembly || param("OP","MOD")!="MOD" || b.data.empty()) fail(b.at,"DSLOAD supports step pressure with OP=MOD only");
+                for(const auto &l:b.data) {
+                    auto f=fields(l); count(f,3,3,l.at); if(upper(f[1])!="P") fail(l.at,"DSLOAD supports uniform pressure P only");
+                    auto region=upper(f[0]); auto [it,inserted]=pressure_ids.emplace(region,LoadId(index_of(pressure_ids.size()))); (void)inserted;
+                    LoadDefinition d{it->second,StepId(index_of(m.steps.size()-1)),region,param("AMPLITUDE"),CoordinateId(0),true,LoadUpdate::Replace,l.at};
+                    m.foundation.face_loads.push_back({d,FaceLoadKind::Pressure,number(f[2],l.at),{}});
+                }
+                m.schema=std::max(m.schema,3u);
             } else if (b.key == "EQUATION") {
                 params({});
                 if(in_part || in_instance || step) fail(b.at,"EQUATION supports root/assembly scope only");
-                m.schema=3;
+                m.schema=std::max(m.schema,3u);
                 if(b.data.empty()) fail(b.at,"empty EQUATION");
                 for(std::size_t row=0;row<b.data.size();) {
                     auto f=fields(b.data[row]); count(f,1,1,b.data[row].at);
                     auto n=label(f[0],b.data[row].at);
                     if(n<2 || n>options.max_entities) fail(b.data[row].at,"equation term count/budget");
-                    IREquation e; e.id=ConstraintId(index_of(m.foundation.equations.size())); e.source=b.data[row++].at;
+                    IREquation e; e.id=ConstraintId(next_constraint++); e.source=b.data[row++].at;
                     while(e.terms.size()<n) {
                         if(row==b.data.size()) fail(e.source,"truncated equation terms");
                         auto at=b.data[row].at; auto terms=fields(b.data[row++]);
@@ -473,7 +524,7 @@ class AbaqusInpReader final : public IModelReader {
                     extra[j*3+j]=extra[k*3+k]=std::cos(angle); extra[j*3+k]=-std::sin(angle); extra[k*3+j]=std::sin(angle);
                     o.rotation=multiply_rotation(o.rotation,extra);
                 }
-                validate_rotation(o.rotation,b.at); m.schema=3; m.foundation.orientations.push_back(std::move(o));
+                validate_rotation(o.rotation,b.at); m.schema=std::max(m.schema,3u); m.foundation.orientations.push_back(std::move(o));
             } else if (b.key == "MATERIAL") {
                 params({"NAME"});
                 if (in_part || in_instance || step)
@@ -683,11 +734,16 @@ class AbaqusInpReader final : public IModelReader {
         }
         if (in_part || in_assembly || in_instance || step)
             fail({path.string(), 1, 1}, "unclosed PART/ASSEMBLY/INSTANCE/STEP");
-        for(auto &e:m.foundation.equations) for(auto &t:e.terms) if(!t.node.instance.empty()) {
-            auto i=std::find_if(m.instances.begin(),m.instances.end(),[&](auto &v){return v.name==t.node.instance;});
-            if(i==m.instances.end()) fail(e.source,"unknown equation instance");
-            t.node.part=i->part;
-        }
+        if(pending_coupling) fail(m.extensions.couplings.at(*pending_coupling).source,"COUPLING missing KINEMATIC");
+        auto qualify=[&](SourceKey &key,const Source &at) {
+            if(key.instance.empty()) return;
+            auto i=std::find_if(m.instances.begin(),m.instances.end(),[&](auto &v){return v.name==key.instance;});
+            if(i==m.instances.end()) fail(at,"unknown source node instance");
+            key.part=i->part;
+        };
+        for(auto &e:m.foundation.equations) for(auto &t:e.terms) qualify(t.node,e.source);
+        for(auto &c:m.extensions.couplings) qualify(c.reference,c.source);
+        for(auto &i:m.foundation.initial_conditions) qualify(i.node,i.source);
         result.report.parsed = true;
         return result;
     }

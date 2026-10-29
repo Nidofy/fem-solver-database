@@ -1,0 +1,30 @@
+{
+  "source_commit": "00b716657ee4a2d2cbc2a5bc26ee85c2cea48937",
+  "producer": "model_foundation_tests + foundation_integration_tests rebuilt from git archive",
+  "files": {
+    "float.sdbmodel": {
+      "bytes": 8916,
+      "sha256": "ce38a14138aa0e3bc69099ed55764acb79a92c4f7f822e18c12a3df209461e5b"
+    },
+    "float.sdbres": {
+      "bytes": 26015,
+      "sha256": "11d129cd1b76d6955288e2d36768e1e62d6c6a86cc821a09629834434895c77c"
+    },
+    "float.sdbrst": {
+      "bytes": 7461,
+      "sha256": "a543467c2826dd3a4b16585aebb566099e626ac67db867eb1d4a0537e1afafba"
+    },
+    "double.sdbmodel": {
+      "bytes": 8916,
+      "sha256": "9343328ba711d18d97a8add0bbf64b603594db5ec2bad25d77354f96a5c27525"
+    },
+    "double.sdbres": {
+      "bytes": 26143,
+      "sha256": "55307d71768566afe5cbcd47cef447d949a59ec205e92e6e65845c91e67922c0"
+    },
+    "double.sdbrst": {
+      "bytes": 13861,
+      "sha256": "9d490a29e86ad3c400361979d44864e30b6c09dbb4ad15bfcde9a0fe05a0e710"
+    }
+  }
+}

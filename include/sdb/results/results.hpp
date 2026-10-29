@@ -33,6 +33,10 @@ struct FrameInfo {
     std::uint64_t id = 0, step = 0, increment = 0, mesh_revision = 0;
     double time = 0, local_time = 0;
     std::uint8_t precision = 8, storage_precision = 8;
+    FrameId frame_id() const { return FrameId::checked(id); }
+    StepId step_id() const { return StepId::checked(step); }
+    // Existing result wire versions implicitly store physical Time/UNSPECIFIED.
+    SampleAxisDescriptor sample_axis() const { return {}; }
     template <class F> void visit(F f) {
         f(id, step, increment, mesh_revision, time, local_time, precision, storage_precision);
     }
@@ -43,6 +47,109 @@ struct ResultFrame {
     std::optional<ResultBinding> binding;
     template <class F> void visit(F f) { f(info, fields); }
 };
+// Unqualified global bases accepted for legacy/default descriptors. Every other
+// basis label requires a nonzero resolved catalog reference when published.
+inline bool global_result_basis(const std::string &name) {
+    auto normalized=upper(name);
+    return normalized=="UNSPECIFIED" || normalized=="GLOBAL" || normalized=="GLOBAL CARTESIAN";
+}
+// Material bases are metadata only: history values are never transformed here.
+// Foundation orientations resolve their coordinate parent graph first. A typed
+// section scoped to a part then inherits the instance rigid rotation; a root
+// section is already in assembly coordinates. Layer angles rotate about local Z.
+struct MaterialResultBases {
+    struct Entry { std::uint64_t id; std::string orientation_name; Rotation rotation; };
+    std::map<std::pair<Index,std::uint32_t>,Entry> samples;
+    std::vector<ResultBasis> catalog;
+    std::size_t bytes=sizeof(std::size_t);
+};
+inline Rotation result_instance_rotation(const IRInstance &instance) {
+    auto angle=instance.rotation[6]*std::numbers::pi/180;
+    if (angle==0) return identity_rotation;
+    std::array<double,3> axis{}; double norm=0;
+    for(unsigned i=0;i<3;++i) { axis[i]=instance.rotation[i+3]-instance.rotation[i]; norm+=axis[i]*axis[i]; }
+    if (!(norm>0) || !std::isfinite(norm)) throw std::invalid_argument("invalid material basis instance axis");
+    for(auto &x:axis) x/=std::sqrt(norm);
+    double c=std::cos(angle),sn=std::sin(angle),v=1-c;
+    Rotation r{c+axis[0]*axis[0]*v,axis[0]*axis[1]*v-axis[2]*sn,axis[0]*axis[2]*v+axis[1]*sn,
+        axis[1]*axis[0]*v+axis[2]*sn,c+axis[1]*axis[1]*v,axis[1]*axis[2]*v-axis[0]*sn,
+        axis[2]*axis[0]*v-axis[1]*sn,axis[2]*axis[1]*v+axis[0]*sn,c+axis[2]*axis[2]*v};
+    validate_rotation(r,{}); return r;
+}
+template<class T> MaterialResultBases material_result_bases(const CompiledModel<T> &model,
+    std::uint64_t budget=native::default_limit) {
+    MaterialResultBases out;
+    auto charge=[&](std::size_t n) {if(n>budget-out.bytes) throw std::length_error("material result basis budget");out.bytes+=n;};
+    if(out.bytes>budget) throw std::length_error("material result basis budget");
+    std::size_t assignments_count=0;
+    for(const auto &section:model.foundation.sections) assignments_count=sum(assignments_count,section.elements.size());
+    charge(product(assignments_count,128));
+    charge(product(sum(sum(model.foundation.definition.solid_sections.size(),model.foundation.definition.beam_sections.size()),
+        model.foundation.definition.shell_sections.size()),128));
+    std::map<SectionId,std::pair<const SectionAssignment*,const IRShellSection*>> definitions;
+    const auto &f=model.foundation.definition;
+    for(const auto &s:f.solid_sections) definitions.emplace(s.assignment.id,std::make_pair(&s.assignment,nullptr));
+    for(const auto &s:f.beam_sections) definitions.emplace(s.assignment.id,std::make_pair(&s.assignment,nullptr));
+    for(const auto &s:f.shell_sections) definitions.emplace(s.assignment.id,std::make_pair(&s.assignment,&s));
+    std::map<Index,std::pair<const SectionAssignment*,const IRShellSection*>> assignments;
+    for(const auto &s:model.foundation.sections) {
+        auto found=definitions.find(s.id);
+        if(found==definitions.end()) throw std::invalid_argument("unresolved result section basis");
+        for(auto e:s.elements) assignments.emplace(e.value(),found->second);
+    }
+    std::uint64_t next=std::uint64_t(1)<<33; // disjoint from orientation and coordinate namespaces
+    for(const auto &[e,definition]:assignments) {
+        const auto &[assignment,shell]=definition;
+        auto local_sample=[&](std::size_t q) {
+            auto sample=model.mesh.sample_point(e,q);
+            const auto &variables=model.mesh.materials()[sample.material].history_schema.variables;
+            return std::any_of(variables.begin(),variables.end(),[](const auto &v){return !global_result_basis(v.field.basis);});
+        };
+        bool needs_local=false;
+        for(std::size_t q=0;q<model.mesh.sample_point_count(e);++q) needs_local=needs_local || local_sample(q);
+        if(!needs_local) continue; // preserve old model bytes for global-only material history
+        Rotation instance=identity_rotation;
+        if(!assignment->scope.empty()) {
+            const auto &key=model.sources.elements.at(e).key;
+            bool found=false;
+            for(const auto &i:model.definition.instances) if(i.name==key.instance) {
+                if(i.part!=assignment->scope) throw std::invalid_argument("material basis scope/instance mismatch");
+                instance=result_instance_rotation(i); found=true; break;
+            }
+            if(!found) throw std::invalid_argument("missing scoped material basis instance");
+        }
+        for(std::size_t q=0;q<model.mesh.sample_point_count(e);++q) {
+            if(!local_sample(q)) continue;
+            auto sample=model.mesh.sample_point(e,q);
+            auto key=std::make_pair(e,sample.layer);
+            if(out.samples.contains(key)) continue;
+            OrientationId orientation=assignment->orientation; double angle=0;
+            if(shell && !shell->layers.empty()) {
+                if(!sample.layer || sample.layer>shell->layers.size()) throw std::invalid_argument("material basis layer bounds");
+                const auto &layer=shell->layers[sample.layer-1];
+                if(layer.orientation.valid()) orientation=layer.orientation;
+                angle=layer.angle_degrees*std::numbers::pi/180;
+            }
+            if(!orientation.valid()) continue; // a local field using this row will fail publication
+            auto rotation=multiply_rotation(instance,model.foundation.orientation(orientation));
+            Rotation layer{std::cos(angle),-std::sin(angle),0,std::sin(angle),std::cos(angle),0,0,0,1};
+            rotation=multiply_rotation(rotation,layer); validate_rotation(rotation,{});
+            std::string name;
+            for(const auto &o:f.orientations) if(o.id==orientation) {name=o.name;break;}
+            if(name.empty() || next==UINT64_MAX) throw std::invalid_argument("material basis identity exhausted/missing");
+            charge(sum(128+sizeof(MaterialResultBases::Entry)+2*sizeof(ResultBasis),product(name.size()+1,2)));
+            out.samples.emplace(key,MaterialResultBases::Entry{next,name,rotation});
+            out.catalog.push_back({next++,rotation});
+        }
+    }
+    return out;
+}
+template<class T> void validate_result_sample_axis(const CompiledModel<T> &model) {
+    const auto &axis=model.definition.extensions.sample_axis;
+    axis.validate();
+    if(axis.units!="UNSPECIFIED")
+        throw std::invalid_argument("result codec cannot encode custom sample-axis units; model extension only");
+}
 struct ResultModel {
     std::uint64_t mesh = 0, definition = 0, configuration = 0;
     std::uint8_t precision = 8;
@@ -58,6 +165,7 @@ struct ResultModel {
           regions);
     }
     template <class T> static ResultModel from(const CompiledModel<T> &m, std::uint64_t config) {
+        validate_result_sample_axis(m);
         ResultModel out;
         out.mesh = m.mesh.fingerprint();
         out.definition = ModelStore::identity(m);
@@ -92,6 +200,8 @@ struct ResultModel {
         for (const auto &coordinate : m.foundation.coordinates)
             if (coordinate.id.value() != 0)
                 out.bases.push_back({(std::uint64_t(1)<<32) + coordinate.id.value(),coordinate.rotation});
+        auto material_bases=material_result_bases(m);
+        out.bases.insert(out.bases.end(),material_bases.catalog.begin(),material_bases.catalog.end());
         return out;
     }
 };
@@ -125,12 +235,6 @@ template<class T> const std::vector<T> &typed_values(const ResultField &field) {
     if (!field.typed) throw std::invalid_argument("legacy result is not typed");
     return std::get<std::vector<T>>(field.typed->values);
 }
-// Unqualified global bases accepted for legacy/default descriptors. Every other
-// basis label requires a nonzero resolved catalog reference when published.
-inline bool global_result_basis(const std::string &name) {
-    auto normalized=upper(name);
-    return normalized=="UNSPECIFIED" || normalized=="GLOBAL" || normalized=="GLOBAL CARTESIAN";
-}
 class OutputScheduler {
   public:
     static bool due(const IROutput &r, std::uint64_t increment, std::uint64_t total) {
@@ -149,32 +253,44 @@ class ResultPublisher {
         if (state.in_trial() || state.model_id() != model.mesh.fingerprint())
             throw std::invalid_argument("history snapshot requires matching committed state");
         state.validate_shape();
+        validate_result_sample_axis(model);
         std::vector<ResultField> fields;
         std::map<std::string,std::size_t> groups;
         std::set<std::string> found;
         std::size_t used = 0;
         auto history = state.data().history.read();
+        auto material_bases=material_result_bases(model,budget);
+        used=material_bases.bytes;
         for (Index e = 0; e < model.mesh.elements(); ++e)
             for (std::size_t q = 0; q < model.mesh.sample_point_count(e); ++q) {
                 auto point = model.mesh.sample_point(e,q);
                 auto &schema = model.mesh.materials()[point.material].history_schema;
                 for (const auto &v : schema.variables) {
                     if (!names.empty() && std::find(names.begin(), names.end(), v.field.name) == names.end()) continue;
-                    if (!global_result_basis(v.field.basis))
-                        throw std::invalid_argument("history snapshot requires explicit resolved local basis adapter");
+                    std::uint64_t basis=0;
+                    if (!global_result_basis(v.field.basis)) {
+                        auto found=material_bases.samples.find({e,point.layer});
+                        if(found==material_bases.samples.end()) throw std::invalid_argument("missing local material history basis");
+                        auto label=upper(v.field.basis);
+                        if(label!="LOCAL" && label!="MATERIAL" && label!="LOCAL MATERIAL" && label!=upper(found->second.orientation_name))
+                            throw std::invalid_argument("history basis label disagrees with material orientation");
+                        basis=found->second.id;
+                    }
                     found.insert(v.field.name);
                     auto signature = native::pack(v.field);
                     auto key = schema.id + ":" + std::to_string(schema.version) + ":" +
-                        std::string(reinterpret_cast<const char*>(signature.data()),signature.size());
+                        std::string(reinterpret_cast<const char*>(signature.data()),signature.size()) + ":BASIS:" + std::to_string(basis);
                     auto [it, added] = groups.emplace(key, fields.size());
                     if (added) {
                         for (const auto &old : fields)
                             if (old.typed->schema_id == schema.id && old.typed->schema_version == schema.version &&
-                                old.descriptor.name == v.field.name)
+                                old.descriptor.name == v.field.name && native::pack(old.typed->schema)!=signature)
                                 throw std::invalid_argument("conflicting history schema identity");
                         auto field = make_typed_field<T>(v.field, {}, {}, {}, "", true);
                         field.typed->schema_id = schema.id;
                         field.typed->schema_version = schema.version;
+                        field.typed->basis_id=basis;
+                        field.descriptor.provenance="Committed material history; values retained in declared basis (no component transform)";
                         used = sum(used, sum(signature.size()*3, sizeof(ResultField) + key.size()*2 + 256));
                         if (used > budget) throw std::length_error("history snapshot metadata budget");
                         fields.push_back(std::move(field));
@@ -200,7 +316,7 @@ class ResultPublisher {
             for (const auto &old : frame.fields)
                 if (old.typed && old.descriptor.name == field.descriptor.name && old.descriptor.history &&
                     old.descriptor.region.empty() && old.typed->schema_id == field.typed->schema_id &&
-                    old.typed->schema_version == field.typed->schema_version)
+                    old.typed->schema_version == field.typed->schema_version && old.typed->basis_id == field.typed->basis_id)
                     throw std::invalid_argument("duplicate history snapshot field");
         }
         auto needed=sum(frame.fields.size(),fields.size());
@@ -224,6 +340,88 @@ class ResultPublisher {
             info.step,info.increment,info.time};
         append_history(frame,model,state,std::move(names),budget);
         return frame;
+    }
+    // Owned snapshots of frozen registered state. Supported dense layouts are
+    // Node/Element/Global entity rows and mesh sample-major IP/section rows.
+    // Face/contact require their separate explicit-address publishing adapter.
+    template<class T> static void append_registered(ResultFrame &frame,const CompiledModel<T> &model,
+        const StateDB<T> &state,std::vector<std::string> names={},std::uint64_t budget=native::default_limit) {
+        if(state.in_trial() || state.model_id()!=model.mesh.fingerprint())
+            throw std::invalid_argument("registered result requires matching committed state");
+        state.validate_shape();
+        validate_result_sample_axis(model);
+        const auto *registry=state.registered_fields();
+        if(!registry) { if(!names.empty()) throw std::out_of_range("no registered state fields"); return; }
+        if(!registry->frozen()) throw std::invalid_argument("registered result layout must be frozen");
+        auto material_bases=material_result_bases(model,budget);
+        std::vector<ResultField> fields;
+        std::set<std::string> found;
+        std::size_t used=material_bases.bytes;
+        for(const auto &owner:registry->entries()) {
+            const auto &entry=*owner; const auto &d=entry.descriptor();
+            if(!names.empty() && std::find(names.begin(),names.end(),d.name)==names.end()) continue;
+            found.insert(d.name);
+            auto basis=entry.basis_id();
+            bool known=basis==0 && global_result_basis(d.basis);
+            if(basis) {
+                for(const auto &[id,r]:model.foundation.orientation_bases) { (void)r; known=known || basis==1+std::uint64_t(id.value()); }
+                for(const auto &c:model.foundation.coordinates) if(c.id.value()) known=known || basis==(std::uint64_t(1)<<32)+c.id.value();
+                for(const auto &b:material_bases.catalog) known=known || basis==b.id;
+            }
+            if(!known) throw std::invalid_argument("registered result missing/invalid basis reference");
+            auto metadata=native::encoded_size(d,budget);
+            auto scalar_bytes=std::visit([](const auto &v){return sizeof(typename std::decay_t<decltype(v)>::value_type);},empty_typed_values(d.scalar));
+            auto row_bytes=sum(2*sizeof(ResultAddress)+64,product(d.component_count(),scalar_bytes+1));
+            auto charge=sum(product(entry.count(),row_bytes),sum(product(metadata,4),sizeof(ResultField)+entry.schema_id().size()+256));
+            if(charge>budget-used) throw std::length_error("registered result snapshot budget");
+            used+=charge; // charge ownership and validation scratch before copying source values
+            std::vector<ResultAddress> addresses; addresses.reserve(entry.count());
+            if(d.location==FieldLocation::Entity) {
+                if(d.association!=Association::Node && d.association!=Association::Element && d.association!=Association::Global)
+                    throw std::invalid_argument("registered result needs explicit face/contact address adapter");
+                for(std::size_t i=0;i<entry.count();++i) {ResultAddress a; a.entity=d.association==Association::Global?0:i+1; addresses.push_back(a);}
+            } else if(d.association==Association::Element &&
+                (d.location==FieldLocation::IntegrationPoint || d.location==FieldLocation::SectionPoint)) {
+                for(Index e=0;e<model.mesh.elements();++e) for(std::size_t q=0;q<model.mesh.sample_point_count(e);++q) {
+                    auto point=model.mesh.sample_point(e,q);
+                    if(d.location==FieldLocation::SectionPoint && !point.section_point)
+                        throw std::invalid_argument("registered section field includes a nonsection sample");
+                    ResultAddress a; a.entity=Id(e)+1; a.integration_point=point.integration_point;
+                    a.layer=point.layer; a.section_point=point.section_point; addresses.push_back(a);
+                }
+            } else throw std::invalid_argument("unsupported registered result location");
+            if(addresses.size()!=entry.count()) throw std::invalid_argument("registered result sample count mismatch");
+            auto values=entry.values(); auto validity=entry.validity();
+            auto field=std::visit([&](auto &&v) {
+                using V=typename std::decay_t<decltype(v)>::value_type;
+                return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+            },std::move(values));
+            field.typed->schema_id=entry.schema_id(); field.typed->schema_version=entry.schema_version(); field.typed->basis_id=basis;
+            field.descriptor.provenance="Owned committed registered-state snapshot; no basis transform";
+            for(const auto &old:frame.fields) if(old.typed && old.descriptor.name==d.name && old.descriptor.history &&
+                old.descriptor.region.empty() && old.typed->schema_id==entry.schema_id())
+                throw std::invalid_argument("registered result duplicates an existing field");
+            fields.push_back(std::move(field));
+        }
+        for(const auto &name:names) if(!found.contains(name)) throw std::out_of_range("unknown registered result field");
+        auto config=frame.binding?frame.binding->configuration:0;
+        ResultBinding binding{model.mesh.fingerprint(),ModelStore::identity(model),config,frame.info.step,frame.info.increment,frame.info.time};
+        if(frame.binding && *frame.binding!=binding) throw std::invalid_argument("registered result frame binding mismatch");
+        auto count=sum(frame.fields.size(),fields.size());
+        if(product(count,sizeof(ResultField))>budget-used) throw std::length_error("registered result directory budget");
+        frame.fields.reserve(count);
+        frame.fields.insert(frame.fields.end(),std::make_move_iterator(fields.begin()),std::make_move_iterator(fields.end()));
+        frame.binding=binding; frame.info.mesh_revision=binding.mesh; frame.info.precision=sizeof(T); frame.info.storage_precision=0;
+    }
+    template<class T> static ResultFrame snapshot_registered(const CompiledModel<T> &model,const StateDB<T> &state,
+        FrameInfo info={},std::vector<std::string> names={},std::uint64_t budget=native::default_limit,std::uint64_t configuration=0) {
+        if(info.id==0 && info.step==0 && info.increment==0 && info.time==0 && info.local_time==0) {
+            info.id=state.data().step; info.increment=state.data().step; info.time=state.data().time; info.local_time=state.data().time;
+        }
+        ResultFrame frame; frame.info=info;
+        frame.binding=ResultBinding{model.mesh.fingerprint(),ModelStore::identity(model),configuration,info.step,info.increment,info.time};
+        frame.info.mesh_revision=frame.binding->mesh; frame.info.precision=sizeof(T); frame.info.storage_precision=0;
+        append_registered(frame,model,state,std::move(names),budget); return frame;
     }
     template <class T>
     static ResultFrame publish(const CompiledModel<T> &model, const StateDB<T> &state, CpuExplicit<T> &cpu,
@@ -431,12 +629,17 @@ inline void validate_frame(const ResultFrame &f, const ResultModel &model,
         throw std::runtime_error("typed result binding mismatch");
     if (i.storage_precision == 8 && f.binding) throw std::runtime_error("legacy result has typed binding");
     std::set<std::tuple<std::string, std::string, bool, std::uint32_t, std::uint32_t>> keys;
-    std::set<std::tuple<std::string, std::string, bool, std::string, std::uint32_t>> typed_keys;
+    std::set<std::tuple<std::string, std::string, bool, std::string, std::uint32_t,std::uint64_t>> typed_keys;
+    std::map<std::tuple<std::string,std::string,bool,std::string,std::uint32_t>,native::Bytes> schemas;
     for (auto &field : f.fields) {
         auto &d = field.descriptor;
         if (field.typed) {
             const auto &p = *field.typed;
             validate_typed_payload(p);
+            auto schema_key=std::make_tuple(d.name,d.region,d.history,p.schema_id,p.schema_version);
+            auto signature=native::pack(p.schema);
+            auto [schema_it,added]=schemas.emplace(schema_key,signature);
+            if(!added && schema_it->second!=signature) throw std::runtime_error("conflicting schema identity across basis groups");
             if (!p.basis_id && !global_result_basis(p.schema.basis))
                 throw std::runtime_error("local result basis requires catalog reference");
             if (p.basis_id && std::none_of(model.bases.begin(),model.bases.end(),[&](const auto &b){return b.id==p.basis_id;}))
@@ -452,7 +655,7 @@ inline void validate_frame(const ResultFrame &f, const ResultModel &model,
                 d.tensor_shear != (p.schema.shear == ShearConvention::Tensor) ||
                 d.time_level != (p.schema.time == PhysicalTime::HalfStep ? TimeLevel::HalfStep : TimeLevel::Current) ||
                 d.name != p.schema.name || d.components != p.schema.components || d.basis != p.schema.basis ||
-                !typed_keys.emplace(d.name, d.region, d.history, p.schema_id, p.schema_version).second)
+                !typed_keys.emplace(d.name, d.region, d.history, p.schema_id, p.schema_version,p.basis_id).second)
                 throw std::runtime_error("typed field envelope mismatch/duplicate");
             for (const auto &a : p.addresses) validate_result_address(a, p.schema, model);
             continue;
@@ -561,10 +764,15 @@ class ResultReader {
         indexed_->typed() ? ResultFormat::TypedIndexed3 : ResultFormat::Indexed2; }
     ResultField typed_field(std::size_t frame_index, const std::string &name,
         std::optional<ResultAddress> exact = {}, std::optional<Id> entity = {}, const std::string &schema_id = "",
-        std::optional<std::string> stored_region = {}) const {
+        std::optional<std::string> stored_region = {},std::optional<std::uint64_t> basis_id = {}) const {
         if (!indexed_ || !indexed_->typed()) throw std::invalid_argument("typed query requires indexed3");
         auto f = indexed_->frame(frame_index, &name, false, entity, {}, 1, exact, true,
-            schema_id.empty() ? nullptr : &schema_id, stored_region ? &*stored_region : nullptr);
+            schema_id.empty() ? nullptr : &schema_id, stored_region ? &*stored_region : nullptr,basis_id);
+        if((exact || entity) && f.fields.size()>1) {
+            bool any=std::any_of(f.fields.begin(),f.fields.end(),[](const auto &v){return !v.typed->addresses.empty();});
+            if(any) std::erase_if(f.fields,[](const auto &v){return v.typed->addresses.empty();});
+            else f.fields.resize(1);
+        }
         if (f.fields.empty()) throw std::out_of_range("typed field not stored");
         if (f.fields.size() != 1) throw std::invalid_argument("ambiguous typed field schemas/regions");
         return std::move(f.fields.front());
@@ -579,6 +787,19 @@ class ResultReader {
         auto result = native::unpack<ResultFrame>(native::body(in, rec), limit_);
         validate_frame(result, model, std::nullopt);
         return result;
+    }
+    std::size_t by_id(FrameId id) const {
+        if(!id.valid()) throw std::invalid_argument("invalid frame ID");
+        std::size_t lo=0,hi=index.size();
+        while(lo<hi) {auto mid=lo+(hi-lo)/2; if(index[mid].id<id.value()) lo=mid+1; else hi=mid;}
+        if(lo==index.size() || index[lo].id!=id.value()) throw std::out_of_range("frame ID not stored");
+        return lo;
+    }
+    ResultFrame frame(FrameId id) const {return frame(by_id(id));}
+    ResultField typed_field(FrameId id,const std::string &name,std::optional<ResultAddress> exact={},
+        std::optional<Id> entity={},const std::string &schema_id="",std::optional<std::string> region={},
+        std::optional<std::uint64_t> basis_id={}) const {
+        return typed_field(by_id(id),name,exact,entity,schema_id,region,basis_id);
     }
     std::size_t by_time(double time) const {
         if (!std::isfinite(time) || index.empty() || time < index.front().time || time > index.back().time)

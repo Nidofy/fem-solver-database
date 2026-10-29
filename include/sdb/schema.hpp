@@ -18,6 +18,27 @@ enum class RestartPolicy : std::uint8_t { Required, Reconstruct, Omit };
 enum class MissingPolicy : std::uint8_t { Forbidden, ValidityMask };
 enum class StorageKind : std::uint8_t { Dense, Ragged, Sparse };
 
+// Logical axis contract, separate from wire version and PhysicalTime staggering.
+// Version 1 is the existing physical-time axis. Frequency/modal/complex axes
+// require a future version and corresponding reader; unknown kinds never alias
+// time merely because their coordinate is representable as a double.
+enum class SampleAxisKind : std::uint8_t { Time = 0 };
+struct SampleAxisDescriptor {
+    std::uint32_t version = 1;
+    SampleAxisKind kind = SampleAxisKind::Time;
+    std::string units = "UNSPECIFIED";
+    void validate() const {
+        if (version != 1 || kind != SampleAxisKind::Time || units.empty())
+            throw std::invalid_argument("unsupported sample axis/version/units");
+    }
+    void validate_coordinate(double coordinate) const {
+        validate();
+        if (!std::isfinite(coordinate) || coordinate < 0)
+            throw std::invalid_argument("invalid physical time coordinate");
+    }
+    template<class F> void visit(F f) { f(version, kind, units); }
+};
+
 template <class T> constexpr ScalarType scalar_type() {
     if constexpr (std::is_same_v<T, float>) return ScalarType::Float32;
     else if constexpr (std::is_same_v<T, double>) return ScalarType::Float64;

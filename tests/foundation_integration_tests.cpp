@@ -112,10 +112,20 @@ template<class T> void write_fixture(const std::filesystem::path &models,const s
     check(destination.data().rotation->angle.read()(0,2)==T(9),"inertia validation before publish");
     read_oracle<T>(dir);
 }
+template<class T> void dbf3_legacy(const std::filesystem::path &dir) {
+    read_oracle<T>(dir);
+    const std::string tag=sizeof(T)==4?"float":"double";
+    auto m=ModelStore::load<T>(dir/(tag+".sdbmodel"));
+    ModelStore::save(dir/(tag+"-resaved.sdbmodel"),m);
+    StateDB<T> state(m.mesh,true);
+    auto info=RestartDB::load(dir/(tag+".sdbrst"),m,state,77);
+    RestartDB::save(dir/(tag+"-resaved.sdbrst"),m,state,info);
+}
 int main(int argc,char **argv) {
     try {
         if(argc!=3) throw std::invalid_argument("usage: foundation_integration_tests <model-dir> <scratch> | --read <scratch>");
-        if(std::string(argv[1])=="--legacy") {
+        if(std::string(argv[1])=="--dbf3-legacy") {dbf3_legacy<float>(argv[2]);dbf3_legacy<double>(argv[2]);}
+        else if(std::string(argv[1])=="--legacy") {
             auto dir=std::filesystem::path(argv[2]);
             auto m=ModelStore::load<double>(dir/"schema2.sdbmodel");
             check(m.definition.schema==2 && !m.definition.history_bindings.empty(),"frozen schema2 decoded");
