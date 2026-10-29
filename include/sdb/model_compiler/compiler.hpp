@@ -54,8 +54,10 @@ template <class T> struct CompiledModel {
 class ModelCompiler {
   public:
     template <class T> CompiledModel<T> compile(ModelIR ir) const {
-        if (ir.schema != 1)
+        if (ir.schema != 1 && ir.schema != 2)
             throw std::runtime_error("unsupported ModelIR schema");
+        if (ir.schema == 1 && !ir.history_bindings.empty())
+            throw std::runtime_error("history bindings require ModelIR schema 2");
         if (ir.parts.empty() || (ir.mode != ImportMode::Solve && ir.mode != ImportMode::MeshOnly))
             throw std::runtime_error("invalid ModelIR root/mode");
         ModelBuilder<T> b;
@@ -221,17 +223,31 @@ class ModelCompiler {
                 b.add_element_set(setid++, std::move(labels));
         }
         std::map<std::string, Index> materials;
+        std::map<std::string, const IRHistoryBinding *> history_bindings;
+        for (const auto &binding : ir.history_bindings) {
+            if (binding.material.empty() || !history_bindings.emplace(binding.material, &binding).second)
+                throw std::invalid_argument("empty/duplicate material history binding");
+            binding.history_schema.template validate<T>();
+        }
         for (auto &m : ir.materials) {
             Index idx = index_of(materials.size());
             if (!materials.emplace(m.name, idx).second)
                 fail(m.source, "duplicate material name");
             if (!(m.density > 0 && m.young > 0 && m.poisson > -1 && m.poisson < .5))
                 fail(m.source, "material requires positive density/E and -1 < nu < 0.5");
-            b.add_material({Id(idx) + 1,
-                            1,
-                            {static_cast<T>(m.density), static_cast<T>(m.young), static_cast<T>(m.poisson)},
-                            0});
+            Material<T> material{Id(idx) + 1, 1,
+                {static_cast<T>(m.density), static_cast<T>(m.young), static_cast<T>(m.poisson)}, 0};
+            if (auto it = history_bindings.find(m.name); it != history_bindings.end()) {
+                material.model = it->second->model;
+                material.history_schema = it->second->history_schema;
+                material.history_variables = material.history_schema.template validate<T>();
+                incapable(m.source, "explicit material history is storage-only; CPU kernel unavailable");
+            }
+            b.add_material(std::move(material));
         }
+        for (const auto &[name, binding] : history_bindings)
+            if (!materials.contains(name))
+                throw std::invalid_argument("unknown material history binding: " + name);
         std::vector<const IRSection *> assignment(source.elements.size(), nullptr);
         for (auto &s : ir.sections) {
             if (!materials.contains(s.material))

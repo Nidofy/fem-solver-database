@@ -3,6 +3,17 @@
 Updated after every task and review milestone. Cross-session handoff details:
 SESSION_HANDOFF.md.
 
+## Current DBF1 implementation (2026-10-29)
+
+The user-requested foundation kit supersedes the ALR1 no-further-development
+instruction for this development branch only. Current batch **DBF1 / READY_FOR_REVIEW**,
+base `9a3d754dbbc5c0b1720a93ecf29ee3278f705f73`, branch
+`codex/astra-db-foundation-completion`. Shared metadata, named material history,
+schema-2 model/restart closure, generic ragged/sparse host primitives and two
+reproduced P1 repairs are self-tested. Serial/OpenMP/MSVC ASan: 15/15 each.
+See [DBF1 handoff](db_foundation/README.md) and capability matrix for incomplete
+D1–D7 work. No independent acceptance, push or merge; CUDA/production NOT_RUN.
+
 - Historical batch: **B01 — ACCEPTED, independent round-5 gate passed** (2026-10-28)
 - Batch base SHA: `aaa74afb3c264bbd7ca43555a7445c77994ccaa2`
 - Batch content HEAD (reviewed object, unchanged by repair): `719c3fb`
@@ -32,7 +43,7 @@ SESSION_HANDOFF.md.
   REQUEST_CHANGES/HOLD. Reports are content-exact copies: LF-normalized content equals the originals; original-byte and Git-blob SHA-256 are recorded separately in `verification/reviews/B01/report-provenance.md`. All 7 findings + 2 errata → FIXED_VERIFIED; ledger in
   `verification/reviews/B01/findings.md`.
 
-## Current ALR1 freeze (2026-10-29)
+## Historical ALR1 freeze (2026-10-29; review status retained)
 
 - Current batch: **ALR1 - FROZEN_FOR_BATCH_REVIEW / READY_FOR_REVIEW**, not ACCEPTED.
 - Base: `480da32a17e3b60e6694b95e5c9ec83618e5b64b`; content HEAD:

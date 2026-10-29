@@ -1,5 +1,12 @@
 # Solver Database V2
 
+The [DBF1 foundation batch](docs/development/db_foundation/README.md) adds validated
+field/history metadata, schema-2 model history bindings, named mixed-IP state
+queries, and ragged/sparse host storage. Histories with explicit schemas are
+storage-only; unsupported execution is rejected. Schema-1 files remain readable
+with unchanged legacy encoding. CPU serial/OpenMP/MSVC ASan each pass 15/15 tests;
+this is READY_FOR_REVIEW, not independent acceptance or full D1–D7 completion.
+
 Independent C++20 finite element data infrastructure. The CPU implementation includes
 TET4 and full-integration C3D8 small-strain linear elasticity, mixed elements,
 read-only snapshots, bounded asynchronous results and linked restart append.
@@ -60,7 +67,8 @@ All headers are under `include/sdb/`; namespace `sdb`.
 | Header | Implemented API |
 |---|---|
 | `memory.hpp` | 64-byte aligned STL allocator, checked sizes, arena, per-thread scratch, counters |
-| `field.hpp` | `Field<T,C,Layout>`, `View`, checked host views, `SoA`, `AoSoA<W>`, registry |
+| `field.hpp`, `schema.hpp` | `Field<T,C,Layout>`, checked views, SoA/AoSoA, registry descriptors, HistorySchema |
+| `storage.hpp` | checked ragged/sparse host fields, integer/validity metadata, native DTO encoding |
 | `model.hpp` | `ModelBuilder<T>`, frozen `MeshDB<T>`, materials, sparse labels, batches, sets, DOFs, surfaces |
 | `state.hpp` | persistent explicit fields, packed IP histories, rotations, current-coordinate view, trial/commit/rollback |
 | `contact.hpp` | face connectivity, bounded parallel candidates/batches, generation-checked manifold pool |
@@ -90,7 +98,8 @@ db.save("run.checkpoint");
 For a new mesh, use `ModelBuilder::add_material`, `add_part`, `add_node`,
 `add_element`, optional sets/surfaces/constraints, then `finalize()`. Finalization
 is the topology mutation boundary. Arbitrary constitutive schemas use numeric
-model IDs, parameter arrays and a per-IP history count; only material model 1
+model IDs, parameter arrays and a per-IP history count, with optional validated
+HistorySchema metadata; only legacy material model 1 without an explicit schema
 has an implemented physics kernel here. It uses `[density, Young's modulus, nu]`.
 
 Install with `cmake --install ... --prefix <prefix>`. Consumers use

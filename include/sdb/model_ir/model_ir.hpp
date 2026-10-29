@@ -169,6 +169,12 @@ struct OpaqueBlock {
     Source source;
     template <class F> void visit(F f) { f(keyword, data, source); }
 };
+struct IRHistoryBinding {
+    std::string material;
+    std::uint32_t model = 1;
+    HistorySchema history_schema;
+    template <class F> void visit(F f) { f(material, model, history_schema); }
+};
 struct ModelIR {
     std::uint32_t schema = 1;
     std::string units = "unspecified", assembly;
@@ -183,10 +189,17 @@ struct ModelIR {
     std::vector<IRActionBlock> initial_boundaries;
     std::vector<IRStep> steps;
     std::vector<OpaqueBlock> opaque;
+    std::vector<IRHistoryBinding> history_bindings;
     // Coordinate systems other than the global Cartesian frame remain opaque and fail the solve gate.
     template <class F> void visit(F f) {
-        f(schema, units, assembly, mode, parts, instances, sets, materials, sections, surfaces, amplitudes,
+        f(schema);
+        if (schema != 1 && schema != 2)
+            throw std::runtime_error("unsupported ModelIR schema");
+        f(units, assembly, mode, parts, instances, sets, materials, sections, surfaces, amplitudes,
           initial_boundaries, steps, opaque);
+        if (schema >= 2) f(history_bindings);
+        else if (!history_bindings.empty())
+            throw std::runtime_error("history bindings require ModelIR schema 2");
     }
 };
 struct SourceKey {

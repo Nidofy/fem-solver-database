@@ -20,7 +20,7 @@ class ModelStore {
     }
     template <class T> static void save(const std::filesystem::path &path, const CompiledModel<T> &model) {
         auto bytes = native::pack(model.definition);
-        ModelManifest manifest{1,
+        ModelManifest manifest{model.definition.schema,
                                1,
                                sizeof(T),
                                model.mesh.fingerprint(),
@@ -37,14 +37,14 @@ class ModelStore {
         std::ifstream in(path, std::ios::binary);
         native::prefix(in, model_magic);
         auto manifest = native::unpack<ModelManifest>(native::record(in, 0));
-        if (manifest.schema != 1 || manifest.compiler_version != 1 || manifest.precision != sizeof(T))
+        if ((manifest.schema != 1 && manifest.schema != 2) || manifest.compiler_version != 1 || manifest.precision != sizeof(T))
             throw std::runtime_error("model schema/compiler/precision mismatch");
         auto bytes = native::record(in, 1);
         native::end(in);
         if (native::hash(bytes) != manifest.definition)
             throw std::runtime_error("model definition identity mismatch");
         auto model = ModelCompiler{}.compile<T>(native::unpack<ModelIR>(bytes));
-        if (model.mesh.fingerprint() != manifest.mesh ||
+        if (model.definition.schema != manifest.schema || model.mesh.fingerprint() != manifest.mesh ||
             native::pack(model.sources.nodes) != native::pack(manifest.nodes) ||
             native::pack(model.sources.elements) != native::pack(manifest.elements))
             throw std::runtime_error("model reconstruction/source map mismatch");

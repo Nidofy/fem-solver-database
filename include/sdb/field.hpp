@@ -1,5 +1,7 @@
 #pragma once
 #include "memory.hpp"
+#include "schema.hpp"
+#include <optional>
 #include <string>
 #include <typeindex>
 #include <unordered_map>
@@ -138,6 +140,7 @@ class FieldRegistry {
         std::type_index type;
         std::shared_ptr<void> field;
         std::string group;
+        std::optional<FieldDescriptor> descriptor;
     };
     std::unordered_map<std::string, Entry> entries_;
     bool frozen_ = false;
@@ -147,10 +150,26 @@ class FieldRegistry {
         if (frozen_)
             throw std::logic_error("registry frozen");
         auto p = std::make_shared<F>(count);
-        auto [it, ok] = entries_.emplace(std::move(name), Entry{typeid(F), p, std::move(group)});
+        auto [it, ok] = entries_.emplace(std::move(name), Entry{typeid(F), p, std::move(group), {}});
         if (!ok)
             throw std::invalid_argument("duplicate field");
         return *static_cast<F *>(it->second.field.get());
+    }
+    template <class F> F &add(FieldDescriptor descriptor, std::size_t count, std::string group = {}) {
+        descriptor.validate();
+        if (descriptor.scalar != scalar_type<typename F::value_type>() ||
+            descriptor.component_count() != F::components || descriptor.storage != StorageKind::Dense ||
+            descriptor.missing != MissingPolicy::Forbidden)
+            throw std::invalid_argument("descriptor disagrees with dense field storage");
+        auto name = descriptor.name;
+        auto &field = add<F>(name, count, std::move(group));
+        entries_.at(name).descriptor = std::move(descriptor);
+        return field;
+    }
+    const FieldDescriptor &descriptor(const std::string &name) const {
+        const auto &d = entries_.at(name).descriptor;
+        if (!d) throw std::logic_error("legacy field has no semantic descriptor");
+        return *d;
     }
     template <class F> F &get(const std::string &name) const {
         const auto &e = entries_.at(name);

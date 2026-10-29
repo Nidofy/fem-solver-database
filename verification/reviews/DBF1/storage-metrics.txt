@@ -1,0 +1,5 @@
+storage n=0 field_host_live_delta=0 ragged_encoded_bytes=40 sparse_encoded_bytes=48
+storage n=16 field_host_live_delta=768 ragged_encoded_bytes=552 sparse_encoded_bytes=512
+storage n=1024 field_host_live_delta=49152 ragged_encoded_bytes=32808 sparse_encoded_bytes=29744
+storage n=16384 field_host_live_delta=786432 ragged_encoded_bytes=524328 sparse_encoded_bytes=475184
+storage checks=82

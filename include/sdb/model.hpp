@@ -1,5 +1,6 @@
 #pragma once
 #include "field.hpp"
+#include "schema.hpp"
 #include <array>
 #include <bit>
 #include <cmath>
@@ -79,6 +80,7 @@ template <class T> struct Material {
     std::uint32_t model = 1; // 1: isotropic linear elastic [rho,E,nu]; others caller-defined schema
     std::vector<T> parameters;
     std::uint32_t history_variables = 0;
+    HistorySchema history_schema{};
 };
 template <class T> class MaterialDB {
     std::vector<Material<T>> materials_;
@@ -86,6 +88,8 @@ template <class T> class MaterialDB {
 
   public:
     Index add(Material<T> m) {
+        if (!m.history_schema.empty() && m.history_schema.template validate<T>() != m.history_variables)
+            throw std::invalid_argument("history schema/count mismatch");
         if (ids_.contains(m.id))
             throw std::invalid_argument("duplicate material ID");
         for (T p : m.parameters)
@@ -253,6 +257,33 @@ template <class T> class MeshDB {
                 integer(f.local);
                 integer(static_cast<std::uint8_t>(f.side));
             }
+        }
+        bool explicit_history = false;
+        for (Index i = 0; i < materials_.size(); ++i)
+            explicit_history |= !materials_[i].history_schema.empty();
+        if (explicit_history) {
+            // Legacy hashes remain byte-for-byte identical without explicit schemas.
+            integer(0x5344424849535431ull); // SDBHIST1 domain
+            auto semantic = [&](auto &&self, const auto &value) -> void {
+                using X = std::remove_cvref_t<decltype(value)>;
+                if constexpr (std::is_enum_v<X> || std::is_integral_v<X>)
+                    integer(static_cast<std::uint64_t>(value));
+                else if constexpr (std::is_floating_point_v<X>)
+                    integer(std::bit_cast<std::uint64_t>(static_cast<double>(value)));
+                else if constexpr (std::is_same_v<X, std::string>) {
+                    integer(value.size());
+                    for (unsigned char c : value) integer(c);
+                } else if constexpr (requires(X &x) { x.visit([](auto &...) {}); }) {
+                    // visit is also the canonical native wire traversal; it does not mutate.
+                    const_cast<X &>(value).visit([&](const auto &...v) { (self(self, v), ...); });
+                } else {
+                    integer(value.size());
+                    for (const auto &v : value) self(self, v);
+                }
+            };
+            integer(materials_.size());
+            for (Index i = 0; i < materials_.size(); ++i)
+                semantic(semantic, materials_[i].history_schema);
         }
         return h;
     }

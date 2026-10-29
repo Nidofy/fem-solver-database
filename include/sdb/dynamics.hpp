@@ -113,7 +113,8 @@ template <class T> class TetPlan {
             if (el.topology == Topology::Hex8 && hex)
                 continue;
             is_tet[e] = 1;
-            if (el.topology != Topology::Tet4 || el.integration_points != 1 || mat.model != 1)
+            if (el.topology != Topology::Tet4 || el.integration_points != 1 || mat.model != 1 ||
+                !mat.history_schema.empty())
                 throw std::invalid_argument("TET4 linear-elastic one-IP kernel required");
             auto ns = mesh.connectivity(e);
             T a[3], b[3], c[3], cross_bc[3], cross_ca[3], cross_ab[3];

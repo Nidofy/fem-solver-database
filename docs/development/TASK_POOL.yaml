@@ -5,11 +5,31 @@
 #           REPAIRED_PENDING_GATE / ACCEPTED / DEFERRED
 schema_version: 2
 program: fem-solver-database-v2
-current_batch: ALR1
-batch_state: FROZEN_FOR_BATCH_REVIEW # self-tested; independent ALR1 review pending
-batch_base_sha: 480da32a17e3b60e6694b95e5c9ec83618e5b64b
-batch_content_head_sha: 8122adf2c149a672222ab81d8ac722e69931205c
+current_batch: DBF1
+batch_state: READY_FOR_REVIEW # self-tested, not independent acceptance
+batch_base_sha: 9a3d754dbbc5c0b1720a93ecf29ee3278f705f73
+batch_content_head_sha: PENDING_CONTENT_COMMIT
 tasks:
+  - id: DBF1-D0
+    title: Actual branch audit and reproduced rotation/enum P1 repairs
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/db_foundation/REVIEW.md
+  - id: DBF1-D1-D3-D5-D6
+    title: Field metadata and semantic material history model/state/restart slice
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/db_foundation/CONTRACTS.md
+  - id: DBF1-D2
+    title: Native-codec ragged and sparse host storage primitives
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: tests/storage_tests.cpp
+  - id: DBF1-D7-SUBSET
+    title: Synthetic history and storage fixtures, legacy golden and CPU matrix
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/db_foundation/VERIFICATION.md
+  - id: DBF-NEXT
+    title: Remaining D1-D7 contracts and full composite storage fixture
+    status: PLANNED
+    evidence: docs/development/db_foundation/RESUME.md
   - id: R0.01
     title: Freeze repository baseline and inspect source reality
     status: ACCEPTED # independent R5 closure; CUDA remains separately blocked

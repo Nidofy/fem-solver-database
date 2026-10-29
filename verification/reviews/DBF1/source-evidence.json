@@ -1,0 +1,137 @@
+[
+  {
+    "file": "include/sdb/schema.hpp",
+    "symbol": "struct FieldDescriptor",
+    "line": 36
+  },
+  {
+    "file": "include/sdb/schema.hpp",
+    "symbol": "struct HistorySchema",
+    "line": 99
+  },
+  {
+    "file": "include/sdb/field.hpp",
+    "symbol": "class FieldRegistry",
+    "line": 138
+  },
+  {
+    "file": "include/sdb/field.hpp",
+    "symbol": "class CheckedView",
+    "line": 41
+  },
+  {
+    "file": "include/sdb/storage.hpp",
+    "symbol": "class RaggedField",
+    "line": 55
+  },
+  {
+    "file": "include/sdb/storage.hpp",
+    "symbol": "class SparseField",
+    "line": 123
+  },
+  {
+    "file": "include/sdb/model.hpp",
+    "symbol": "inline Index index_of",
+    "line": 17
+  },
+  {
+    "file": "include/sdb/model.hpp",
+    "symbol": "struct Material",
+    "line": 78
+  },
+  {
+    "file": "include/sdb/model.hpp",
+    "symbol": "explicit_history =",
+    "line": 261
+  },
+  {
+    "file": "include/sdb/state.hpp",
+    "symbol": "history_address",
+    "line": 128
+  },
+  {
+    "file": "include/sdb/state.hpp",
+    "symbol": "auto history =",
+    "line": 109
+  },
+  {
+    "file": "include/sdb/model_ir/model_ir.hpp",
+    "symbol": "struct SourceMap",
+    "line": 218
+  },
+  {
+    "file": "include/sdb/model_ir/model_ir.hpp",
+    "symbol": "struct IRHistoryBinding",
+    "line": 172
+  },
+  {
+    "file": "include/sdb/model_ir/model_ir.hpp",
+    "symbol": "f(schema);",
+    "line": 195
+  },
+  {
+    "file": "include/sdb/model_compiler/compiler.hpp",
+    "symbol": "class ModelCompiler",
+    "line": 54
+  },
+  {
+    "file": "include/sdb/model_compiler/compiler.hpp",
+    "symbol": "history_bindings;",
+    "line": 226
+  },
+  {
+    "file": "include/sdb/io/model_store.hpp",
+    "symbol": "class ModelStore",
+    "line": 16
+  },
+  {
+    "file": "include/sdb/io/restart.hpp",
+    "symbol": "class RestartDB",
+    "line": 16
+  },
+  {
+    "file": "include/sdb/io/restart.hpp",
+    "symbol": "state.data().rotation ||",
+    "line": 68
+  },
+  {
+    "file": "include/sdb/io/native.hpp",
+    "symbol": "native enum width overflow",
+    "line": 42
+  },
+  {
+    "file": "include/sdb/results/results.hpp",
+    "symbol": "struct ResultDescriptor",
+    "line": 9
+  },
+  {
+    "file": "include/sdb/results/results.hpp",
+    "symbol": "class ResultPublisher",
+    "line": 84
+  },
+  {
+    "file": "include/sdb/results/results.hpp",
+    "symbol": "class ResultReader",
+    "line": 266
+  },
+  {
+    "file": "include/sdb/results/async_writer.hpp",
+    "symbol": "class Async",
+    "line": 12
+  },
+  {
+    "file": "include/sdb/implicit.hpp",
+    "symbol": "class Dof",
+    "line": 5
+  },
+  {
+    "file": "include/sdb/input/abaqus.hpp",
+    "symbol": "class Abaqus",
+    "line": 81
+  },
+  {
+    "file": "include/sdb/input/abaqus.hpp",
+    "symbol": "class ReaderRegistry",
+    "line": 628
+  }
+]

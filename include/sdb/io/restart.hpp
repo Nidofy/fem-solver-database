@@ -25,6 +25,7 @@ class RestartDB {
         if (state.model_id() != model.mesh.fingerprint())
             throw std::invalid_argument("restart model mismatch");
         info.precision = sizeof(T);
+        info.model_schema = model.definition.schema;
         info.mesh = model.mesh.fingerprint();
         info.definition = ModelStore::identity(model);
         info.total_increment = state.data().step;
@@ -64,14 +65,14 @@ class RestartDB {
     static RestartInfo load(const std::filesystem::path &path, const CompiledModel<T> &model,
                             StateDB<T> &state, std::uint64_t configuration,
                             std::uint64_t max_file_bytes = 64ull * 1024 * 1024 * 1024) {
-        if (state.in_trial() || state.model_id() != model.mesh.fingerprint())
+        if (state.in_trial() || state.data().rotation || state.model_id() != model.mesh.fingerprint())
             throw std::logic_error("restart requires committed matching model");
         if (std::filesystem::file_size(path) > max_file_bytes)
             throw std::length_error("restart file budget");
         std::ifstream in(path, std::ios::binary);
         native::prefix(in, restart_magic);
         auto info = native::unpack<RestartInfo>(native::record(in, 0, 4096));
-        if (info.state_schema != 3 || info.model_schema != 1 || info.solver_version != 1 ||
+        if (info.state_schema != 3 || info.model_schema != model.definition.schema || info.solver_version != 1 ||
             info.precision != sizeof(T) || info.mesh != model.mesh.fingerprint() ||
             info.definition != ModelStore::identity(model) || info.configuration != configuration ||
             info.time < 0 || info.dt <= 0)

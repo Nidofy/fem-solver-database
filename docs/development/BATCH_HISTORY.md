@@ -1,5 +1,14 @@
 # Batch history
 
+## DBF1, 2026-10-29
+
+Base `9a3d754`, branch `codex/astra-db-foundation-completion`, READY_FOR_REVIEW.
+User kit execution adds field/history metadata, typed packed history identity,
+ModelIR2 migration and ragged/sparse host primitives; fixes reproduced enum
+narrowing and rotation restore loss. CPU serial/OpenMP/ASan each 15/15.
+Full program remains partial; [handoff](db_foundation/README.md) records bounds.
+No push/merge/independent ACCEPTED verdict; historical batches remain unchanged.
+
 | Batch | State | Base SHA | Content HEAD | Tasks | Review | Notes |
 |---|---|---|---|---|---|---|
 | B01 | ACCEPTED | aaa74af | 719c3fb (freeze/packet b58dfff; fixes → 02e1ee4, see repair-report.md) | R0.01✓ R0.02✓ R0.03✓ R1.01✓ R1.02✓ R0.04✓ R0.05(BLOCKED_ENV) | r1: A FAIL / B HOLD → repaired (02e1ee4). r2 incremental: A FAIL (A-002/A-004 NOT_CLOSED + A-005/A-006 new) / B PASS (O-004 C3 new) → repaired (d6c67de). r3 merged single-reviewer: FAIL (R3-001/C2 A-005 residual; R3-002/C3) → repaired (63b24fc). r4 merged: FAIL (R4-001/C2, R4-002/C3) → direct repair d01ea18; 50/50 controls, 26/26 reviewer fixtures; implementer verification → r5 independent PASS on 1577181 (50/50 + 26/26 + 34/34), R4-001/R4-002 CLOSED | dev/glm-b01; packet in verification/reviews/B01 (findings.md, repair-report.md); no runtime code changed by repair; user-authorized stable integration; acceptance.md records scope |

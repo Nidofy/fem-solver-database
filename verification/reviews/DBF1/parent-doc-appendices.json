@@ -1,0 +1,26 @@
+[
+  {
+    "file": "docs/CODEX_REPO_MAP.md",
+    "before_sha256": "63c4e624c5e8f4491fce1804d2d08d65d05952465e8e8ece9916a167b2a6522f",
+    "after_sha256": "9c6e1dc1f9fb7bc21c1e3668390630559f9dd635c3a0e179d4b5091f0737a2a6",
+    "appended_utf8": "\n\n## 2026-10-29: DBF1 database foundation first batch\n\nStandalone solver_database_v2 DBF1 adds semantic field/history metadata, native schema-2 history model storage and ragged/sparse host fields. Development is isolated to that nested repository; no production dispatch/build changes.\n\nEvidence and remaining scope: [DBF1 handoff](../solver_database_v2/docs/development/db_foundation/README.md). Status READY_FOR_REVIEW, not independently accepted. Production solver/CUDA: **not locally compiled / not locally verified**.\n"
+  },
+  {
+    "file": "docs/CODEX_MODULE_NOTES.md",
+    "before_sha256": "7d40d02d1840cd17b1d91d740fc8a3103b403c0ba55b4c03bba5e49d5600f1dd",
+    "after_sha256": "105bf8923488566e02b15f817b2450f53158746fe655946251f02af931da5742",
+    "appended_utf8": "\n\n## 2026-10-29: DBF1 database foundation first batch\n\nDBF1 smallest boundary is include/sdb/{schema,field,storage,model,state}.hpp and existing ModelIR/compiler/native ModelStore/RestartDB. Explicit history schemas remain storage-only with direct-plan and lifecycle gates. Material/ModelIR grow metadata; downstream consumers require rebuild.\n\nEvidence and remaining scope: [DBF1 handoff](../solver_database_v2/docs/development/db_foundation/README.md). Status READY_FOR_REVIEW, not independently accepted. Production solver/CUDA: **not locally compiled / not locally verified**.\n"
+  },
+  {
+    "file": "docs/CODEX_MIGRATION_NOTES.md",
+    "before_sha256": "9075468cc70d741d78022dc17bb0d3b8e361a038ce148384611c6ef14a73e2f0",
+    "after_sha256": "3d9e92b5c1210a9b5135ffd41fd6f8949ce570beeec98a8321676e1dc89cda29",
+    "appended_utf8": "\n\n## 2026-10-29: DBF1 database foundation first batch\n\nDBF1 preserves schema-1 wire bytes and legacy fingerprints, adds optional ModelIR2 history bindings and rejects same-count semantic history mismatch. New readers load frozen legacy files; old readers reject schema2. Integrate only independently reviewed standalone commits, rebuild consumers and verify production/CUDA adapters. No public production solver API was modified.\n\nEvidence and remaining scope: [DBF1 handoff](../solver_database_v2/docs/development/db_foundation/README.md). Status READY_FOR_REVIEW, not independently accepted. Production solver/CUDA: **not locally compiled / not locally verified**.\n"
+  },
+  {
+    "file": "docs/CODEX_TASK_LOG.md",
+    "before_sha256": "110b951ac0c4eedc4c2c3ee69235ef5af1993e3362f42ca2548c40851409ed55",
+    "after_sha256": "db5f573051d597f320df21a75e777b75f5235180d6ea24628bd178db359852df",
+    "appended_utf8": "\n\n## 2026-10-29: DBF1 database foundation first batch\n\nImplemented first DB foundation batch requested in SDB_DB_FOUNDATION_COMPLETION_KIT: descriptors/history initialization/query/model+restart closure, ragged/sparse native DTOs, enum overflow and rotation-loss repairs. GCC serial/OpenMP and MSVC ASan each pass 15/15; 171 foundation and 82 storage checks pass. Full D1-D7, new physical kernels, CUDA and production integration remain unimplemented/unverified. Assumption: preserve unnamed legacy histories; explicit histories are storage-only. No root solver build attempted.\n\nEvidence and remaining scope: [DBF1 handoff](../solver_database_v2/docs/development/db_foundation/README.md). Status READY_FOR_REVIEW, not independently accepted. Production solver/CUDA: **not locally compiled / not locally verified**.\n"
+  }
+]

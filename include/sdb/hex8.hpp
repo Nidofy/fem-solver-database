@@ -37,7 +37,7 @@ template <class T> class HexPlan {
             auto e = elements[h];
             auto &el = mesh.element(e);
             auto &mat = mesh.materials()[el.material];
-            if (el.integration_points != 8 || mat.model != 1)
+            if (el.integration_points != 8 || mat.model != 1 || !mat.history_schema.empty())
                 throw std::invalid_argument("HEX8 full eight-IP linear kernel required");
             auto ns = mesh.connectivity(e);
             ip_offsets.push_back(state.ip_offsets()[e]);

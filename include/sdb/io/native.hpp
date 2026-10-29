@@ -35,8 +35,13 @@ template <class X> void encode(Writer &w, const X &value) {
     }
 }
 template <class X> void decode(Reader &r, X &value, std::uint64_t &budget) {
-    if constexpr (std::is_enum_v<X>)
-        value = static_cast<X>(r.integer<std::uint32_t>());
+    if constexpr (std::is_enum_v<X>) {
+        const auto wire = r.integer<std::uint32_t>();
+        using U = std::underlying_type_t<X>;
+        if (std::uint64_t(wire) > std::uint64_t(std::numeric_limits<U>::max()))
+            throw std::runtime_error("native enum width overflow");
+        value = static_cast<X>(wire);
+    }
     else if constexpr (std::is_same_v<X, bool>) {
         auto v = r.integer<std::uint8_t>();
         if (v > 1)

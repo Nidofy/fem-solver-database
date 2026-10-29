@@ -106,6 +106,18 @@ template <class T> class StateDB {
         data_.stress.resize(ip_offsets_.back());
         data_.strain.resize(ip_offsets_.back());
         data_.history.resize(history_offsets_.back());
+        auto history = data_.history.write();
+        for (Index i = 0; i < e; ++i) {
+            const auto &el = mesh.element(i);
+            const auto &material = mesh.materials()[el.material];
+            if (material.history_schema.empty()) continue;
+            for (std::size_t ip = 0; ip < el.integration_points; ++ip) {
+                auto address = sum(history_offsets_[i], product(ip, material.history_variables));
+                for (const auto &variable : material.history_schema.variables)
+                    for (double initial : variable.initial)
+                        history(address++) = static_cast<T>(initial);
+            }
+        }
         if (rotation)
             data_.rotation.emplace(n);
     }
@@ -113,6 +125,24 @@ template <class T> class StateDB {
     const StateData<T> &data() const noexcept { return data_; }
     const auto &ip_offsets() const noexcept { return ip_offsets_; }
     const auto &history_offsets() const noexcept { return history_offsets_; }
+    std::size_t history_address(const MeshDB<T> &mesh, Index element, std::size_t ip,
+                                const std::string &name, std::size_t component = 0) const {
+        validate_shape();
+        if (mesh.fingerprint() != model_id_)
+            throw std::invalid_argument("history address model mismatch");
+        const auto &el = mesh.element(element);
+        if (ip >= el.integration_points) throw std::out_of_range("history integration point");
+        const auto &material = mesh.materials()[el.material];
+        auto offset = material.history_schema.offset(name);
+        for (const auto &variable : material.history_schema.variables)
+            if (variable.field.name == name) {
+                if (component >= variable.field.component_count())
+                    throw std::out_of_range("history component");
+                return sum(history_offsets_.at(element),
+                           sum(product(ip, material.history_variables), sum(offset, component)));
+            }
+        throw std::out_of_range("unknown history variable");
+    }
     std::uint64_t model_id() const noexcept { return model_id_; }
     bool in_trial() const noexcept { return backup_.has_value(); }
     void validate_shape() const {

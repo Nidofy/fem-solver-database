@@ -1,0 +1,16 @@
+{
+  "producer_source": "9a3d754dbbc5c0b1720a93ecf29ee3278f705f73",
+  "producer": "pre-change build-b01/sdb_run.exe",
+  "command": "sdb_run --input tests/fixtures/abaqus/forced_tet.inp --backend cpu --precision double --output legacy.sdbres --save-model legacy.sdbmodel --stop-after 1 --checkpoint legacy.sdbrst",
+  "files": {
+    "legacy.sdbmodel": {
+      "bytes": 5903,
+      "sha256": "a3a45acad43916920e400f485fc9a4ff67afbe2e6e768ef2d4063c257c832d2b"
+    },
+    "legacy.sdbrst": {
+      "bytes": 1766,
+      "sha256": "9d029e30a15ac829940979195812d8768a867e32423a974d8aad5d9f9f21b52f"
+    }
+  },
+  "source_reproduction": "Compiled exact 9a3d754 CLI and headers with GCC15.2 C++20 O0; both files match byte-for-byte."
+}

@@ -1,0 +1,2 @@
+PASS: enum overflow rejected
+PASS: rotation mismatch rejected without mutation

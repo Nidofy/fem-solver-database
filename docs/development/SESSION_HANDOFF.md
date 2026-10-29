@@ -3,7 +3,18 @@
 A fresh session MUST re-verify against real Git state before trusting this
 file: `git status --porcelain=v1 -b`, `git log --oneline -12`, task pool.
 
-## Current position (2026-10-29, ALR1 freeze)
+## Current position (2026-10-29, DBF1)
+
+The current user explicitly requested implementation of SDB_DB_FOUNDATION_COMPLETION_KIT.
+DBF1 continues from `9a3d754` on `codex/astra-db-foundation-completion`; it does not
+inherit an independent acceptance verdict for ALR1. Read [DBF1](db_foundation/README.md),
+[capabilities](db_foundation/CAPABILITY_MATRIX.md), and [resume](db_foundation/RESUME.md).
+CPU serial/OpenMP/MSVC ASan pass 15/15 each. Current scope is READY_FOR_REVIEW;
+full D1–D7, CUDA and production integration remain incomplete. Do not push/merge
+or integrate B02c automatically. The DBF1 packet fixes its content SHA separately
+from its subsequent documentation freeze commit.
+
+## Historical position (2026-10-29, ALR1 freeze)
 
 Current branch is `codex/astra-lifecycle-result-hardening`; base `480da32`, content
 HEAD `8122adf2c149a672222ab81d8ac722e69931205c`. Read
