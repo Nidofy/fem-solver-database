@@ -194,8 +194,11 @@ template <class T> class MeshDB {
         return it == sample_points_.end() ? SamplePoint{static_cast<std::uint32_t>(q + 1), 0, 0, el.material}
                                           : it->second[q];
     }
-    ExternalLabel external_label(NodeId i) const { return ExternalLabel(node_id(i.value())); }
-    NodeId node(ExternalLabel label) const { return NodeId(node_index(label.value())); }
+    ExternalLabel external_label(NodeId i) const { return ExternalLabel::checked(node_id(i.value())); }
+    NodeId node(ExternalLabel label) const {
+        if (!label.valid()) throw std::invalid_argument("invalid typed external label");
+        return NodeId(node_index(label.value()));
+    }
     const Element &element(ElementId i) const { return element(i.value()); }
     void validate_face(FaceId f) const {
         const auto &e = element(element_index(f.element));

@@ -100,10 +100,19 @@ template <class T, std::size_t B = 1> class SparseMatrix {
         d.columns = columns_; d.values.assign(values_.begin(), values_.end());
         return d;
     }
-    static SparseMatrix from_data(const MatrixData<T> &d) {
+    static SparseMatrix from_data(const MatrixData<T> &d,
+                                  std::uint64_t budget = std::numeric_limits<std::uint64_t>::max()) {
         if (d.schema != 1 || d.index_bits != 32 || d.block_size != B || d.scalar != scalar_type<T>() ||
             d.block_rows >= invalid_index || d.block_rows > std::numeric_limits<std::size_t>::max())
             throw std::invalid_argument("matrix schema/dimension mismatch");
+        // Reject malformed value counts before the constructor allocates B*B
+        // scalars per column. A tiny wire payload must not expand into an empty
+        // or truncated matrix's claimed backing allocation.
+        if (d.values.size() != product(d.columns.size(), product(B, B)))
+            throw std::invalid_argument("matrix value shape");
+        const auto backing_bytes = sum(product(d.offsets.size(), sizeof(std::size_t)),
+            sum(product(d.columns.size(), sizeof(Index)), product(d.values.size(), sizeof(T))));
+        if (backing_bytes > budget) throw std::length_error("matrix reconstruction budget");
         std::vector<std::size_t> offsets;
         offsets.reserve(d.offsets.size());
         for (auto v : d.offsets) {
@@ -124,7 +133,7 @@ template <class T, std::size_t B = 1> class SparseMatrix {
     }
     static SparseMatrix decode(std::span<const std::uint8_t> bytes,
                                std::uint64_t budget = lifecycle::native::default_limit) {
-        return from_data(lifecycle::native::unpack<MatrixData<T>>(bytes, budget));
+        return from_data(lifecycle::native::unpack<MatrixData<T>>(bytes, budget), budget);
     }
     void apply(std::span<const T> x, std::span<T> y) const {
         if (x.size() != size() || y.size() != size())

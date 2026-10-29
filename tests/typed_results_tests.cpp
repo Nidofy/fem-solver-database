@@ -31,6 +31,9 @@ template<class T> void history_snapshot(const std::filesystem::path &fixture) {
     check(typed_values<T>(frame.fields.at(0)).at(0)==T(.25),"history scalar preserved");
     check(frame.fields[0].typed->schema_id==h.id,"history schema preserved");
     check(state.data().history.read()(0)==before,"history snapshot read only");
+    frame.fields[0].typed->schema.units="conflicting-units";
+    rejects([&]{ResultPublisher::append_history(frame,model,state);});
+    check(frame.fields.size()==1 && frame.fields[0].typed->schema.units=="conflicting-units","history append conflict leaves frame unchanged");
     state.data().step=8; state.data().time=.75;
     auto timed=ResultPublisher::snapshot_history(model,state);
     check(timed.info.id==8 && timed.info.increment==8 && timed.info.time==.75,"default committed snapshot clock");
@@ -42,6 +45,74 @@ template<class T> void history_snapshot(const std::filesystem::path &fixture) {
     ir.history_bindings[0].history_schema.variables[0].field.basis="LOCAL FIBER";
     auto local=ModelCompiler{}.compile<T>(ir); StateDB<T> local_state(local.mesh);
     rejects([&]{ResultPublisher::snapshot_history(local,local_state);});
+}
+void history_contract_drift(const ResultModel &model,const std::filesystem::path &dir) {
+    ResultAddress a;a.entity=1;a.integration_point=1;a.layer=1;a.section_point=1;
+    auto d=schema<double>("STRESS");d.shape={2};d.components={"XX","YY"};d.units="Pa";
+    ResultFrame original;original.fields.push_back(make_typed_field<double>(d,{a},{10,20}));
+    original.fields[0].typed->schema_id="stress.schema";bind_result_frame(original,model);
+    auto conflict=original;auto duplicate=original.fields[0];duplicate.typed->schema.units="MPa";
+    conflict.fields.push_back(duplicate);rejects([&]{validate_frame(conflict,model,{});});
+    for(unsigned mutation=0;mutation<6;++mutation) {
+        auto path=dir/("drift-"+std::to_string(mutation)+".sdbres");std::filesystem::remove(path);
+        {
+            NativeResultStorage writer(path,model,false,false,native::default_limit,{},false,ResultFormat::TypedIndexed3);
+            writer.append(original);auto next=original;next.info.id=1;next.info.increment=1;next.info.time=1;
+            auto &field=next.fields[0];
+            if(mutation==0) {field.typed->schema.components={"YY","XX"};field.descriptor.components={"YY","XX"};field.typed->values=std::vector<double>{200,100};}
+            if(mutation==1) field.typed->schema.units="MPa";
+            if(mutation==2) field.typed->basis_id=7;
+            if(mutation==3) field.typed->schema.time=PhysicalTime::Previous;
+            if(mutation==4) field.typed->schema_version=2;
+            if(mutation==5) field.descriptor.region="changed-region";
+            bind_result_frame(next,model);writer.append(next);
+        }
+        ResultReader reader(path);
+        check(reader.typed_field(1,"STRESS").typed->addresses.size()==1,"per-frame metadata remains independently queryable");
+        rejects([&]{ResultQuery::typed_history<double>(reader,"STRESS",a,0,0,2,"stress.schema");});
+    }
+    auto regional=original;regional.fields[0].descriptor.region="left";
+    auto other=regional.fields[0];other.descriptor.region="right";other.typed->values=std::vector<double>{30,40};regional.fields.push_back(other);
+    auto path=dir/"regions.sdbres";std::filesystem::remove(path);
+    {NativeResultStorage writer(path,model,false,false,native::default_limit,{},false,ResultFormat::TypedIndexed3);writer.append(regional);}
+    ResultReader reader(path);rejects([&]{reader.typed_field(0,"STRESS");});
+    check(typed_values<double>(reader.typed_field(0,"STRESS",a,{},"stress.schema",std::string("right")))[0]==30,"exact stored region selection");
+}
+void source_contracts(const ResultModel &model,const std::filesystem::path &dir) {
+    for(unsigned format=0;format<3;++format) for(unsigned mutation=0;mutation<4;++mutation) {
+        auto bad=model;
+        if(mutation==0) bad.nodes[0].index=999;
+        if(mutation==1) bad.nodes[0].id=999;
+        if(mutation==2) bad.nodes[1].key=bad.nodes[0].key;
+        if(mutation==3) bad.elements[0].key.label=0;
+        auto path=dir/("bad-source-"+std::to_string(format)+"-"+std::to_string(mutation)+".sdbres");
+        std::filesystem::remove(path);
+        auto wire=format==0?ResultFormat::Native1:format==1?ResultFormat::Indexed2:ResultFormat::TypedIndexed3;
+        rejects([&]{NativeResultStorage writer(path,bad,false,false,native::default_limit,{},false,wire);});
+        check(!std::filesystem::exists(path),"source metadata rejected before output bytes");
+        // Bypass the public writer to exercise decoder validation independently.
+        native::atomic_stream(path,[&](auto &out) {
+            if(format==0) {native::prefix(out,result_magic);native::record(out,0,native::pack(bad));}
+            else indexed_detail::File::create(out,bad,native::default_limit,format==2);
+        });
+        rejects([&]{ResultReader reader(path);});
+    }
+}
+void sparse_sample_layout(const std::filesystem::path &dir) {
+    ModelBuilder<double> b;
+    for(unsigned n=0;n<8;++n) b.add_node(n+1,{double(n&1),double((n>>1)&1),double(n>>2)});
+    b.add_material({1,1,{1,100,0},0});b.add_part(1);
+    b.add_element(1,Topology::Hex8,{1,2,4,3,5,6,8,7},1,1,8);b.set_sample_points(1,{{1,0,0,0}});
+    CompiledModel<double> m({},b.finalize());m.descriptors.push_back(descriptor("C3D8",{}));
+    for(unsigned n=0;n<8;++n) m.sources.add(true,{{"","",n+1},n+1,n,{}});
+    m.sources.add(false,{{"","",1},1,0,{}});
+    StateDB<double> state(m.mesh);auto rm=ResultModel::from(m,0);
+    check(state.ip_offsets().back()==1 && rm.samples.size()==1 && rm.samples[0].size()==1,"explicit shortened sample layout preserved");
+    ResultAddress invalid;invalid.entity=1;invalid.integration_point=8;
+    auto d=schema<double>("IP");rejects([&]{validate_result_address(invalid,d,rm);});
+    auto path=dir/"short-layout.sdbres";std::filesystem::remove(path);
+    {NativeResultStorage writer(path,rm,false,false,native::default_limit,{},false,ResultFormat::TypedIndexed3);}
+    ResultReader reader(path);rejects([&]{validate_result_address(invalid,d,reader.model);});
 }
 int main(int argc,char **argv) {
     try {
@@ -166,6 +237,8 @@ int main(int argc,char **argv) {
             w.append(run.snapshot());
         }
         history_snapshot<float>(argv[1]); history_snapshot<double>(argv[1]);
+        history_contract_drift(rm,dir);
+        source_contracts(legacy,dir);sparse_sample_layout(dir);
         std::cout<<"typed results checks="<<checks<<" PASS\n";
     } catch(const std::exception &e) {std::cerr<<e.what()<<'\n';return 1;}
 }

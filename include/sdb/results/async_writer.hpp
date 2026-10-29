@@ -37,7 +37,9 @@ class AsyncResultWriter {
             add(product(field.values.capacity(), sizeof(double)));
             if (field.typed) {
                 const auto &p = *field.typed;
-                validate_typed_payload(p);
+                // Admission accounting must not allocate validation trees before
+                // the budget check/backpressure. The worker validates after the
+                // owned frame and all validation scratch have been charged.
                 str(p.schema_id); str(p.schema.name); str(p.schema.units); str(p.schema.basis);
                 add(product(p.schema.shape.capacity(), sizeof(std::uint32_t)));
                 add(product(p.schema.components.capacity(), sizeof(std::string)));
@@ -109,6 +111,8 @@ class AsyncResultWriter {
                     active.splice(active.end(), queue_, queue_.begin());
                     const auto bytes = active.front().bytes;
                     lock.unlock();
+                    for (const auto &field : active.front().frame.fields)
+                        if (field.typed) validate_typed_payload(*field.typed);
                     storage_.append(active.front().frame);
                     lock.lock();
                     ++stats_.written;

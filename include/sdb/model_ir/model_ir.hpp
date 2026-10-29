@@ -220,6 +220,8 @@ struct SourceMap {
         auto &v = node ? nodes : elements;
         auto &m = node ? node_lookup : element_lookup;
         if (e.index != v.size()) fail(e.source, "SourceMap index must append densely");
+        if (v.size() >= invalid_index || e.id != Id(e.index) + 1 || !e.key.label)
+            fail(e.source, "SourceMap ID/label invalid");
         if (!m.emplace(e.key, e.index).second)
             fail(e.source, "duplicate scoped label");
         try { v.push_back(e); }

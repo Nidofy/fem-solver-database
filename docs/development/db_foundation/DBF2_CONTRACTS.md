@@ -12,6 +12,10 @@ frames, coordinates, orientations, constraints and loads. Default values reserve
 the maximum underlying unsigned integer as invalid. Internal IDs remain 32 bit;
 external/frame IDs use 64 bit. No Index64 runtime is claimed. Existing numerical
 APIs retain their aliases; SourceMap, FieldRegistry and DofMap add typed boundaries.
+The legacy raw-label API can retain UINT64_MAX; conversion to the new ExternalLabel
+wrapper explicitly rejects that reserved sentinel instead of returning an invalid
+wrapper for a live entity. Result readers and writers validate dense internal IDs,
+indices, nonzero external labels and unique scoped source keys.
 
 SourceMap resolves `(part, instance, external label)` in both directions. Runtime
 reordering changes layout indices, not those source identities. Semantic identity
@@ -31,6 +35,9 @@ CSR/BSR reuse SparseMatrix, adding a portable DTO with scalar type, 32-bit colum
 64-bit offsets/row count, block size, and general/symmetric flag. Sorted unique
 columns, shapes, finite values and transpose equality for symmetric matrices are
 validated. The zero-row matrix is legal. Encoding preflights its byte budget.
+Decode validates scalar count before constructing backing storage and bounds the
+reconstruction bytes separately; a short corrupt DTO cannot trigger a large block
+matrix allocation before rejection.
 
 ## ModelIR schema 3
 
@@ -117,14 +124,20 @@ resolves to the file's right-handed rotation catalog. Compiler orientation IDs m
 to result IDs `1 + orientation ID`; nonzero coordinate IDs map to `2^32 + ID`.
 ID zero denotes global/unspecified basis.
 
-`typed_field` and `typed_history<T>` support exact full addresses, entity filters
-and history-schema ID selection. Ambiguous names reject. Ordinary legacy `field`
+`typed_field` and `typed_history<T>` support exact full addresses, entity filters,
+history-schema ID and exact stored-region selection. Ambiguous names reject. A
+history query compares the complete field schema, schema ID/version, basis and
+region between contributing samples, rejecting changes such as tensor-component
+reordering. Per-frame reads still expose each explicitly stored schema. Conflicting
+same-key descriptors within a frame reject. Ordinary legacy `field`
 queries do not silently coerce typed integers into double. Full-address sorted
 blocks allow selective lookup when hundreds of layer points share one entity.
 `snapshot_history` captures owned committed values without advancing state; its
 default clock uses the committed state time/increment. Analysis step may be supplied
 explicitly. Async admission charges include vector capacities, addresses, metadata,
 encoding and validation scratch; that charge is not process RSS.
+Admission accounting allocates no validation tree. Payload validation happens in
+the worker after the owning frame and its scratch allowance have been admitted.
 
 `sdb_run --typed-indexed` selects the new container for existing CPU output.
 `--read file --typed --field NAME` prints exact scalar values, validity and address

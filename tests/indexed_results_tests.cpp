@@ -104,6 +104,7 @@ int main(int argc, char **argv) {
         for (std::size_t n = 0; n < nodes; ++n) {
             big.nodes[n].id = n + 1;
             big.nodes[n].index = Index(n);
+            big.nodes[n].key = {"SYNTHETIC", "LARGE", n + 1};
         }
         ResultFrame large = f;
         large.fields.clear();

@@ -82,6 +82,15 @@ int main(int argc,char**argv) {
         auto wire=lifecycle::native::pack(NodeId(0x12345678));
         check(wire==lifecycle::native::Bytes({0x78,0x56,0x34,0x12}));
         check(lifecycle::native::unpack<NodeId>(wire)==NodeId(0x12345678));
+        ModelBuilder<double> legacy_labels;legacy_labels.add_node(UINT64_MAX,{0,0,0});
+        auto legacy=legacy_labels.finalize();check(legacy.node_id(0)==UINT64_MAX);
+        rejects([&]{legacy.external_label(NodeId(0));});
+        rejects([&]{legacy.node(ExternalLabel{});});
+        MatrixData<double> malformed;malformed.block_rows=1;malformed.block_size=1024;
+        malformed.offsets={0,1};malformed.columns={0};
+        auto tiny=lifecycle::native::pack(malformed);auto allocations=host_memory.allocations.load();
+        rejects([&]{SparseMatrix<double,1024>::decode(tiny,1024);});
+        check(host_memory.allocations.load()==allocations);
         FieldRegistry registry; registry.add<Field<double>>("A",1);
         auto id=registry.field_id("A"); registry.get<Field<double>>(id).write()(0)=7;
         check(registry.get<Field<double>>("A").read()(0)==7 && registry.name(id)=="A");

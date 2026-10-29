@@ -37,7 +37,29 @@ inline std::size_t scalar_bytes(ScalarType type) {
     return std::visit([](const auto &v) { return sizeof(typename std::decay_t<decltype(v)>::value_type); },
         empty_typed_values(type));
 }
-inline void validate_model(const ResultModel &m) {
+inline void validate_model(const ResultModel &m, std::uint64_t budget = native::default_limit) {
+    if ((m.precision != 4 && m.precision != 8) || m.coordinates.size() != m.nodes.size() ||
+        m.connectivity.size() != m.elements.size() || m.descriptors.size() != m.elements.size())
+        throw std::runtime_error("result mesh shape/precision invalid");
+    index_of(m.nodes.size());index_of(m.elements.size());
+    auto sources = [&](const std::vector<SourceEntry> &entries) {
+        if (product(entries.size(), sizeof(const SourceKey *)) > budget)
+            throw std::length_error("result source validation budget");
+        for (std::size_t i = 0; i < entries.size(); ++i)
+            if (entries[i].index != i || entries[i].id != i + 1 || !entries[i].key.label)
+                throw std::runtime_error("result source ID/index/label invalid");
+        std::vector<const SourceKey *> keys;
+        keys.reserve(entries.size());
+        for (const auto &entry : entries) keys.push_back(&entry.key);
+        std::sort(keys.begin(), keys.end(), [](auto a, auto b) { return *a < *b; });
+        for (std::size_t i = 1; i < keys.size(); ++i)
+            if (*keys[i-1] == *keys[i]) throw std::runtime_error("duplicate result scoped source identity");
+    };
+    sources(m.nodes);sources(m.elements);
+    for (const auto &xyz : m.coordinates)
+        for (double x : xyz) if (!std::isfinite(x)) throw std::runtime_error("nonfinite result coordinate");
+    for (const auto &nodes : m.connectivity)
+        for (auto n : nodes) if (n >= m.nodes.size()) throw std::runtime_error("result connectivity out of bounds");
     std::set<std::uint64_t> ids;
     for (const auto &b : m.bases) {
         if (!b.id || !ids.insert(b.id).second) throw std::runtime_error("invalid/duplicate result basis");

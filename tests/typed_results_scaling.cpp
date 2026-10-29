@@ -23,7 +23,10 @@ int main(int argc,char **argv) {
                     ResultModel model;
                     model.mesh=1; model.definition=2; model.configuration=3;
                     model.coordinates.resize(entities); model.nodes.resize(entities);
-                    for (std::size_t i=0;i<entities;++i) model.nodes[i].id=i+1;
+                    for (std::size_t i=0;i<entities;++i) {
+                        model.nodes[i].id=i+1;model.nodes[i].index=Index(i);
+                        model.nodes[i].key={"SYNTHETIC","SCALING",i+1};
+                    }
                     ResultFrame frame;
                     for (unsigned j=0;j<field_count;++j) {
                         FieldDescriptor schema;

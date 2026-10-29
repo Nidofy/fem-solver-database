@@ -75,18 +75,16 @@ struct ResultModel {
             auto ns = m.mesh.connectivity(e);
             out.connectivity.emplace_back(ns.begin(), ns.end());
         }
-        bool extended = false;
+        // An explicit layout may be a shorter canonical prefix. Preserve it even
+        // when each stored point individually resembles the default layout.
         if (m.mesh.has_sample_layout()) for (Index e = 0; e < m.mesh.elements(); ++e) {
             std::vector<ResultSample> points;
             for (std::size_t q = 0; q < m.mesh.sample_point_count(e); ++q) {
                 auto p = m.mesh.sample_point(e, q);
                 points.push_back({p.integration_point, p.layer, p.section_point, p.material});
-                extended = extended || p.layer || p.section_point ||
-                    p.integration_point != q + 1 || p.material != m.mesh.element(e).material;
             }
             out.samples.push_back(std::move(points));
         }
-        if (!extended) out.samples.clear();
         // Wire basis namespaces: 0=global; 1+OrientationId; 2^32+CoordinateId.
         // Every stored matrix maps local vectors to global, row major; no origins.
         for (const auto &[id,rotation] : m.foundation.orientation_bases)
@@ -170,6 +168,10 @@ class ResultPublisher {
                         std::string(reinterpret_cast<const char*>(signature.data()),signature.size());
                     auto [it, added] = groups.emplace(key, fields.size());
                     if (added) {
+                        for (const auto &old : fields)
+                            if (old.typed->schema_id == schema.id && old.typed->schema_version == schema.version &&
+                                old.descriptor.name == v.field.name)
+                                throw std::invalid_argument("conflicting history schema identity");
                         auto field = make_typed_field<T>(v.field, {}, {}, {}, "", true);
                         field.typed->schema_id = schema.id;
                         field.typed->schema_version = schema.version;
@@ -198,8 +200,7 @@ class ResultPublisher {
             for (const auto &old : frame.fields)
                 if (old.typed && old.descriptor.name == field.descriptor.name && old.descriptor.history &&
                     old.descriptor.region.empty() && old.typed->schema_id == field.typed->schema_id &&
-                    old.typed->schema_version == field.typed->schema_version &&
-                    native::pack(old.typed->schema)==native::pack(field.typed->schema))
+                    old.typed->schema_version == field.typed->schema_version)
                     throw std::invalid_argument("duplicate history snapshot field");
         }
         auto needed=sum(frame.fields.size(),fields.size());
@@ -430,7 +431,7 @@ inline void validate_frame(const ResultFrame &f, const ResultModel &model,
         throw std::runtime_error("typed result binding mismatch");
     if (i.storage_precision == 8 && f.binding) throw std::runtime_error("legacy result has typed binding");
     std::set<std::tuple<std::string, std::string, bool, std::uint32_t, std::uint32_t>> keys;
-    std::set<std::tuple<std::string, std::string, bool, std::string, std::uint32_t,native::Bytes>> typed_keys;
+    std::set<std::tuple<std::string, std::string, bool, std::string, std::uint32_t>> typed_keys;
     for (auto &field : f.fields) {
         auto &d = field.descriptor;
         if (field.typed) {
@@ -451,7 +452,7 @@ inline void validate_frame(const ResultFrame &f, const ResultModel &model,
                 d.tensor_shear != (p.schema.shear == ShearConvention::Tensor) ||
                 d.time_level != (p.schema.time == PhysicalTime::HalfStep ? TimeLevel::HalfStep : TimeLevel::Current) ||
                 d.name != p.schema.name || d.components != p.schema.components || d.basis != p.schema.basis ||
-                !typed_keys.emplace(d.name, d.region, d.history, p.schema_id, p.schema_version,native::pack(p.schema)).second)
+                !typed_keys.emplace(d.name, d.region, d.history, p.schema_id, p.schema_version).second)
                 throw std::runtime_error("typed field envelope mismatch/duplicate");
             for (const auto &a : p.addresses) validate_result_address(a, p.schema, model);
             continue;
@@ -517,6 +518,7 @@ class ResultReader {
             in.seekg(0);
             native::prefix(in, result_magic);
             model = native::unpack<ResultModel>(native::record(in, 0, limit), limit);
+            typed_detail::validate_model(model,limit);
         }
         if (model.precision != 4 && model.precision != 8)
             throw std::runtime_error("result precision invalid");
@@ -558,9 +560,11 @@ class ResultReader {
     ResultFormat format() const { return !indexed_ ? ResultFormat::Native1 :
         indexed_->typed() ? ResultFormat::TypedIndexed3 : ResultFormat::Indexed2; }
     ResultField typed_field(std::size_t frame_index, const std::string &name,
-        std::optional<ResultAddress> exact = {}, std::optional<Id> entity = {}, const std::string &schema_id = "") const {
+        std::optional<ResultAddress> exact = {}, std::optional<Id> entity = {}, const std::string &schema_id = "",
+        std::optional<std::string> stored_region = {}) const {
         if (!indexed_ || !indexed_->typed()) throw std::invalid_argument("typed query requires indexed3");
-        auto f = indexed_->frame(frame_index, &name, false, entity, {}, 1, exact, true, schema_id.empty() ? nullptr : &schema_id);
+        auto f = indexed_->frame(frame_index, &name, false, entity, {}, 1, exact, true,
+            schema_id.empty() ? nullptr : &schema_id, stored_region ? &*stored_region : nullptr);
         if (f.fields.empty()) throw std::out_of_range("typed field not stored");
         if (f.fields.size() != 1) throw std::invalid_argument("ambiguous typed field schemas/regions");
         return std::move(f.fields.front());
@@ -711,17 +715,30 @@ class ResultQuery {
   public:
     template<class T> static std::vector<std::pair<double,std::optional<T>>> typed_history(
         const ResultReader &reader, const std::string &name, ResultAddress address, unsigned component = 0,
-        double time_begin = 0, double time_end = std::numeric_limits<double>::max(), const std::string &schema_id = "") {
+        double time_begin = 0, double time_end = std::numeric_limits<double>::max(), const std::string &schema_id = "",
+        std::optional<std::string> stored_region = {}) {
         if (!std::isfinite(time_begin) || !std::isfinite(time_end) || time_begin > time_end)
             throw std::invalid_argument("invalid typed history interval");
         std::vector<std::pair<double,std::optional<T>>> values;
+        std::optional<native::Bytes> contract;
         for (std::size_t i=0; i<reader.index.size(); ++i) {
             auto time = reader.index[i].time;
             if (time < time_begin) continue;
             if (time > time_end) break;
             ResultField field;
-            try { field=reader.typed_field(i,name,address,{},schema_id); } catch(const std::out_of_range&) { continue; }
+            try { field=reader.typed_field(i,name,address,{},schema_id,stored_region); } catch(const std::out_of_range&) { continue; }
             auto &p=*field.typed;
+            if (p.addresses.empty()) continue;
+            native::Writer signature;
+            native::encode(signature,p.schema);
+            native::encode(signature,p.schema_id);
+            native::encode(signature,p.schema_version);
+            native::encode(signature,p.basis_id);
+            native::encode(signature,field.descriptor.region);
+            native::encode(signature,field.descriptor.history);
+            if (contract && *contract != signature.bytes)
+                throw std::invalid_argument("typed history schema/basis/region changed between samples");
+            if (!contract) contract=std::move(signature.bytes);
             if (component >= p.schema.component_count()) throw std::out_of_range("typed history component");
             auto &v=typed_values<T>(field);
             if (!p.addresses.empty()) values.emplace_back(time,
@@ -788,7 +805,7 @@ class NativeResultStorage final : public IResultStorage {
         : lease_(path), model_(std::move(model)), limit_(limit) {
         if (upper(path.extension().string()) == ".H5" || upper(path.extension().string()) == ".HDF5")
             throw std::invalid_argument("native backend requires a non-HDF5 suffix (.sdbres)");
-        typed_detail::validate_model(model_);
+        typed_detail::validate_model(model_,limit_);
         if (format != ResultFormat::Auto && format != ResultFormat::Native1 &&
             format != ResultFormat::Indexed2 && format != ResultFormat::TypedIndexed3)
             throw std::invalid_argument("unknown result format");
