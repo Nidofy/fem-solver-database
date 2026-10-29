@@ -41,5 +41,6 @@ general-domain-output/
 !/verification/summarize_benchmarks.py
 # Curated batch-review packets are authored for publication (no host-local paths).
 !/verification/reviews/
+/verification/reviews/DBF3/independent-astra/scratch/
 # Batch identity validator is a portable tool, same as the reproduce scripts.
 !/verification/validate_batch_identity.py
