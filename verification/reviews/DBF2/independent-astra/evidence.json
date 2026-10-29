@@ -1,0 +1,122 @@
+{
+  "reasoning_effort": "high",
+  "base": "25cd74c2bc713f865e9086bd58dc3982f4fcadf9",
+  "initial_content": "826e65352772cd10508297466e59cd6e11816388",
+  "initial_followup": "cfeeab7fbd8235b35ed459de0461794a69b001f2",
+  "reviewer_model": "gpt-6-astra",
+  "files": [
+    {
+      "sha256": "bcf8c742efe99f49867526c65912acdc9076ee7deeab8f67205df31877ee6923",
+      "bytes": 2767,
+      "file": "adversarial.cpp"
+    },
+    {
+      "sha256": "7d3c65e94cba0ec6ec59265690a098acbfdd4320c462f0c1f2b1885cdb4ec044",
+      "bytes": 201,
+      "file": "adversarial.log"
+    },
+    {
+      "sha256": "e086e462dfd570b86702fa92386ca86a12b79b34423554eff3db30c307349a47",
+      "bytes": 806,
+      "file": "boundary_probe.cpp"
+    },
+    {
+      "sha256": "06d90afa40e816b25f1b51917e0eda07923c36f5db7e088649113eb1d3833c55",
+      "bytes": 167,
+      "file": "boundary_probe.log"
+    },
+    {
+      "sha256": "19ad83644648c501b77bfb5328ee13de18b8b0ce9a58f2d04596402506bdb303",
+      "bytes": 3073,
+      "file": "fixed_adversarial.cpp"
+    },
+    {
+      "sha256": "d025b41bffd93ff6416faed585414c33a4aa16c0cf8ec4686ce2aa2f4c8730e8",
+      "bytes": 194,
+      "file": "fixed_adversarial.log"
+    },
+    {
+      "sha256": "2b7ac3cb72cd55ae7aa2cf69354471b358c0d932d420d85ddeb3fce9157c0219",
+      "bytes": 1031,
+      "file": "fixed_boundary_probe.cpp"
+    },
+    {
+      "sha256": "fa03f229e518456ad2d3e4fdc45170fab1bc823ccc4a06e263d4fc6e1d7ba39d",
+      "bytes": 119,
+      "file": "fixed_boundary_probe.log"
+    },
+    {
+      "sha256": "0a7fbf9489dd6b042e604c73f47c55ac15f0245e283816b271d8b0af11a454b9",
+      "bytes": 3023,
+      "file": "fixed_restart_probe.cpp"
+    },
+    {
+      "sha256": "9bcd40fd2ca5943527d2a576c46043a13ff4e41c2923687aa2150043c47f7f3f",
+      "bytes": 296,
+      "file": "fixed_restart_probe.log"
+    },
+    {
+      "sha256": "e668b1a1352a9a973e3b03e35eb4d664f88d7d8663816fa64a5c31b18c82f5ab",
+      "bytes": 1035,
+      "file": "fixed_sample_probe.cpp"
+    },
+    {
+      "sha256": "37f248379481fd751194556dba4e29ad8e16861cdeea597d5d75e9aa31c25e34",
+      "bytes": 73,
+      "file": "fixed_sample_probe.log"
+    },
+    {
+      "sha256": "aa53abe4ca0275716a5bcd05e716ff8e1a6fb9e08f570fe168ac8da77b5134ed",
+      "bytes": 342,
+      "file": "fixed_wire_oracle.log"
+    },
+    {
+      "sha256": "706c9208fa9f9d03a13d86458d22a3bb0f78636b84c318a7deee164eee230e18",
+      "bytes": 1753,
+      "file": "legacy_probe.cpp"
+    },
+    {
+      "sha256": "09d0ffb8ea6bf8c027496cfba029ff96097e351680f964d59bd65160d22fa020",
+      "bytes": 248,
+      "file": "legacy_probe.log"
+    },
+    {
+      "sha256": "8452d1ba6afb7ddf4119f138c0ac24cb6e4bab501c0ee2eb128892f9d991423d",
+      "bytes": 12373,
+      "file": "report.md"
+    },
+    {
+      "sha256": "e7774c15f5d6e5c5feec07e0acb766d0cccccace353cc5783468c2f5bbce72ed",
+      "bytes": 2614,
+      "file": "restart_probe.cpp"
+    },
+    {
+      "sha256": "fb434a595bff6c8d6c758e31f95f29fabe3a142e3d5523adb6e8b13bef359ef9",
+      "bytes": 260,
+      "file": "restart_probe.log"
+    },
+    {
+      "sha256": "26ffb73929131fe591a73539ed661cbc719f8239e09c9d69694cc233e2d7ed37",
+      "bytes": 927,
+      "file": "sample_probe.cpp"
+    },
+    {
+      "sha256": "5887b35fcd758be8869c94a0d495f081bdef800ed2fb36d2880af9bf415c7be1",
+      "bytes": 73,
+      "file": "sample_probe.log"
+    },
+    {
+      "sha256": "aa53abe4ca0275716a5bcd05e716ff8e1a6fb9e08f570fe168ac8da77b5134ed",
+      "bytes": 342,
+      "file": "wire_oracle.log"
+    },
+    {
+      "sha256": "b3b5547f99af4f84123624daf13bc373690670a5841a8d02280f91c8a3368032",
+      "bytes": 3868,
+      "file": "wire_oracle.py"
+    }
+  ],
+  "review_head": "1f39b7313a10002099ddc23c7ebb4b89a6633bdb",
+  "findings_closed": 6,
+  "verdict": "PASS bounded DBF2 slice"
+}

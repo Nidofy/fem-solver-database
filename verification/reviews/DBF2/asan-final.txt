@@ -1,0 +1,59 @@
+**********************************************************************
+** Visual Studio 2026 Developer Command Prompt v18.9.2
+** Copyright (c) 2026 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+ninja: no work to do.
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+      Start  1: general_contact_contracts
+ 1/24 Test  #1: general_contact_contracts ...............   Passed    0.36 sec
+      Start  2: general_contact_demo
+ 2/24 Test  #2: general_contact_demo ....................   Passed    0.47 sec
+      Start  3: general_contact_geometry
+ 3/24 Test  #3: general_contact_geometry ................   Passed    0.74 sec
+      Start  4: general_contact_domain_demo
+ 4/24 Test  #4: general_contact_domain_demo .............   Passed    1.31 sec
+      Start  5: lifecycle_contracts
+ 5/24 Test  #5: lifecycle_contracts .....................   Passed   15.96 sec
+      Start  6: foundation_contracts
+ 6/24 Test  #6: foundation_contracts ....................   Passed    0.19 sec
+      Start  7: foundation_process_reader
+ 7/24 Test  #7: foundation_process_reader ...............   Passed    0.07 sec
+      Start  8: storage_contracts
+ 8/24 Test  #8: storage_contracts .......................   Passed    0.16 sec
+      Start  9: foundation_boundaries
+ 9/24 Test  #9: foundation_boundaries ...................   Passed    0.10 sec
+      Start 10: typed_admission_budget
+10/24 Test #10: typed_admission_budget ..................   Passed    1.31 sec
+      Start 11: model_foundation_contracts
+11/24 Test #11: model_foundation_contracts ..............   Passed    0.81 sec
+      Start 12: model_foundation_process_reader
+12/24 Test #12: model_foundation_process_reader .........   Passed    0.13 sec
+      Start 13: typed_results_contracts
+13/24 Test #13: typed_results_contracts .................   Passed    0.87 sec
+      Start 14: foundation_integration
+14/24 Test #14: foundation_integration ..................   Passed    0.36 sec
+      Start 15: foundation_integration_process_reader
+15/24 Test #15: foundation_integration_process_reader ...   Passed    0.14 sec
+      Start 16: hex8_contracts
+16/24 Test #16: hex8_contracts ..........................   Passed    1.04 sec
+      Start 17: indexed_results_contracts
+17/24 Test #17: indexed_results_contracts ...............   Passed   63.08 sec
+      Start 18: async_results_contracts
+18/24 Test #18: async_results_contracts .................   Passed    0.12 sec
+      Start 19: typed_process_pipeline
+19/24 Test #19: typed_process_pipeline ..................   Passed    0.79 sec
+      Start 20: foundation3_legacy_golden
+20/24 Test #20: foundation3_legacy_golden ...............   Passed    0.15 sec
+      Start 21: foundation_legacy_golden
+21/24 Test #21: foundation_legacy_golden ................   Passed    0.20 sec
+      Start 22: lifecycle_process_pipeline
+22/24 Test #22: lifecycle_process_pipeline ..............   Passed    8.78 sec
+      Start 23: database_contracts
+23/24 Test #23: database_contracts ......................   Passed    0.09 sec
+      Start 24: explicit_numerics
+24/24 Test #24: explicit_numerics .......................   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 24
+
+Total Test time (real) =  97.33 sec

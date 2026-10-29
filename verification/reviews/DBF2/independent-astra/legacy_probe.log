@@ -1,0 +1,5 @@
+model schema 1 exact-byte resave PASS
+model schema 2 exact-byte resave PASS
+native1.sdbres decoded initial 5-node displacement oracle PASS
+indexed2.sdbres decoded initial 5-node displacement oracle PASS
+4 independent frozen legacy checks PASS

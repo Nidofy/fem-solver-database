@@ -1,0 +1,5 @@
+fault 0: nonfinite restart state
+fault 1: native I/O truncated/read failure
+fault 2: native trailing data
+fault 3: restart schema/model/solver/precision/configuration mismatch
+4 full-state restore atomicity checks PASS; inconsistent source-map accepted=1

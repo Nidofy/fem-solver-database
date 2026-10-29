@@ -1,5 +1,11 @@
 # Independent DBF2 review corrections
 
+Final closure: all six findings independently retested **CLOSED / bounded PASS**
+at `1f39b7313a10002099ddc23c7ebb4b89a6633bdb`. Final full suites pass 24/24 in
+GCC serial, GCC/OpenMP and MSVC ASan. See DBF2_VERIFICATION for final logs and the
+test-only producer-thread instrumentation followup. The initial finding/fix
+history below is retained without rewriting the original failed review.
+
 Independent reviewer: `gpt-6-astra`, high reasoning, user-authorized. Initial
 implementation `826e65352772cd10508297466e59cd6e11816388`, followed by portable
 orientation-diagnostic commit `cfeeab7`. The initial review correctly reported FAIL;

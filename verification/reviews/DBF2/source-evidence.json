@@ -1,0 +1,117 @@
+{
+  "source_head": "1f39b7313a10002099ddc23c7ebb4b89a6633bdb",
+  "entries": [
+    {
+      "capability": "Strong identity",
+      "path": "include/sdb/types.hpp",
+      "line": 8,
+      "symbol": "class StrongId",
+      "sha256": "d769f282dbd29f6a4e84859f0f8e5a7d43085e381fbd8d3ea36ec6042977f869"
+    },
+    {
+      "capability": "Typed field registry",
+      "path": "include/sdb/field.hpp",
+      "line": 187,
+      "symbol": "FieldId field_id",
+      "sha256": "006871fe9722bf32f7a75f634bcf62fc8e6515b18f10e1f9a5ea6be190fcc535"
+    },
+    {
+      "capability": "Layer sample identity",
+      "path": "include/sdb/model.hpp",
+      "line": 122,
+      "symbol": "struct SamplePoint",
+      "sha256": "f1bf0ba84ed2fe8699d90ccf7d6ca9b478d169f4bf636c2f87982765a010af17"
+    },
+    {
+      "capability": "Per-sample history address",
+      "path": "include/sdb/state.hpp",
+      "line": 146,
+      "symbol": "history_address_at",
+      "sha256": "0f6c17dceac889b93889a33b81ffc4170339db9df69de17863af4b29c4b9db76"
+    },
+    {
+      "capability": "BSR decoding preflight",
+      "path": "include/sdb/implicit.hpp",
+      "line": 103,
+      "symbol": "static SparseMatrix from_data",
+      "sha256": "721b413bc65932bee6cb5b7558b65db5208ffa7d960054e0416a0f7200416959"
+    },
+    {
+      "capability": "Model foundation schema",
+      "path": "include/sdb/model_ir/foundation.hpp",
+      "line": 186,
+      "symbol": "struct ModelFoundation",
+      "sha256": "295ee25f5f1f2d79eb664e55215718b3130b1730344f60947746c8db14abf776"
+    },
+    {
+      "capability": "Coordinate/material validation",
+      "path": "include/sdb/model_ir/foundation_validate.hpp",
+      "line": 28,
+      "symbol": "validate_foundation",
+      "sha256": "9d84cfc5c5a13460354239c879c453a9d067ff355a5077b6960e8b2a3ba59466"
+    },
+    {
+      "capability": "Scoped typed resolution",
+      "path": "include/sdb/model_ir/foundation_validate.hpp",
+      "line": 123,
+      "symbol": "resolve_foundation",
+      "sha256": "9d84cfc5c5a13460354239c879c453a9d067ff355a5077b6960e8b2a3ba59466"
+    },
+    {
+      "capability": "Semantic identity",
+      "path": "include/sdb/model_compiler/compiler.hpp",
+      "line": 31,
+      "symbol": "canonical_definition",
+      "sha256": "67819d4725f060699ec87618cccbeafd11ccf6a3ffdd48904f8fcd1d42801cca"
+    },
+    {
+      "capability": "Typed result payload",
+      "path": "include/sdb/results/typed.hpp",
+      "line": 48,
+      "symbol": "struct TypedFieldPayload",
+      "sha256": "8029a545b4e7c3e11d0b02d8cf0f602a756d0eaef0c4126cb0ec84441d7e26ef"
+    },
+    {
+      "capability": "Result source validation",
+      "path": "include/sdb/results/typed_format.hpp",
+      "line": 40,
+      "symbol": "inline void validate_model",
+      "sha256": "1194605772e3cc9ceabc73db2dc719eb52dfbfefc56d81b4ec1aea8f5b803c79"
+    },
+    {
+      "capability": "Typed history continuity",
+      "path": "include/sdb/results/results.hpp",
+      "line": 740,
+      "symbol": "typed history schema/basis/region changed",
+      "sha256": "11c2c67ad1ba089cc8d1b14a50373ea8e631455a14799b0923a04183a9c1c84a"
+    },
+    {
+      "capability": "Async admission budget",
+      "path": "include/sdb/results/async_writer.hpp",
+      "line": 22,
+      "symbol": "static std::uint64_t required_bytes",
+      "sha256": "3fbc4ae90626b7fe8d107edd30ffd6cff8d5b704d9b401b69172ad46c881148a"
+    },
+    {
+      "capability": "Rotational restart schema",
+      "path": "include/sdb/io/restart.hpp",
+      "line": 29,
+      "symbol": "info.state_schema = state.data().rotation",
+      "sha256": "a7be59133af8043e806d8cbcd8ce4a0a6db6e18e4c79baaf3e8115c210aa4712"
+    },
+    {
+      "capability": "Synthetic composite",
+      "path": "tests/foundation_integration_tests.cpp",
+      "line": 49,
+      "symbol": "void write_fixture",
+      "sha256": "5079699e93ca6905d855389099437d004bc78b46fac50feaaaaefc15c0cc6034"
+    },
+    {
+      "capability": "Allocation instrumentation",
+      "path": "tests/typed_budget_tests.cpp",
+      "line": 11,
+      "symbol": "void *operator new",
+      "sha256": "6a565340ed10cb092d7db75f987b84b52954eb4ea1c4ed5365b4318f2d17e9d2"
+    }
+  ]
+}

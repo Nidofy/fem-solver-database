@@ -1,2 +1,4 @@
 # Keep source archives and fixtures independent of host core.autocrlf settings.
 * text=auto eol=lf
+# Preserve independently recorded evidence byte hashes, including Windows logs.
+verification/reviews/DBF2/independent-astra/* -text

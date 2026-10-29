@@ -1,0 +1,4 @@
+#include <sdb/results/results.hpp>
+#include <iostream>
+using namespace sdb;using namespace sdb::lifecycle;
+int main(){ModelBuilder<double>b;for(unsigned n=0;n<8;++n)b.add_node(n+1,{double(n&1),double((n>>1)&1),double(n>>2)});b.add_material({1,1,{1,100,0},0});b.add_part(1);b.add_element(1,Topology::Hex8,{1,2,4,3,5,6,8,7},1,1,8);b.set_sample_points(1,{{1,0,0,0}});CompiledModel<double>m({},b.finalize());m.descriptors.push_back(descriptor("C3D8",{}));for(unsigned n=0;n<8;++n)m.sources.add(true,{{"","",n+1},n+1,n,{}});m.sources.add(false,{{"","",1},1,0,{}});StateDB<double>s(m.mesh);auto rm=ResultModel::from(m,0);FieldDescriptor d;d.name="X";ResultAddress a;a.entity=1;a.integration_point=8;bool accepted=true;try{validate_result_address(a,d,rm);}catch(...){accepted=false;}std::cout<<"state samples="<<s.ip_offsets().back()<<" persisted explicit layouts="<<rm.samples.size()<<" nonexistent ip8 accepted="<<accepted<<'\n';}

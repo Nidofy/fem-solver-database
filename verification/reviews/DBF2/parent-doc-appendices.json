@@ -1,0 +1,34 @@
+[
+  {
+    "path": "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\docs\\CODEX_REPO_MAP.md",
+    "preserved_prefix_bytes": 51192,
+    "preserved_prefix_sha256": "9c6e1dc1f9fb7bc21c1e3668390630559f9dd635c3a0e179d4b5091f0737a2a6",
+    "appendix_sha256": "0664c8fcd3486450e03386d0ec0029ff947aedb47bfc5c19119c918cf0fae120",
+    "pre_final_bytes": 51635,
+    "final_appendix_sha256": "da3f16c74f268c089a410c876eed4ad23111e1b3a0680ad8a250885064d93083"
+  },
+  {
+    "path": "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\docs\\CODEX_MODULE_NOTES.md",
+    "preserved_prefix_bytes": 68863,
+    "preserved_prefix_sha256": "105bf8923488566e02b15f817b2450f53158746fe655946251f02af931da5742",
+    "appendix_sha256": "f57d9585e7429905a748b1e80b99d93da8e0bbf21be332522ec335c36bedab62",
+    "pre_final_bytes": 69439,
+    "final_appendix_sha256": "da3f16c74f268c089a410c876eed4ad23111e1b3a0680ad8a250885064d93083"
+  },
+  {
+    "path": "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\docs\\CODEX_MIGRATION_NOTES.md",
+    "preserved_prefix_bytes": 44245,
+    "preserved_prefix_sha256": "3d9e92b5c1210a9b5135ffd41fd6f8949ce570beeec98a8321676e1dc89cda29",
+    "appendix_sha256": "455d49317aba9de9f0869ced3d8ad01962886a119bb24d0c67670a31193acb95",
+    "pre_final_bytes": 44811,
+    "final_appendix_sha256": "da3f16c74f268c089a410c876eed4ad23111e1b3a0680ad8a250885064d93083"
+  },
+  {
+    "path": "D:\\Codes\\Solver\\ExplicitSolver_track_l_c0a_l0\\docs\\CODEX_TASK_LOG.md",
+    "preserved_prefix_bytes": 161256,
+    "preserved_prefix_sha256": "db5f573051d597f320df21a75e777b75f5235180d6ea24628bd178db359852df",
+    "appendix_sha256": "af968b3b05a652d3a7a856e426e80ed9a8a19ef0bee0f407b0d4ff66d4e73dfb",
+    "pre_final_bytes": 161980,
+    "final_appendix_sha256": "da3f16c74f268c089a410c876eed4ad23111e1b3a0680ad8a250885064d93083"
+  }
+]

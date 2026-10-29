@@ -1,0 +1,3 @@
+same-frame contradictory same-schema descriptors accepted=0
+component0 history schema drift rejected=1
+1024-byte admission rejection allocated=34 diagnostic=frame exceeds async result budget

@@ -1,0 +1,16 @@
+[
+  {
+    "file": "build-b01\\integration-scratch\\float.sdbres",
+    "result_fields": 20,
+    "restart_fields": 20,
+    "precision": 4,
+    "status": "PASS"
+  },
+  {
+    "file": "build-b01\\integration-scratch\\double.sdbres",
+    "result_fields": 20,
+    "restart_fields": 20,
+    "precision": 8,
+    "status": "PASS"
+  }
+]

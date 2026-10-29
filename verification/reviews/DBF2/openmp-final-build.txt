@@ -1,0 +1,27 @@
+[1/2] Building CXX object CMakeFiles/sdb_typed_budget_tests.dir/tests/typed_budget_tests.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:490,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/async_writer.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_budget_tests.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:431:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  431 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:431:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:454:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  454 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  455 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:454:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = long long unsigned int; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_budget_tests.cpp:32:63:   required from here
+   32 |         frame.fields.push_back(make_typed_field<std::uint64_t>(schema,std::move(addresses),std::vector<std::uint64_t>(100000)));
+      |                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:120:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  120 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+[2/2] Linking CXX executable sdb_typed_budget_tests.exe
