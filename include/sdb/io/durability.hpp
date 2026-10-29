@@ -110,6 +110,17 @@ class PublicationError : public std::runtime_error {
   public:
     PublicationError()
         : std::runtime_error("atomic publication failed; inspect publication outcome and cause") {}
+    // Preserve existing diagnostic consumers while adding structured outcome.
+    // cause_ owns the exception, so its what() buffer survives this catch scope.
+    // No message concatenation/allocation is allowed after replacement.
+    const char *what() const noexcept override {
+        if (cause_) {
+            try { std::rethrow_exception(cause_); }
+            catch (const std::exception &error) { return error.what(); }
+            catch (...) {}
+        }
+        return std::runtime_error::what();
+    }
     bool published() const noexcept { return published_; }
     bool replacement_may_have_happened() const noexcept { return uncertain_; }
     const std::exception_ptr &cause() const noexcept { return cause_; }
