@@ -8,7 +8,7 @@ program: fem-solver-database-v2
 current_batch: DBF1
 batch_state: READY_FOR_REVIEW # self-tested, not independent acceptance
 batch_base_sha: 9a3d754dbbc5c0b1720a93ecf29ee3278f705f73
-batch_content_head_sha: PENDING_CONTENT_COMMIT
+batch_content_head_sha: c5cd0622d7a52fb7c15db0e98dc33b5833d206a7
 tasks:
   - id: DBF1-D0
     title: Actual branch audit and reproduced rotation/enum P1 repairs
