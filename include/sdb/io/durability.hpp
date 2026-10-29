@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <exception>
 #include <filesystem>
 #include <stdexcept>
@@ -107,19 +108,14 @@ inline void sync_parent(const std::filesystem::path &path) {
 class PublicationError : public std::runtime_error {
     bool published_ = false, uncertain_ = false;
     std::exception_ptr cause_;
+    std::array<char, 1024> diagnostic_{};
   public:
     PublicationError()
         : std::runtime_error("atomic publication failed; inspect publication outcome and cause") {}
-    // Preserve existing diagnostic consumers while adding structured outcome.
-    // cause_ owns the exception, so its what() buffer survives this catch scope.
-    // No message concatenation/allocation is allowed after replacement.
+    // Own a bounded diagnostic; rethrow_exception may copy/allocate, so what()
+    // must not return a pointer obtained from a temporary rethrown exception.
     const char *what() const noexcept override {
-        if (cause_) {
-            try { std::rethrow_exception(cause_); }
-            catch (const std::exception &error) { return error.what(); }
-            catch (...) {}
-        }
-        return std::runtime_error::what();
+        return diagnostic_[0] ? diagnostic_.data() : std::runtime_error::what();
     }
     bool published() const noexcept { return published_; }
     bool replacement_may_have_happened() const noexcept { return uncertain_; }
@@ -128,6 +124,18 @@ class PublicationError : public std::runtime_error {
         published_ = published;
         uncertain_ = uncertain;
         cause_ = std::current_exception();
+        if (cause_) {
+            // capture is called from an active handler. Bare throw refers to
+            // that same exception without copying it or allocating storage.
+            try { throw; }
+            catch (const std::exception &error) {
+                const char *message = error.what();
+                std::size_t i = 0;
+                for (; i + 1 < diagnostic_.size() && message[i]; ++i) diagnostic_[i] = message[i];
+                diagnostic_[i] = '\0';
+            }
+            catch (...) {}
+        }
     }
 };
 } // namespace sdb::durability
