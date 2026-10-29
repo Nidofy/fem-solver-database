@@ -379,6 +379,11 @@ class File {
                 }
                 in.seekg(static_cast<std::streamoff>(cursor));
                 auto h = native::header(in, limit_);
+                // Apply the v4 stored-block bound before allocating or treating
+                // a truncated oversized declaration as a discardable tail.
+                if (compressed_ && h.kind == 2 &&
+                    h.size > compressed_detail::max_stored + compressed_detail::envelope_bytes)
+                    throw std::length_error("compressed recovery block exceeds stored limit");
                 if (h.size > size_ - h.offset) {
                     incomplete_tail = true;
                     break;

@@ -95,6 +95,19 @@ int main(int argc,char **argv) {
         rejects([&]{ResultReader bad(damaged); (void)bad.frame(0);});
         rejects([&]{ResultReader bad(damaged,true);});
         check(bytes(damaged)==corruption,"reader modified corruption");
+        // Recovery must reject both complete and truncated oversized blocks
+        // before body allocation or repair truncation, even after a valid commit.
+        const auto oversized=root/"oversized.sdbres";
+        for (const bool truncated : {false,true}) {
+            { std::ofstream out(oversized,std::ios::binary|std::ios::trunc);
+              native::write(out,complete);
+              native::record(out,2,native::Bytes(compressed_detail::max_stored+compressed_detail::envelope_bytes+1)); }
+            if (truncated) fs::resize_file(oversized,complete.size()+17);
+            const auto before_repair=bytes(oversized);
+            rejects([&]{ResultReader bad(oversized,true);});
+            rejects([&]{NativeResultStorage bad(oversized,m,true,true);});
+            check(bytes(oversized)==before_repair,"oversized recovery mutated source");
+        }
         // A 256-row block exceeds the codec cap: split rows without flattening
         // components or changing their schema. This exercises the adaptive path.
         FieldDescriptor wide; wide.name="WIDE"; wide.scalar=ScalarType::Float64;
