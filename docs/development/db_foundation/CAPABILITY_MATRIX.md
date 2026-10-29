@@ -1,5 +1,19 @@
 # Actual capability matrix
 
+## DBF4 phase-two additions
+
+| Capability | API / evidence | Boundary |
+|---|---|---|
+| Explicit durability | durability::Level, NativeResultStorage/ResultWriter/AsyncResultWriter::barrier | StreamFlush/FileSync; strict PublicationSync POSIX only, rejected on Windows |
+| Ordered publication | CheckpointLink::publish_durable, CLI --durability | exact result watermark before restart then link; no cross-file atomicity claim |
+| Ambiguous outcome | PublicationError and LinkPublicationError | confirmed/potential replacement plus failed stage; caller reopens and verifies |
+| Process failure campaign | dbf4_fault_driver + Python schema1/CRC/FNV oracle | Native1/Indexed2/Typed3 fresh readers; process termination is not power loss |
+| Concurrency sanitizer | WSL Linux GCC TSan | separate from GCC Windows and MSVC ASan matrix; final evidence in DBF4_VERIFICATION |
+
+Final acceptance status and source identities are recorded in DBF4_HANDOFF and
+DBF4_VERIFICATION. The historical DBF3 matrix below remains its original bounded
+acceptance record; its future-durability statement is superseded by DBF4.
+
 Current continuation: **DBF3 phase one**, source `c53ab3e`. Its table below
 supersedes the corresponding DBF2 limitations; historical tables retain their
 original scope. See DBF3_REQUIREMENTS, DBF3_CONTRACTS and DBF3_VERIFICATION for

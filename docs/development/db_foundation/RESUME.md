@@ -1,5 +1,18 @@
 # Resume DB foundation work
 
+## Current DBF4 phase-two continuation
+
+The user subsequently authorized phase two. Its implementation baseline is DBF3
+`5349ccfd5f1dff49b87fac88ffa43b61dc5f40ed`; final reviewed source is
+`910510d5340bfac779a2510eec8c78def73c5134`, final test commit `4769985`.
+DBF4 is COMPLETE within its stated scope: independent Astra/high PASS, all three
+clean-build Windows configurations 39/39, Linux TSan and process campaigns PASS.
+Read DBF4_CONTRACTS, DBF4_HANDOFF and DBF4_VERIFICATION. Scope is explicit
+durability barriers, ordered Result→Restart→Link publication, typed ambiguous
+failure outcomes, fault campaigns and supported TSan. Compression and production
+adapters remain separate later work. Older phase-one-only authorization notes
+below are historical and superseded for durability by this request.
+
 ## Current DBF3 phase-one continuation
 
 Start with DBF3_HANDOFF, DBF3_VERIFICATION, DBF3_REQUIREMENTS and the independent

@@ -37,7 +37,9 @@ After a failed or interrupted operation, reopen and verify the existing exact
 prefix/identity link before append. Do not blindly retry or assume the previous
 restart survived. Typed errors distinguish failures before replacement from
 replacement that succeeded or may have happened, and identify which stage of
-the compound publication was reached. No on-disk durability assertion is added:
+the compound publication was reached. PublicationError owns a bounded diagnostic
+(1023 characters plus terminator) while retaining the original exception through
+cause(); what() neither rethrows nor allocates. No on-disk durability assertion is added:
 legacy link schema1 and Native1/Indexed2/TypedIndexed3 bytes remain compatible.
 
 ## Evidence obligations
