@@ -182,8 +182,12 @@ template<class T> void read_registered(const std::filesystem::path &fixture,cons
     for(bool checkpoint:{false,true}) {
         StateDB<T> state(model.mesh); register_fields(state);
         auto stem=sizeof(T)==4 ? "registered-f" : "registered-d";
-        if(checkpoint) load_checkpoint(dir/(std::string(stem)+".chk"),model.mesh,state);
-        else RestartDB::load(dir/(std::string(stem)+".sdbrst"),model,state,123);
+        try {
+            if(checkpoint) load_checkpoint(dir/(std::string(stem)+".chk"),model.mesh,state);
+            else RestartDB::load(dir/(std::string(stem)+".sdbrst"),model,state,123);
+        } catch(const std::exception &e) {
+            throw std::runtime_error(std::string(stem)+(checkpoint?" checkpoint: ":" restart: ")+e.what());
+        }
         check(state.template registered_field<Field<std::uint64_t>>("exact").read()(0)==UINT64_MAX,"fresh process uint64");
         check(state.template registered_field<Field<std::int64_t>>("signed").read()(0)==-9007199254740993ll,"fresh process int64");
         check(state.template registered_field<Field<T>>("rebuild").read()(0)==T(.25),"fresh process reconstruction");
@@ -192,7 +196,8 @@ template<class T> void read_registered(const std::filesystem::path &fixture,cons
         check(state.template registered_field<Field<T,3,AoSoA<4>>>("vector").read()(0,2)==T(3),"fresh process typed layout");
     }
     CpuRun<T> run(model); register_fields(run.state());
-    run.restore(dir/(sizeof(T)==4?"run-f.sdbrst":"run-d.sdbrst"));
+    try {run.restore(dir/(sizeof(T)==4?"run-f.sdbrst":"run-d.sdbrst"));}
+    catch(const std::exception &e) {throw std::runtime_error(std::string(sizeof(T)==4?"float CpuRun: ":"double CpuRun: ")+e.what());}
     check(run.state().template registered_field<Field<std::uint64_t>>("exact").read()(0)==UINT64_MAX-1,"fresh process CpuRun restore");
     run.advance();
 }
