@@ -1,0 +1,2 @@
+FAIL: wire enum 256 aliases Solve=0
+FAIL: restore silently discarded destination rotation
