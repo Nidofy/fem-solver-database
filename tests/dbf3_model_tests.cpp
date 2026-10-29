@@ -1,4 +1,4 @@
-#include <sdb/io/model_store.hpp>
+#include <sdb/lifecycle.hpp>
 #include <sdb/dynamics.hpp>
 #include <iostream>
 using namespace sdb;
@@ -153,6 +153,82 @@ void parser(const std::filesystem::path &directory) {
     bad("TYPE=VELOCITY","TYPE=STRESS","VELOCITY");
     bad("SURFACE=A.FACE","SURFACE=A.FACE,INFLUENCE RADIUS=2","unsupported parameter");
 }
+template<class T> native::Bytes mechanics(const StateDB<T> &state) {
+    native::Writer w;
+    state.data().fields([&](const auto &field) {
+        using F=std::decay_t<decltype(field)>;
+        native::encode(w,static_cast<std::uint64_t>(field.size()));
+        const auto view=field.read();
+        for(std::size_t n=0;n<field.size();++n) for(unsigned c=0;c<F::components;++c) native::encode(w,view(n,c));
+    });
+    native::encode(w,state.data().step);native::encode(w,state.data().time);native::encode(w,state.data().dt);
+    return std::move(w.bytes);
+}
+template<class T> std::uint64_t legacy_configuration(const CpuRun<T> &run) {
+    native::Writer w;
+    native::encode(w,std::string("cpu/tet4/linear/cd-v1/serial/deterministic"));
+    native::encode(w,run.plans());native::encode(w,std::uint8_t(sizeof(T)));
+    return native::hash(w.bytes);
+}
+template<class T> void executable_amplitude_regression(const std::filesystem::path &fixtures,const std::filesystem::path &scratch) {
+    auto original=ReaderRegistry{}.read(fixtures.parent_path()/"abaqus"/"forced_tet.inp").model;
+    original.amplitudes={{"STEP",false,{{0,0},{.2,2}}, {}}};
+    original.steps[0].loads[0].actions[0].amplitude="STEP";
+    auto single=ModelCompiler{}.compile<T>(original);CpuRun<T> single_run(single);
+    check(single_run.configuration()==legacy_configuration(single_run),"single-step configuration identity unchanged");
+    auto ir=original;
+    auto step2=ir.steps[0];step2.name="SECOND";step2.period=.1;step2.loads.clear();ir.steps.push_back(step2);
+    auto step3=ir.steps[0];step3.name="REDEFINED";step3.period=.1;ir.steps.push_back(step3);
+    auto step4=step2;step4.name="PROPAGATED-AGAIN";ir.steps.push_back(step4);
+    const auto wire=native::pack(ir);auto model=ModelCompiler{}.compile<T>(ir);
+    check(model.report.executable_cpu && native::pack(model.definition)==wire,"runtime provenance preserves executable ModelIR bytes");
+    const auto node=model.sources.node_id({"","",40}).value();StateDB<T> state(model.mesh);
+    auto force=[&](std::size_t step,double local,double total) {
+        LoadEvaluator::apply(model.analysis,step,local,total,state);return state.data().external_force.read()(node,0);
+    };
+    check(force(0,.2,.2)==T(2),"step amplitude first endpoint");
+    check(force(1,0,.2)==T(2) && force(1,.05,.25)==T(2),"inherited executable step amplitude holds endpoint");
+    check(force(2,0,.3)==T(0) && force(2,.05,.35)==T(.5),"explicit redefinition restarts local amplitude");
+    check(force(3,0,.4)==T(1),"propagation uses latest explicit origin period");
+    check(model.analysis.steps[1].loads[0].origin_step==0 && model.analysis.steps[3].loads[0].origin_step==2,"runtime action origin provenance");
+    auto invalid=model.analysis;invalid.steps[1].loads[0].origin_step=2;
+    rejects([&]{LoadEvaluator::apply(invalid,1,0,.2,state);},"origin step");
+    auto manual=model.analysis;manual.steps[1].loads[0].origin_step=UINT64_MAX;
+    LoadEvaluator::apply(manual,1,.05,.25,state);check(state.data().external_force.read()(node,0)==T(.5),"manual unspecified origin retains local-time behavior");
+    auto total_ir=ir;total_ir.amplitudes[0].total_time=true;total_ir.amplitudes[0].points={{0,0},{1,10}};
+    auto total=ModelCompiler{}.compile<T>(total_ir);StateDB<T> total_state(total.mesh);CpuRun<T> total_run(total);
+    LoadEvaluator::apply(total.analysis,1,0,.2,total_state);check(total_state.data().external_force.read()(node,0)==T(2),"total-time amplitude at transition");
+    LoadEvaluator::apply(total.analysis,1,.05,.25,total_state);check(total_state.data().external_force.read()(node,0)==T(2.5),"inherited total-time amplitude continues");
+    check(total_run.configuration()==legacy_configuration(total_run),"total-time-only configuration identity unchanged");
+    auto reset_ir=ir;reset_ir.steps.resize(2);reset_ir.steps[1].loads={{true,{}, {}}};
+    auto reset=ModelCompiler{}.compile<T>(reset_ir);StateDB<T> reset_state(reset.mesh);CpuRun<T> reset_run(reset);
+    LoadEvaluator::apply(reset.analysis,1,0,.2,reset_state);check(reset_state.data().external_force.read()(node,0)==T(0),"OP NEW still removes inherited amplitude load");
+    check(reset_run.configuration()==legacy_configuration(reset_run),"removed amplitude configuration identity unchanged");
+    CpuRun<T> continuous(model);continuous.initialize();
+    check(continuous.configuration()!=legacy_configuration(continuous),"affected multistep configuration rejects old solver semantics");
+    for(std::uint64_t i=0;i<continuous.plans()[0].increments;++i) continuous.advance();
+    const auto tag=sizeof(T)==4?"float":"double";
+    auto boundary=scratch/(std::string(tag)+"-amplitude-boundary.sdbrst");continuous.save(boundary);
+    CpuRun<T> resumed(model);resumed.restore(boundary);
+    check(mechanics(continuous.state())==mechanics(resumed.state()),"boundary checkpoint restores identical mechanical state");
+    continuous.advance();resumed.advance();
+    check(continuous.step_index()==1 && continuous.state().data().external_force.read()(node,0)==T(2),"real CpuRun transition holds step-time load");
+    auto middle=scratch/(std::string(tag)+"-amplitude-middle.sdbrst");continuous.save(middle);resumed.save(scratch/(std::string(tag)+"-amplitude-resumed.sdbrst"));
+    check(mechanics(continuous.state())==mechanics(resumed.state()),"first transition increment checkpoint split equality");
+    CpuRun<T> middle_resumed(model);middle_resumed.restore(middle);
+    while(continuous.advance()) {}
+    while(resumed.advance()) {}
+    while(middle_resumed.advance()) {}
+    continuous.save(scratch/(std::string(tag)+"-amplitude-final.sdbrst"));
+    resumed.save(scratch/(std::string(tag)+"-amplitude-final-resumed.sdbrst"));
+    middle_resumed.save(scratch/(std::string(tag)+"-amplitude-final-middle.sdbrst"));
+    check(mechanics(continuous.state())==mechanics(resumed.state()) && mechanics(continuous.state())==mechanics(middle_resumed.state()),"real multistep continuous and both restart splits are bitwise equal");
+    RestartInfo old_info;old_info.configuration=legacy_configuration(continuous);old_info.step=continuous.step_index();old_info.increment=continuous.increment();
+    auto old_path=scratch/(std::string(tag)+"-old-amplitude-configuration.sdbrst");RestartDB::save(old_path,model,continuous.state(),old_info);
+    auto before=mechanics(resumed.state());auto cursor=std::make_pair(resumed.step_index(),resumed.increment());
+    rejects([&]{resumed.restore(old_path);},"configuration mismatch");
+    check(mechanics(resumed.state())==before && std::make_pair(resumed.step_index(),resumed.increment())==cursor,"old amplitude solver configuration rejection is atomic");
+}
 int main(int argc,char **argv) {
     try {
         if(argc==3 && std::string(argv[1])=="--read") {
@@ -161,6 +237,7 @@ int main(int argc,char **argv) {
         } else {
             if(argc!=3) throw std::invalid_argument("usage: dbf3_model_tests <fixtures> <scratch> | --read <scratch>");
             std::filesystem::create_directories(argv[2]);contracts<float>(argv[2]);contracts<double>(argv[2]);parser(argv[1]);
+            executable_amplitude_regression<float>(argv[1],argv[2]);executable_amplitude_regression<double>(argv[1],argv[2]);
         }
         std::cout<<checks<<" DBF3 model checks passed\n";
     } catch(const std::exception &e) {std::cerr<<e.what()<<'\n';return 1;}

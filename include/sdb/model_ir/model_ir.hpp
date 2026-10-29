@@ -243,6 +243,9 @@ struct Action {
     std::uint8_t component = 0;
     double value = 0;
     std::string amplitude;
+    // Runtime provenance only; ModelIR/wire identity remains unchanged. Unspecified
+    // preserves local-time evaluation for manually constructed AnalysisDB actions.
+    std::uint64_t origin_step = UINT64_MAX;
 };
 struct AnalysisStep {
     std::string name;

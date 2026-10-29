@@ -104,6 +104,17 @@ template <class T> class CpuRun {
                                           : "cpu/tet4/linear/cd-v1/serial/deterministic"));
         native::encode(w, plans_);
         native::encode(w, std::uint8_t(sizeof(T)));
+        // Only runs affected by the corrected propagated step-time amplitude
+        // semantics change configuration identity. Their old checkpoints must
+        // not silently resume under a different loading history.
+        bool propagated_step_amplitude = false;
+        for (std::size_t step = 0; step < model.analysis.steps.size(); ++step)
+            for (const auto &a : model.analysis.steps[step].loads)
+                if (a.origin_step < step && !a.amplitude.empty() &&
+                    !model.analysis.amplitudes.at(a.amplitude).total_time)
+                    propagated_step_amplitude = true;
+        if (propagated_step_amplitude)
+            native::encode(w, std::string("propagated-step-amplitude/hold-origin-end-v2"));
         config_ = native::hash(w.bytes);
     }
     StateDB<T> &state() { return state_; }

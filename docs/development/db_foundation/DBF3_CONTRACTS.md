@@ -9,7 +9,9 @@ have separate evidence; construction/serialization do not imply execution.
 
 Strong IDs are typed boundaries, not a replacement for the existing Index32 hot
 layout. SourceKey retains scoped external labels; NodeId/ElementId refer to
-zero-based compiled indices. InstanceId and StepId refer to definition order.
+zero-based compiled indices. InstanceId follows lexicographically sorted instance
+names (use `instance_id(name)` instead of assuming declaration order); StepId
+follows analysis-step definition order.
 FrameId identifies the stored logical frame ID; Reader overloads resolve it and
 reject missing IDs rather than treating it as an ordinal. Old ordinal overloads
 remain supported. Maximum-value StrongId sentinels reject rather than truncate.

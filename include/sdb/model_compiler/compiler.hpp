@@ -601,7 +601,7 @@ class ModelCompiler {
         }
         using ActionKey = std::pair<Index, std::uint8_t>;
         std::map<ActionKey, Action> boundaries, loads;
-        auto actions = [&](const std::vector<IRActionBlock> &blocks, std::map<ActionKey, Action> &current) {
+        auto actions = [&](const std::vector<IRActionBlock> &blocks, std::map<ActionKey, Action> &current, std::uint64_t origin_step) {
             bool reset = false;
             for (auto &block : blocks) {
                 if (block.reset != blocks.front().reset)
@@ -631,11 +631,11 @@ class ModelCompiler {
                             ActionKey key{n, c};
                             if (!updated.insert(key).second)
                                 fail(a.source, "overlapping action targets in same step; combine explicitly");
-                            current[key] = {n, c, a.value, a.amplitude};
+                            current[key] = {n, c, a.value, a.amplitude, origin_step};
                         }
                 }
         };
-        actions(ir.initial_boundaries, boundaries);
+        actions(ir.initial_boundaries, boundaries, UINT64_MAX);
         // Mesh holds only initial constraints. Runtime step masks come from AnalysisDB.
         for (auto &[key, a] : boundaries) {
             if (a.value != 0 || !a.amplitude.empty())
@@ -647,8 +647,8 @@ class ModelCompiler {
             if (!step_names.insert(step.name).second || !std::isfinite(step.period) || step.period <= 0 ||
                 !std::isfinite(step.increment) || step.increment < 0)
                 fail(step.source, "invalid/duplicate step");
-            actions(step.boundaries, boundaries);
-            actions(step.loads, loads);
+            actions(step.boundaries, boundaries, analysis.steps.size());
+            actions(step.loads, loads, analysis.steps.size());
             AnalysisStep compiled{step.name, step.period, step.increment, step.direct, {}, {}, step.source};
             for (auto &[k, a] : boundaries) {
                 if (a.value != 0 || !a.amplitude.empty())
@@ -738,7 +738,18 @@ class LoadEvaluator {
         state.data().external_force.fill(0);
         auto f = state.data().external_force.write();
         for (auto &a : db.steps.at(step).loads) {
-            double scale = a.amplitude.empty() ? 1 : amplitude(db.amplitudes.at(a.amplitude), local, total);
+            double scale = 1;
+            if (!a.amplitude.empty()) {
+                const auto &curve = db.amplitudes.at(a.amplitude);
+                double evaluation_local = local;
+                if (!curve.total_time && a.origin_step != UINT64_MAX) {
+                    if (a.origin_step > step)
+                        throw std::invalid_argument("load origin step is after evaluation step");
+                    if (a.origin_step < step)
+                        evaluation_local = db.steps.at(static_cast<std::size_t>(a.origin_step)).period;
+                }
+                scale = amplitude(curve, evaluation_local, total);
+            }
             double value = scale * a.value;
             if (!std::isfinite(value) || std::abs(value) > double(std::numeric_limits<T>::max()))
                 throw std::runtime_error("load exceeds selected precision range");
