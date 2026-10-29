@@ -38,6 +38,7 @@ void write_file(const std::filesystem::path &p, const native::Bytes &bytes) {
 template<class T> void contracts(const std::filesystem::path &fixture,const std::filesystem::path &dir) {
     auto model=ModelCompiler{}.compile<T>(ReaderRegistry{}.read(fixture).model);
     StateDB<T> s(model.mesh), plain(model.mesh);
+    ModelStore::save(dir/(sizeof(T)==4?"registered-f.sdbmodel":"registered-d.sdbmodel"),model);
     check(!plain.registered_fields(),"default state extensions allocate nothing");
     auto alloc=host_memory.allocations.load(); plain.freeze_registered_fields();
     check(host_memory.allocations.load()==alloc && !plain.registered_fields(),"default freeze allocates nothing");
@@ -174,7 +175,10 @@ template<class T> void rotation_restore(const std::filesystem::path &fixture,con
     }
 }
 template<class T> void read_registered(const std::filesystem::path &fixture,const std::filesystem::path &dir) {
-    auto model=ModelCompiler{}.compile<T>(ReaderRegistry{}.read(fixture).model);
+    // Cross-process restore consumes the writer's model artifact, preserving its
+    // source provenance and strict model identity rather than reparsing a path.
+    (void)fixture;
+    auto model=ModelStore::load<T>(dir/(sizeof(T)==4?"registered-f.sdbmodel":"registered-d.sdbmodel"));
     for(bool checkpoint:{false,true}) {
         StateDB<T> state(model.mesh); register_fields(state);
         auto stem=sizeof(T)==4 ? "registered-f" : "registered-d";
