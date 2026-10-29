@@ -18,8 +18,10 @@ for entry in packet["files"]:
     assert not Path(path).is_absolute() and ".." not in Path(path).parts and path not in seen
     seen.add(path)
     raw = subprocess.check_output(["git", "show", head + ":" + path], cwd=root) if use_git else (root / path).read_bytes()
-    if not use_git and hashlib.sha256(raw).hexdigest() != entry["sha256"]:
-        raw.decode("utf-8")
+    if not use_git and entry.get("allow_crlf_normalization", False) and hashlib.sha256(raw).hexdigest() != entry["sha256"]:
+        # Allow only files whose captured worktree bytes were proven to differ
+        # from their Git blob solely by CRLF. Some CTest host logs use a local
+        # Windows encoding, so UTF-8 decoding is not an appropriate text test.
         raw = raw.replace(b"\r\n", b"\n")
     assert len(raw) == entry["bytes"] and hashlib.sha256(raw).hexdigest() == entry["sha256"], path
 if use_git:
