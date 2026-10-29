@@ -1,0 +1,10 @@
+**********************************************************************
+** Visual Studio 2026 Developer Command Prompt v18.9.2
+** Copyright (c) 2026 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+7ea0bf312619b019aa6dcd69f03731163e6ec6d4
+verified_frames=3
+format=4 frames=3 nodes=10000 elements=0
+verified_frames=3
+format=4 frames=3 nodes=10000 elements=0

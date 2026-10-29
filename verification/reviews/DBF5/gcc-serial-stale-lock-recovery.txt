@@ -1,0 +1,5 @@
+fixed source: 7ea0bf312619b019aa6dcd69f03731163e6ec6d4
+Failed first serial run: many.sdbres.writer-lock remained after pre-fix run was interrupted at indexed_results_contracts.
+Get-Process sdb_indexed_results_tests: zero running processes.
+Preserved scratch by Move-Item within verified build-b01-serial directory.
+No source or binary changes; rerun full suite with new scratch.

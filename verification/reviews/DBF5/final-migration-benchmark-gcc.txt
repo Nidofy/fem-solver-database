@@ -1,0 +1,2 @@
+DBF5 migration: 113 checks passed
+local baseline iterations=2000 snapshot_to_frozen_us=4.5875 private_tet_scratch_us=0.3945 reduction_us=0.0685 checksum=60000

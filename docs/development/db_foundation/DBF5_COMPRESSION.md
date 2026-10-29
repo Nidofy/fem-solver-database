@@ -105,9 +105,24 @@ bombs, unknown/unavailable codecs, raw/stored/workspace limits, malformed,
 truncated, concatenated and trailing frames, native checksum and raw CRC errors,
 and decoding with less than the conservative workspace bound.
 
-The codec tests establish the isolated byte-compression contract. Solver
-production integration, CUDA, physical power-loss survival and untested zstd
-distributions remain outside this evidence. Result-envelope compatibility,
-writer admission and end-to-end selective reads require their own integration
-tests. Migration must preserve the bounded single-frame/raw-CRC contract and
-make the actual zstd runtime discoverable for optional consumers.
+## Indexed result integration
+
+CompressedIndexed4 wraps the existing typed logical blocks with a 24-byte
+version/codec/raw-size/stored-size/raw-CRC envelope. Persisted default and per-field
+policies are bound into file identity. Directories, commit footers, writer leases,
+durability barriers and linked continuation reuse the existing infrastructure.
+Normal reads and recovery cap stored block declarations before allocation;
+recovery also rejects oversized truncated declarations before any tail repair.
+Typed rows are split adaptively to respect the 4 MiB raw codec input limit.
+This is a codec-block bound, not a claim that every model/frame allocation is
+4 MiB: frame encoding/validation has its existing admission charge. Async admission
+adds conservative codec/output scratch before taking frame ownership.
+
+Integration tests cover seven lanes, signed zero/missingness, mixed raw/zstd
+policy, selective reads, append, corruption, oversize recovery, low budgets and
+wide-row splitting. CLI and separate-process crash/independent wire-oracle tests
+are detailed in DBF5_VERIFICATION. The formal byte grammar is RESULT_FORMAT_SPEC.
+
+Production integration, CUDA, physical power-loss survival and untested zstd
+distributions remain outside this evidence. Migration must preserve the bounded
+single-frame/raw-CRC contract and make the actual zstd runtime discoverable.

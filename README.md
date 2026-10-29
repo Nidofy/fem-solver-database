@@ -168,6 +168,30 @@ contact and MPI/CUDA contact execution are not complete. The standalone static
 triangle TOI primitive does not provide automatic whole-domain time-step cutback.
 No commercial-solver feature parity or production qualification is claimed.
 
+## Optional compressed results and consumer migration
+
+DBF5 adds opt-in `CompressedIndexed4` results, checked consumer contracts and a
+standalone FNL/FEG/IDARRAY migration toolkit. Configure with `-DSDB_ZSTD=ON`,
+`-DSDB_ZSTD_INCLUDE_DIR=<SDK include>` and `-DSDB_ZSTD_LIBRARY=<SDK library>` to
+link a real zstd SDK (1.5.5 or newer with the required advanced allocator API).
+The default build remains dependency-free with respect to zstd. Unavailable
+codecs are rejected explicitly. Install/export preserves this optional dependency.
+
+```text
+build/sdb_run --input tests/fixtures/abaqus/forced_tet.inp --output compressed.sdbres --compression zstd --compression-fields U:1,S:none --async-mib 64
+build/sdb_run --read compressed.sdbres --verify
+build/sdb_run --read compressed.sdbres --convert-result decoded.sdbres --compression none
+```
+
+Conversion writes a new result file, retains exact typed values and does not
+create or transfer a restart continuation link. Append adopts the saved policy
+when none is supplied; an explicitly conflicting policy fails before tail repair.
+New format files require a v4-capable reader. Old formats remain readable.
+See [DBF5 handoff](docs/development/db_foundation/DBF5_HANDOFF.md),
+[format specification](docs/development/db_foundation/RESULT_FORMAT_SPEC.md),
+[consumer contracts](docs/development/db_foundation/DBF5_CONSUMERS.md) and
+[migration guide](docs/development/db_foundation/DBF5_MIGRATION.md).
+
 ## Indexed results, asynchronous output and safe continuation
 
 ```text
@@ -190,7 +214,8 @@ Use independent readers for simultaneous queries.
 in-flight work; it excludes persistent model/solver data and the producer's current
 frame. Oversized frames throw, queue saturation blocks, and close reports worker
 errors. Always explicitly close an `AsyncResultWriter` before reporting success.
-Compression is not enabled; float is widened losslessly to double for storage.
+Legacy v1/v2 widen float losslessly to double. Optional typed v4 compression
+preserves all seven scalar lanes exactly; see the DBF5 section below.
 A completed flush is not a guarantee of physical power-loss durability.
 
 `NativeResultStorage::barrier(level)` and `AsyncResultWriter::barrier(level)`

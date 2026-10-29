@@ -1,0 +1,7 @@
+DBF5 consumer benchmark; alternating paired samples; serial FP64
+elements=2000 nodes=12000 samples=21 repeats=200
+identical_force_kernel_raw_median_us=441.8 checked_median_us=441.39
+paired_checked_overhead_percent median=-0.541341387 min=-6.49324715 max=12.560418
+full_cpu_median_us=495.135 reference_median_us=479.02
+full_consumer_difference_percent median=-3.30001828 min=-7.58051653 max=1.86252284
+checksum=-0.495733654; full-consumer difference includes assembly traversal; no universal 1.3% guarantee

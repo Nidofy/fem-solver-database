@@ -1,6 +1,27 @@
 # Resume DB foundation work
 
-## Current DBF4 phase-two continuation
+## Current DBF5 continuation
+
+User authorization extended to phase three and remaining standalone work.
+Implementation base: `a9a203c67d78ed8649e12e05c15214ae2b95ea63`.
+Reviewed runtime source: `7ea0bf312619b019aa6dcd69f03731163e6ec6d4`.
+Status: COMPLETE within the standalone scope; independent scoped review closed,
+Windows serial/OpenMP/MSVC ASan each45/45, Linux focused/sanitizer/package/crash
+and cross-platform reader checks passed. No runtime/test edits after this SHA.
+Read DBF5_HANDOFF, DBF5_VERIFICATION, DBF5_REVIEW_FIXES and the independent
+DBF5 report before continuing. Verify the packet manifest before reusing evidence.
+CompressedIndexed4, checked reference consumers and the copied-snapshot
+migration seam now exist; do not repeat their historical gap lists.
+
+Native integration must start in the current buildable production repository:
+capture actual FNL/FEG/IDARRAY snapshots, compare mirror data and exact equation
+maps, run legacy/new kernels per element family and benchmark real batches.
+Preserve storage-only gates for unsupported physics. This checkout has no native
+SDK/device or physical power-loss certification. ALR1/B02c are not implicitly
+merged or globally accepted; the historical 1.3% view-overhead number is not a
+general contract guarantee. Preserve the original untracked user kit.
+
+## Historical DBF4 phase-two continuation
 
 The user subsequently authorized phase two. Its implementation baseline is DBF3
 `5349ccfd5f1dff49b87fac88ffa43b61dc5f40ed`; final reviewed source is
@@ -13,7 +34,7 @@ failure outcomes, fault campaigns and supported TSan. Compression and production
 adapters remain separate later work. Older phase-one-only authorization notes
 below are historical and superseded for durability by this request.
 
-## Current DBF3 phase-one continuation
+## Historical DBF3 phase-one continuation
 
 Start with DBF3_HANDOFF, DBF3_VERIFICATION, DBF3_REQUIREMENTS and the independent
 `verification/reviews/DBF3/independent-astra/REVIEW.md`. Final reviewed library

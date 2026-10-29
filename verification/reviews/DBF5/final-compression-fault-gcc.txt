@@ -1,0 +1,17 @@
+compressed result write {"frames": 1, "linked": true, "step": 0, "tail": false, "valid_end": 7424}
+compressed result sync-before {"frames": 2, "linked": false, "step": 0, "tail": false, "valid_end": 12607}
+compressed result sync-after {"frames": 2, "linked": false, "step": 0, "tail": false, "valid_end": 12607}
+compressed restart temp {"frames": 2, "linked": false, "step": 0, "tail": false, "valid_end": 12607}
+compressed restart sync-before {"frames": 2, "linked": false, "step": 0, "tail": false, "valid_end": 12607}
+compressed restart sync-after {"frames": 2, "linked": false, "step": 0, "tail": false, "valid_end": 12607}
+compressed restart replace-before {"frames": 2, "linked": false, "step": 0, "tail": false, "valid_end": 12607}
+compressed restart replace-after {"frames": 2, "linked": false, "step": 100, "tail": false, "valid_end": 12607}
+compressed link link-before {"frames": 2, "linked": false, "step": 100, "tail": false, "valid_end": 12607}
+compressed link temp {"frames": 2, "linked": false, "step": 100, "tail": false, "valid_end": 12607}
+compressed link sync-before {"frames": 2, "linked": false, "step": 100, "tail": false, "valid_end": 12607}
+compressed link sync-after {"frames": 2, "linked": false, "step": 100, "tail": false, "valid_end": 12607}
+compressed link replace-before {"frames": 2, "linked": false, "step": 100, "tail": false, "valid_end": 12607}
+compressed link replace-after {"frames": 2, "linked": true, "step": 100, "tail": false, "valid_end": 12607}
+compressed link link-after {"frames": 2, "linked": true, "step": 100, "tail": false, "valid_end": 12607}
+compressed result commit {"frames": 1, "linked": true, "step": 0, "tail": true, "valid_end": 7424}
+DBF5 compressed abrupt process exit / fresh reader campaign PASS: 70 child checks; no power-loss claim

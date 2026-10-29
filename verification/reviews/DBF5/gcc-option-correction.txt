@@ -1,0 +1,5 @@
+Fixed source 7ea0bf3; final provenance inspection found SDB_OPENMP:BOOL=$omp in both caches.
+PowerShell 5 unquoted -DSDB_OPENMP=$omp passed the variable literally. Nonempty $omp enabled OpenMP.
+The first nominal serial run was actually OpenMP: build.ninja -fopenmp; consumer 122612 checks.
+run-gcc.ps1 now quotes the complete option. Rebuild true serial with OFF; preserve superseded logs.
+OpenMP configuration was actually enabled as intended; normalize its option to ON and rerun CTest without library changes.

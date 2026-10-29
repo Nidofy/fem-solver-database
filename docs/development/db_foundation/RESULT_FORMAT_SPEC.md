@@ -85,6 +85,9 @@ CRC protects the exact logical block. Zstd payload is exactly one ordinary frame
 with known content size and checksum; skippable, concatenated, trailing, unknown-
 size or checksum-free frames reject. Raw fallback requires stored=decoded size.
 Decompression has independent raw/stored/workspace limits before allocation.
+Recovery also checks the stored kind-2 record bound before body allocation or
+incomplete-tail classification; an oversized truncated declaration is corruption,
+not permission to truncate the file during repair.
 
 Raw blocks are capped at4MiB; stored capacity5MiB; zstd's custom allocator caps
 workspace at32MiB, including allocation headers. Typed writer batches shrink

@@ -1,0 +1,287 @@
++ :
++ [ 1 = 1 ]
++ run reuse-input-proof python3 - /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final
++ name=reuse-input-proof
++ shift
++ python3 - /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final
++ result=0
++ printf+ tee %s exit=%s\n reuse-input-proof -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+reuse-input-proof exit=0
++ [ 0 -ne 0 ]
++ return 0
++ proof_status=0
++ [ 0 -ne 0 ]
++ tsan_tests=async_results_tests dbf5_compressed_tests
++ [ 1 = 1 ]
++ tsan_tests=dbf5_compressed_tests
++ run tsan-dbf5_compressed_tests-build g++ -std=c++20 -O1 -g -pthread -fsanitize=thread -fno-omit-frame-pointer -DSDB_WITH_ZSTD=1 -Iinclude -I/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include tests/dbf5_compressed_tests.cpp /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5 -o /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/tsan-dbf5_compressed_tests
++ name=tsan-dbf5_compressed_tests-build
++ shift
++ g++ -std=c++20 -O1 -g -pthread -fsanitize=thread -fno-omit-frame-pointer -DSDB_WITH_ZSTD=1 -Iinclude -I/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include tests/dbf5_compressed_tests.cpp /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5 -o /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/tsan-dbf5_compressed_tests
++ result=0
++ printf+ tee %s exit=%s\n tsan-dbf5_compressed_tests-build -a 0
+ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log
+tsan-dbf5_compressed_tests-build exit=0
++ [ 0 -ne 0 ]
++ return 0
++ [ dbf5_compressed_tests = async_results_tests ]
++ run tsan-dbf5_compressed_tests-run setarch x86_64 -R env TSAN_OPTIONS=halt_on_error=1 /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/tsan-dbf5_compressed_tests /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/tsan-compressed-scratch
++ name=tsan-dbf5_compressed_tests-run
++ shift
++ setarch x86_64 -R env TSAN_OPTIONS=halt_on_error=1 /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/tsan-dbf5_compressed_tests /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/tsan-compressed-scratch
++ result=0
++ + printf %s exit=%s\ntee -a tsan-dbf5_compressed_tests-run /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log
+ 0
+tsan-dbf5_compressed_tests-run exit=0
++ [ 0 -ne 0 ]
++ return 0
++ ready=0
++ ready=1
++ [ 1 = 1 ]
++ run asan-dbf5_codec_tests-run /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-dbf5_codec_tests
++ name=asan-dbf5_codec_tests-run
++ shift
++ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-dbf5_codec_tests
++ result=0
++ + printftee %s exit=%s\n -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log asan-dbf5_codec_tests-run
+ 0
+asan-dbf5_codec_tests-run exit=0
++ [ 0 -ne 0 ]
++ return 0
++ ready=0
++ run asan-dbf5_compressed_tests-build g++ -std=c++20 -O1 -g -pthread -fsanitize=address,undefined -fno-omit-frame-pointer -DSDB_WITH_ZSTD=1 -Iinclude -I/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include tests/dbf5_compressed_tests.cpp /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5 -o /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-dbf5_compressed_tests
++ name=asan-dbf5_compressed_tests-build
++ shift
++ g++ -std=c++20 -O1 -g -pthread -fsanitize=address,undefined -fno-omit-frame-pointer -DSDB_WITH_ZSTD=1 -Iinclude -I/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include tests/dbf5_compressed_tests.cpp /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5 -o /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-dbf5_compressed_tests
++ result=0
++ printf+  %s exit=%s\n asan-dbf5_compressed_tests-buildtee -a 0
+ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log
+asan-dbf5_compressed_tests-build exit=0
++ [ 0 -ne 0 ]
++ return 0
++ ready=1
++ [ 1 = 1 ]
++ run asan-dbf5_compressed_tests-run /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-dbf5_compressed_tests /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-compressed-scratch
++ name=asan-dbf5_compressed_tests-run
++ shift
++ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-dbf5_compressed_tests /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-compressed-scratch
++ result=0
++ printf+  %s exit=%s\n asan-dbf5_compressed_tests-runtee -a 0
+ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log
+asan-dbf5_compressed_tests-run exit=0
++ [ 0 -ne 0 ]
++ return 0
++ ready=0
++ run asan-dbf5_consumer_tests-build g++ -std=c++20 -O1 -g -pthread -fsanitize=address,undefined -fno-omit-frame-pointer -DSDB_WITH_ZSTD=1 -Iinclude -I/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include tests/dbf5_consumer_tests.cpp /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5 -o /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-dbf5_consumer_tests
++ name=asan-dbf5_consumer_tests-build
++ shift
++ g++ -std=c++20 -O1 -g -pthread -fsanitize=address,undefined -fno-omit-frame-pointer -DSDB_WITH_ZSTD=1 -Iinclude -I/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include tests/dbf5_consumer_tests.cpp /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5 -o /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-dbf5_consumer_tests
++ result=0
++ printf+ tee %s exit=%s\n asan-dbf5_consumer_tests-build -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+asan-dbf5_consumer_tests-build exit=0
++ [ 0 -ne 0 ]
++ return 0
++ ready=1
++ [ 1 = 1 ]
++ run asan-dbf5_consumer_tests-run /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-dbf5_consumer_tests tests/fixtures/abaqus/forced_tet.inp /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-consumer-scratch
++ name=asan-dbf5_consumer_tests-run
++ shift
++ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-dbf5_consumer_tests tests/fixtures/abaqus/forced_tet.inp /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-consumer-scratch
++ result=0
++ printf+  %s exit=%s\n asan-dbf5_consumer_tests-runtee -a 0
+ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log
+asan-dbf5_consumer_tests-run exit=0
++ [ 0 -ne 0 ]
++ return 0
++ ready=0
++ ready=1
++ [ 1 = 1 ]
++ run asan-dbf5_migration_tests-run /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-dbf5_migration_tests tests/fixtures/dbf5/migration-golden.txt /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-migration-scratch
++ name=asan-dbf5_migration_tests-run
++ shift
++ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-dbf5_migration_tests tests/fixtures/dbf5/migration-golden.txt /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/asan-migration-scratch
++ result=0
++ tee+ printf -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log %s exit=%s\n asan-dbf5_migration_tests-run
+ 0
+asan-dbf5_migration_tests-run exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run cmake-on-configure cmake -S . -B /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/on -DSDB_ZSTD=ON -DSDB_OPENMP=ON -DSDB_ZSTD_INCLUDE_DIR=/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include -DSDB_ZSTD_LIBRARY=/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=-O1
++ name=cmake-on-configure
++ shift
++ cmake -S . -B /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/on -DSDB_ZSTD=ON -DSDB_OPENMP=ON -DSDB_ZSTD_INCLUDE_DIR=/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include -DSDB_ZSTD_LIBRARY=/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=-O1
++ result=0
++ printf+  %s exit=%s\n cmake-on-configuretee -a 0
+ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log
+cmake-on-configure exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run cmake-on-build cmake --build /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/on -j 2 --target sdb_run sdb_dbf5_codec_tests sdb_dbf5_compressed_tests sdb_dbf5_consumer_tests sdb_dbf5_migration_tests sdb_async_results_tests sdb_indexed_results_tests sdb_typed_results_tests sdb_dbf5_fault_driver sdb_dbf5_compression
++ name=cmake-on-build
++ shift
++ cmake --build /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/on -j 2 --target sdb_run sdb_dbf5_codec_tests sdb_dbf5_compressed_tests sdb_dbf5_consumer_tests sdb_dbf5_migration_tests sdb_async_results_tests sdb_indexed_results_tests sdb_typed_results_tests sdb_dbf5_fault_driver sdb_dbf5_compression
++ result=0
++ printf+ tee %s exit=%s\n cmake-on-build -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+cmake-on-build exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run cmake-on-ctest env OMP_NUM_THREADS=4 ctest --test-dir /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/on --output-on-failure -R ^(dbf5_codec|dbf5_compressed|dbf5_consumer|dbf5_migration|dbf5_cli|async_results_contracts|indexed_results_contracts|typed_results_contracts)$
++ name=cmake-on-ctest
++ shift
++ env OMP_NUM_THREADS=4 ctest --test-dir /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/on --output-on-failure -R ^(dbf5_codec|dbf5_compressed|dbf5_consumer|dbf5_migration|dbf5_cli|async_results_contracts|indexed_results_contracts|typed_results_contracts)$
++ result=0
++ printf+ tee %s exit=%s\n cmake-on-ctest -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+cmake-on-ctest exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run cmake-on-install cmake --install /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/on --prefix /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/install-on
++ name=cmake-on-install
++ shift
++ cmake --install /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/on --prefix /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/install-on
++ result=0
++ printf+ tee %s exit=%s\n cmake-on-install -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+cmake-on-install exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run cmake-off-configure cmake -S . -B /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/off -DSDB_ZSTD=OFF -DSDB_OPENMP=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=-O1
++ name=cmake-off-configure
++ shift
++ cmake -S . -B /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/off -DSDB_ZSTD=OFF -DSDB_OPENMP=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=-O1
++ result=0
++ printf+ tee %s exit=%s\n cmake-off-configure -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+cmake-off-configure exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run cmake-off-build cmake --build /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/off -j 2 --target sdb_run sdb_dbf5_codec_tests sdb_dbf5_compressed_tests sdb_dbf5_fault_driver
++ name=cmake-off-build
++ shift
++ cmake --build /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/off -j 2 --target sdb_run sdb_dbf5_codec_tests sdb_dbf5_compressed_tests sdb_dbf5_fault_driver
++ result=0
++ printf+  %s exit=%s\n cmake-off-buildtee -a 0
+ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log
+cmake-off-build exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run cmake-off-ctest ctest --test-dir /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/off --output-on-failure -R ^(dbf5_codec|dbf5_compressed|dbf5_cli)$
++ name=cmake-off-ctest
++ shift
++ ctest --test-dir /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/off --output-on-failure -R ^(dbf5_codec|dbf5_compressed|dbf5_cli)$
++ result=0
++ printf+ tee %s exit=%s\n cmake-off-ctest -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+cmake-off-ctest exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run cmake-off-install cmake --install /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/off --prefix /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/install-off
++ name=cmake-off-install
++ shift
++ cmake --install /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/off --prefix /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/install-off
++ result=0
++ printf+ tee %s exit=%s\n cmake-off-install -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+cmake-off-install exit=0
++ [ 0 -ne 0 ]
++ return 0
++ mkdir -p /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-source
++ cat
++ cat
++ run package-on-configure cmake -S /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-source -B /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-on -DCMAKE_PREFIX_PATH=/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/install-on -DSDB_ZSTD_INCLUDE_DIR=/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include -DSDB_ZSTD_LIBRARY=/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5
++ name=package-on-configure
++ shift
++ cmake -S /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-source -B /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-on -DCMAKE_PREFIX_PATH=/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/install-on -DSDB_ZSTD_INCLUDE_DIR=/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include -DSDB_ZSTD_LIBRARY=/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5
++ result=0
++ printf+ tee %s exit=%s\n package-on-configure -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+package-on-configure exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run package-on-build cmake --build /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-on -j 2
++ name=package-on-build
++ shift
++ cmake --build /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-on -j 2
++ result=0
++ printf+ tee %s exit=%s\n package-on-build -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+package-on-build exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run package-on-run /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-on/smoke
++ name=package-on-run
++ shift
++ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-on/smoke
++ result=0
++ + teeprintf %s exit=%s\n -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log package-on-run 0
+
+package-on-run exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run package-off-configure cmake -S /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-source -B /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-off -DCMAKE_PREFIX_PATH=/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/install-off -DSDB_ZSTD_INCLUDE_DIR=/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include -DSDB_ZSTD_LIBRARY=/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5
++ name=package-off-configure
++ shift
++ cmake -S /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-source -B /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-off -DCMAKE_PREFIX_PATH=/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/install-off -DSDB_ZSTD_INCLUDE_DIR=/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd-1.5.5/include -DSDB_ZSTD_LIBRARY=/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5
++ result=0
++ printf+ tee %s exit=%s\n package-off-configure -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+package-off-configure exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run package-off-build cmake --build /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-off -j 2
++ name=package-off-build
++ shift
++ cmake --build /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-off -j 2
++ result=0
++ + teeprintf %s exit=%s\n -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log package-off-build 0
+
+package-off-build exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run package-off-run /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-off/smoke
++ name=package-off-run
++ shift
++ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/consumer-off/smoke
++ result=0
++ tee+  -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.logprintf %s exit=%s\n
+ package-off-run 0
+package-off-run exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run compressed-fault-campaign python3 tests/dbf5_fault_campaign.py /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/on/sdb_dbf5_fault_driver tests/fixtures/abaqus/forced_tet.inp /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/fault-scratch /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/off/sdb_dbf5_fault_driver
++ name=compressed-fault-campaign
++ shift
++ python3 tests/dbf5_fault_campaign.py /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/on/sdb_dbf5_fault_driver tests/fixtures/abaqus/forced_tet.inp /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/fault-scratch /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/off/sdb_dbf5_fault_driver
++ result=0
++ printf+ tee %s exit=%s\n compressed-fault-campaign -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+compressed-fault-campaign exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run compression-benchmark /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/on/sdb_dbf5_compression /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/compression-benchmark 10000
++ name=compression-benchmark
++ shift
++ /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/on/sdb_dbf5_compression /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/compression-benchmark 10000
++ result=0
++ printf+ tee %s exit=%s\n compression-benchmark -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+compression-benchmark exit=0
++ [ 0 -ne 0 ]
++ return 0
++ run compressed-wire-oracle python3 tests/dbf5_wire_oracle.py /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/compression-benchmark /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5
++ name=compressed-wire-oracle
++ shift
++ python3 tests/dbf5_wire_oracle.py /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/compression-benchmark /usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5
++ result=0
++ printf+ tee %s exit=%s\n compressed-wire-oracle -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+compressed-wire-oracle exit=0
++ [ 0 -ne 0 ]
++ return 0
++ + teeprintf Linux focused completion: failures=%s (see every raw log and exit status)\n -a /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/verification/reviews/DBF5/linux-final-status.log 0
+
+Linux focused completion: failures=0 (see every raw log and exit status)
++ test 0 -eq 0

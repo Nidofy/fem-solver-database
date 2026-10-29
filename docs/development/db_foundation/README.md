@@ -1,6 +1,15 @@
 # Database foundation implementation
 
-## Current continuation: DBF2
+## Current continuation: DBF5
+
+The authorized standalone roadmap now includes DBF3 D1–D7 closure, DBF4
+durability and DBF5 compression, consumer contracts/reference parity and migration
+toolkit. Start with [DBF5_HANDOFF](DBF5_HANDOFF.md),
+[DBF5_VERIFICATION](DBF5_VERIFICATION.md), [RESUME](RESUME.md) and the current
+[capability matrix](CAPABILITY_MATRIX.md). Historical gap lists below retain
+their original scope. Native production adaptation remains an environment gate.
+
+## Historical continuation: DBF2
 
 The DBF1 independent Astra/high review passed within its declared scope; its report
 is retained under `verification/reviews/DBF1/independent-astra/report.md` and committed

@@ -1,0 +1,13 @@
+tsan-async_results_tests-build exit=0
+tsan-async_results_tests-run exit=0
+tsan-dbf5_compressed_tests-build exit=0
+tsan-dbf5_compressed_tests-run exit=0
+asan-dbf5_codec_tests-build exit=0
+asan-dbf5_codec_tests-run exit=0
+asan-dbf5_compressed_tests-build exit=0
+asan-dbf5_compressed_tests-run exit=0
+asan-dbf5_consumer_tests-build exit=0
+asan-dbf5_consumer_tests-run exit=0
+asan-dbf5_migration_tests-build exit=0
+asan-dbf5_migration_tests-run exit=0
+cmake-on-configure exit=0

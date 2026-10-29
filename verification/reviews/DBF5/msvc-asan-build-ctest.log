@@ -1,0 +1,425 @@
+**********************************************************************
+** Visual Studio 2026 Developer Command Prompt v18.9.2
+** Copyright (c) 2026 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+-- Performing Test SDB_ZSTD_ADVANCED_API
+-- Performing Test SDB_ZSTD_ADVANCED_API - Success
+-- Configuring done (1.5s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-asan
+[1/1] Cleaning all built files...
+Cleaning... 76 files.
+[1/76] Building CXX object CMakeFiles\sdb_general_contact_demo.dir\examples\general_contact.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[2/76] Building CXX object CMakeFiles\sdb_general_contact_tests.dir\tests\general_contact_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[3/76] Building CXX object CMakeFiles\sdb_contact_geometry_tests.dir\tests\general_contact_geometry_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\general_contact\geometry.hpp(133): warning C4244: 'argument': conversion from 'unsigned int' to 'T', possible loss of data
+        with
+        [
+            T=float
+        ]
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\general_contact\geometry.hpp(133): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\general_contact_geometry_tests.cpp(515): note: see reference to function template instantiation 'sdb::general_contact::GapDerivatives<float> sdb::general_contact::differentiate_gap<float>(const sdb::general_contact::GeometryDB<float> &,sdb::Index,const sdb::general_contact::Facet &)' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\general_contact\geometry.hpp(250): note: see reference to function template instantiation 'sdb::general_contact::Projection<sdb::general_contact::differentiate_gap::D> sdb::general_contact::project<sdb::general_contact::differentiate_gap::D>(const std::array<sdb::general_contact::differentiate_gap::D,3> &,const std::array<std::array<sdb::general_contact::differentiate_gap::D,3>,4> &,unsigned int)' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\general_contact\geometry.hpp(134): warning C4244: 'argument': conversion from 'unsigned int' to 'T', possible loss of data
+        with
+        [
+            T=float
+        ]
+[4/76] Building CXX object CMakeFiles\sdb_contact_domain_demo.dir\examples\general_contact_domain.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[5/76] Building CXX object CMakeFiles\sdb_run.dir\examples\sdb_run.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[6/76] Building CXX object CMakeFiles\sdb_storage_tests.dir\tests\storage_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[7/76] Building CXX object CMakeFiles\sdb_lifecycle_tests.dir\tests\lifecycle_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\lifecycle_tests.cpp(586): warning C4456: declaration of 'multi' hides previous local declaration
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\lifecycle_tests.cpp(417): note: see declaration of 'multi'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\lifecycle_tests.cpp(594): warning C4456: declaration of 'u1' hides previous local declaration
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\lifecycle_tests.cpp(428): note: see declaration of 'u1'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\lifecycle_tests.cpp(594): warning C4456: declaration of 'v1' hides previous local declaration
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\lifecycle_tests.cpp(428): note: see declaration of 'v1'
+[8/76] Building CXX object CMakeFiles\sdb_foundation_tests.dir\tests\foundation_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[9/76] Building CXX object CMakeFiles\sdb_foundation_boundary_tests.dir\tests\foundation_boundary_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[10/76] Building CXX object CMakeFiles\sdb_model_foundation_tests.dir\tests\model_foundation_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[11/76] Building CXX object CMakeFiles\sdb_foundation_integration_tests.dir\tests\foundation_integration_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(273): warning C4456: declaration of 'found' hides previous local declaration
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(260): note: see declaration of 'found'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(273): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\foundation_integration_tests.cpp(141): note: see reference to function template instantiation 'void write_fixture<float>(const std::filesystem::path &,const std::filesystem::path &)' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\foundation_integration_tests.cpp(62): note: see reference to function template instantiation 'sdb::lifecycle::ResultFrame sdb::lifecycle::ResultPublisher::snapshot_history<float>(const sdb::lifecycle::CompiledModel<float> &,const sdb::StateDB<float> &,sdb::lifecycle::FrameInfo,std::vector<std::string,std::allocator<std::string>>,uint64_t,uint64_t)' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(342): note: see reference to function template instantiation 'void sdb::lifecycle::ResultPublisher::append_history<float>(sdb::lifecycle::ResultFrame &,const sdb::lifecycle::CompiledModel<float> &,const sdb::StateDB<float> &,std::vector<std::string,std::allocator<std::string>>,uint64_t)' being compiled
+[12/76] Building CXX object CMakeFiles\sdb_typed_budget_tests.dir\tests\typed_budget_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[13/76] Building CXX object CMakeFiles\sdb_dbf3_contract_tests.dir\tests\dbf3_contract_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb/contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb/contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb/contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb/contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb/contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf3_contract_tests.cpp(25): warning C4305: 'initializing': truncation from 'double' to '_Ty'
+        with
+        [
+            _Ty=float
+        ]
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf3_contract_tests.cpp(25): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf3_contract_tests.cpp(85): note: see reference to function template instantiation 'void topology_model<float>(sdb::Topology)' being compiled
+[14/76] Building CXX object CMakeFiles\sdb_typed_results_tests.dir\tests\typed_results_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(273): warning C4456: declaration of 'found' hides previous local declaration
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(260): note: see declaration of 'found'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(273): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\typed_results_tests.cpp(239): note: see reference to function template instantiation 'void history_snapshot<float>(const std::filesystem::path &)' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\typed_results_tests.cpp(35): note: see reference to function template instantiation 'void sdb::lifecycle::ResultPublisher::append_history<float>(sdb::lifecycle::ResultFrame &,const sdb::lifecycle::CompiledModel<float> &,const sdb::StateDB<float> &,std::vector<std::string,std::allocator<std::string>>,uint64_t)' being compiled
+[15/76] Building CXX object CMakeFiles\sdb_typed_results_scaling.dir\tests\typed_results_scaling.cpp.obj
+[16/76] Building CXX object CMakeFiles\sdb_dbf3_state_tests.dir\tests\dbf3_state_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\include\utility(274): warning C4244: 'initializing': conversion from '_Ty' to '_Ty1', possible loss of data
+        with
+        [
+            _Ty=int
+        ]
+        and
+        [
+            _Ty1=float
+        ]
+C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\include\utility(274): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf3_state_tests.cpp(214): note: see reference to function template instantiation 'void rotation_restore<float>(const std::filesystem::path &,const std::filesystem::path &)' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf3_state_tests.cpp(164): note: see reference to function template instantiation 'std::pair<float,float>::pair<int,float,0>(_Other1 &&,_Other2 &&) noexcept' being compiled
+        with
+        [
+            _Other1=int,
+            _Other2=float
+        ]
+[17/76] Building CXX object CMakeFiles\sdb_dbf3_model_tests.dir\tests\dbf3_model_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[18/76] Building CXX object CMakeFiles\sdb_dbf4_atomic.dir\tests\dbf4_atomic.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[19/76] Building CXX object CMakeFiles\sdb_dbf3_result_tests.dir\tests\dbf3_result_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results\results.hpp(273): warning C4456: declaration of 'found' hides previous local declaration
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results\results.hpp(260): note: see declaration of 'found'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results\results.hpp(273): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf3_result_tests.cpp(65): note: see reference to function template instantiation 'sdb::lifecycle::ResultFrame sdb::lifecycle::ResultPublisher::snapshot_history<double>(const sdb::lifecycle::CompiledModel<double> &,const sdb::StateDB<double> &,sdb::lifecycle::FrameInfo,std::vector<std::string,std::allocator<std::string>>,uint64_t,uint64_t)' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results\results.hpp(342): note: see reference to function template instantiation 'void sdb::lifecycle::ResultPublisher::append_history<double>(sdb::lifecycle::ResultFrame &,const sdb::lifecycle::CompiledModel<double> &,const sdb::StateDB<double> &,std::vector<std::string,std::allocator<std::string>>,uint64_t)' being compiled
+[20/76] Building CXX object CMakeFiles\sdb_dbf4_result_durability_tests.dir\tests\dbf4_result_durability_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[21/76] Building CXX object CMakeFiles\sdb_dbf3_restore_fault_tests.dir\tests\dbf3_restore_fault_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[22/76] Building CXX object CMakeFiles\sdb_dbf5_codec_tests.dir\tests\dbf5_codec_tests.cpp.obj
+[23/76] Building CXX object CMakeFiles\sdb_dbf4_fault_driver.dir\tests\dbf4_fault_driver.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[24/76] Building CXX object CMakeFiles\sdb_dbf5_compressed_tests.dir\tests\dbf5_compressed_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[25/76] Building CXX object CMakeFiles\sdb_dbf4_link_tests.dir\tests\dbf4_link_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[26/76] Building CXX object CMakeFiles\sdb_dbf5_migration_tests.dir\tests\dbf5_migration_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[27/76] Building CXX object CMakeFiles\sdb_dbf5_consumer.dir\benchmarks\dbf5_consumer.cpp.obj
+[28/76] Building CXX object CMakeFiles\sdb_dbf5_consumer_tests.dir\tests\dbf5_consumer_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf5_consumer_tests.cpp(24): warning C4244: 'initializing': conversion from 'const int' to 'float', possible loss of data
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf5_consumer_tests.cpp(24): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf5_consumer_tests.cpp(206): note: see reference to function template instantiation 'sdb::MeshDB<float> mixed_model<float>(bool)' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf5_consumer_tests.cpp(24): warning C4244: 'initializing': conversion from 'const int' to 'float', possible loss of data
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf5_consumer_tests.cpp(24): warning C4244: 'initializing': conversion from 'const int' to 'float', possible loss of data
+[29/76] Building CXX object CMakeFiles\sdb_dbf5_compression.dir\benchmarks\dbf5_compression.cpp.obj
+[30/76] Building CXX object CMakeFiles\sdb_dbf5_fault_driver.dir\tests\dbf5_fault_driver.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[31/76] Building CXX object CMakeFiles\sdb_hex8_tests.dir\tests\hex8_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[32/76] Building CXX object CMakeFiles\sdb_indexed_results_tests.dir\tests\indexed_results_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[33/76] Building CXX object CMakeFiles\sdb_async_results_tests.dir\tests\async_results_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[34/76] Building CXX object CMakeFiles\sdb_tests.dir\tests\tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<uint64_t>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\tests.cpp(182): note: see reference to class template instantiation 'sdb::CandidateBuffer<uint64_t>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<uint64_t>': structure was padded due to alignment specifier
+[35/76] Building CXX object CMakeFiles\explicit_tet.dir\examples\explicit_tet.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[36/76] Building CXX object CMakeFiles\sdb_benchmark.dir\benchmarks\benchmark.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb/contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb/contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb/contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb/contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb/contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[37/76] Linking CXX executable sdb_general_contact_tests.exe
+[38/76] Linking CXX executable sdb_general_contact_demo.exe
+[39/76] Building CXX object CMakeFiles\sdb_lifecycle_benchmark.dir\benchmarks\lifecycle_benchmark.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\benchmarks\lifecycle_benchmark.cpp(1): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\benchmarks\lifecycle_benchmark.cpp(125): warning C4456: declaration of 'p' hides previous local declaration
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\benchmarks\lifecycle_benchmark.cpp(52): note: see declaration of 'p'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\benchmarks\lifecycle_benchmark.cpp(151): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+[40/76] Linking CXX executable sdb_contact_geometry_tests.exe
+[41/76] Linking CXX executable sdb_contact_domain_demo.exe
+[42/76] Linking CXX executable sdb_run.exe
+[43/76] Linking CXX executable sdb_lifecycle_tests.exe
+[44/76] Linking CXX executable sdb_foundation_tests.exe
+[45/76] Linking CXX executable sdb_storage_tests.exe
+[46/76] Linking CXX executable sdb_foundation_boundary_tests.exe
+[47/76] Linking CXX executable sdb_model_foundation_tests.exe
+[48/76] Linking CXX executable sdb_typed_results_tests.exe
+[49/76] Linking CXX executable sdb_typed_budget_tests.exe
+[50/76] Linking CXX executable sdb_foundation_integration_tests.exe
+[51/76] Linking CXX executable sdb_typed_results_scaling.exe
+[52/76] Linking CXX executable sdb_dbf3_contract_tests.exe
+[53/76] Linking CXX executable sdb_dbf3_model_tests.exe
+[54/76] Linking CXX executable sdb_dbf3_state_tests.exe
+[55/76] Linking CXX executable sdb_dbf3_result_tests.exe
+[56/76] Linking CXX executable sdb_dbf3_restore_fault_tests.exe
+[57/76] Linking CXX executable sdb_dbf4_atomic.exe
+[58/76] Linking CXX executable sdb_dbf4_result_durability_tests.exe
+[59/76] Linking CXX executable sdb_dbf4_fault_driver.exe
+[60/76] Linking CXX executable sdb_dbf4_link_tests.exe
+[61/76] Building CXX object CMakeFiles\sdb_lifecycle_stages.dir\benchmarks\lifecycle_stages.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[62/76] Linking CXX executable sdb_dbf5_codec_tests.exe
+[63/76] Linking CXX executable sdb_dbf5_compressed_tests.exe
+[64/76] Linking CXX executable sdb_dbf5_migration_tests.exe
+[65/76] Linking CXX executable sdb_dbf5_consumer_tests.exe
+[66/76] Linking CXX executable sdb_dbf5_consumer.exe
+[67/76] Linking CXX executable sdb_dbf5_fault_driver.exe
+[68/76] Linking CXX executable sdb_dbf5_compression.exe
+[69/76] Linking CXX executable sdb_hex8_tests.exe
+[70/76] Linking CXX executable sdb_indexed_results_tests.exe
+[71/76] Linking CXX executable sdb_async_results_tests.exe
+[72/76] Linking CXX executable sdb_lifecycle_stages.exe
+[73/76] Linking CXX executable sdb_tests.exe
+[74/76] Linking CXX executable sdb_lifecycle_benchmark.exe
+[75/76] Linking CXX executable explicit_tet.exe
+[76/76] Linking CXX executable sdb_benchmark.exe
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-asan
+      Start  1: general_contact_contracts
+ 1/45 Test  #1: general_contact_contracts ...............   Passed    0.54 sec
+      Start  2: general_contact_demo
+ 2/45 Test  #2: general_contact_demo ....................   Passed    0.77 sec
+      Start  3: general_contact_geometry
+ 3/45 Test  #3: general_contact_geometry ................   Passed    1.31 sec
+      Start  4: general_contact_domain_demo
+ 4/45 Test  #4: general_contact_domain_demo .............   Passed    1.90 sec
+      Start  5: lifecycle_contracts
+ 5/45 Test  #5: lifecycle_contracts .....................   Passed   20.63 sec
+      Start  6: foundation_contracts
+ 6/45 Test  #6: foundation_contracts ....................   Passed    0.31 sec
+      Start  7: foundation_process_reader
+ 7/45 Test  #7: foundation_process_reader ...............   Passed    0.07 sec
+      Start  8: storage_contracts
+ 8/45 Test  #8: storage_contracts .......................   Passed    0.18 sec
+      Start  9: dbf3_contracts
+ 9/45 Test  #9: dbf3_contracts ..........................   Passed    0.10 sec
+      Start 10: dbf4_atomic
+10/45 Test #10: dbf4_atomic .............................   Passed    0.14 sec
+      Start 11: dbf4_result_durability
+11/45 Test #11: dbf4_result_durability ..................   Passed    0.39 sec
+      Start 12: dbf4_link_publication
+12/45 Test #12: dbf4_link_publication ...................   Passed    0.37 sec
+      Start 13: dbf5_codec
+13/45 Test #13: dbf5_codec ..............................   Passed    0.66 sec
+      Start 14: dbf5_compressed
+14/45 Test #14: dbf5_compressed .........................   Passed    2.73 sec
+      Start 15: dbf5_consumer
+15/45 Test #15: dbf5_consumer ...........................   Passed    0.15 sec
+      Start 16: dbf5_migration
+16/45 Test #16: dbf5_migration ..........................   Passed    0.08 sec
+      Start 17: dbf3_restore_faults
+17/45 Test #17: dbf3_restore_faults .....................   Passed    0.27 sec
+      Start 18: dbf3_model
+18/45 Test #18: dbf3_model ..............................   Passed    0.34 sec
+      Start 19: dbf3_model_reader
+19/45 Test #19: dbf3_model_reader .......................   Passed    0.04 sec
+      Start 20: dbf3_state
+20/45 Test #20: dbf3_state ..............................   Passed    0.25 sec
+      Start 21: dbf3_state_reader
+21/45 Test #21: dbf3_state_reader .......................   Passed    0.06 sec
+      Start 22: dbf3_result
+22/45 Test #22: dbf3_result .............................   Passed    0.15 sec
+      Start 23: dbf3_result_reader
+23/45 Test #23: dbf3_result_reader ......................   Passed    0.05 sec
+      Start 24: foundation_boundaries
+24/45 Test #24: foundation_boundaries ...................   Passed    0.08 sec
+      Start 25: typed_admission_budget
+25/45 Test #25: typed_admission_budget ..................   Passed    0.56 sec
+      Start 26: model_foundation_contracts
+26/45 Test #26: model_foundation_contracts ..............   Passed    0.32 sec
+      Start 27: model_foundation_process_reader
+27/45 Test #27: model_foundation_process_reader .........   Passed    0.06 sec
+      Start 28: typed_results_contracts
+28/45 Test #28: typed_results_contracts .................   Passed    0.48 sec
+      Start 29: foundation_integration
+29/45 Test #29: foundation_integration ..................   Passed    0.26 sec
+      Start 30: foundation_integration_process_reader
+30/45 Test #30: foundation_integration_process_reader ...   Passed    0.07 sec
+      Start 31: hex8_contracts
+31/45 Test #31: hex8_contracts ..........................   Passed    0.79 sec
+      Start 32: indexed_results_contracts
+32/45 Test #32: indexed_results_contracts ...............   Passed   61.89 sec
+      Start 33: async_results_contracts
+33/45 Test #33: async_results_contracts .................   Passed    0.16 sec
+      Start 34: dbf5_cli
+34/45 Test #34: dbf5_cli ................................   Passed    1.72 sec
+      Start 35: dbf5_fault_campaign
+35/45 Test #35: dbf5_fault_campaign .....................   Passed    4.16 sec
+      Start 36: dbf4_cli_durability
+36/45 Test #36: dbf4_cli_durability .....................   Passed    0.69 sec
+      Start 37: dbf4_fault_campaign
+37/45 Test #37: dbf4_fault_campaign .....................   Passed   11.24 sec
+      Start 38: dbf3_wire_oracle
+38/45 Test #38: dbf3_wire_oracle ........................   Passed    0.09 sec
+      Start 39: dbf3_legacy_golden
+39/45 Test #39: dbf3_legacy_golden ......................   Passed    0.32 sec
+      Start 40: typed_process_pipeline
+40/45 Test #40: typed_process_pipeline ..................   Passed    0.76 sec
+      Start 41: foundation3_legacy_golden
+41/45 Test #41: foundation3_legacy_golden ...............   Passed    0.17 sec
+      Start 42: foundation_legacy_golden
+42/45 Test #42: foundation_legacy_golden ................   Passed    0.20 sec
+      Start 43: lifecycle_process_pipeline
+43/45 Test #43: lifecycle_process_pipeline ..............   Passed    7.76 sec
+      Start 44: database_contracts
+44/45 Test #44: database_contracts ......................   Passed    0.12 sec
+      Start 45: explicit_numerics
+45/45 Test #45: explicit_numerics .......................   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 45
+
+Total Test time (real) = 124.38 sec

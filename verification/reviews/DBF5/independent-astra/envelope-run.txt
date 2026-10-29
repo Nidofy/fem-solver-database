@@ -1,0 +1,7 @@
+version PASS sdb_run: unknown compression envelope version
+codec PASS sdb_run: unknown block codec
+reserved PASS sdb_run: unknown compression feature flags
+raw-cap PASS sdb_run: compressed block declared size outside limits
+stored-span PASS sdb_run: compressed block declared size outside limits
+raw-crc PASS sdb_run: compression block raw CRC mismatch
+independent repaired-outer-CRC envelope campaign: 6 PASS

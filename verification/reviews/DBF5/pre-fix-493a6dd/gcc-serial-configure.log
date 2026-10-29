@@ -1,0 +1,6 @@
+-- Found SDBZstd: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-deps/zstd/include
+-- Performing Test SDB_ZSTD_ADVANCED_API
+-- Performing Test SDB_ZSTD_ADVANCED_API - Success
+-- Configuring done (0.6s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-serial

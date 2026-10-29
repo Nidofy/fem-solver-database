@@ -1,0 +1,33 @@
+{
+  "review_source": "7ea0bf312619b019aa6dcd69f03731163e6ec6d4",
+  "canonical_source_unchanged": true,
+  "configurations": {
+    "build-b01": {
+      "SDB_OPENMP": "ON",
+      "SDB_ZSTD": "ON",
+      "SDB_SANITIZE": "OFF",
+      "CMAKE_CXX_COMPILER": "D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/bin/g++.exe",
+      "CMAKE_BUILD_TYPE": "Release",
+      "consumer_checks": 122612,
+      "sdb_run_sha256": "471f1519dd7383a7d0fe596527a52f4deb9fda0ff6cb3d4ab41e76785d20938a"
+    },
+    "build-b01-serial": {
+      "SDB_OPENMP": "OFF",
+      "SDB_ZSTD": "ON",
+      "SDB_SANITIZE": "OFF",
+      "CMAKE_CXX_COMPILER": "D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/bin/g++.exe",
+      "CMAKE_BUILD_TYPE": "Release",
+      "consumer_checks": 81803,
+      "sdb_run_sha256": "5e787a9547355d014a4a36f80908511208f40e37dec7c69fe2ac6bec4bd26047"
+    },
+    "build-dbf5-asan": {
+      "SDB_OPENMP": "OFF",
+      "SDB_ZSTD": "ON",
+      "SDB_SANITIZE": "ON",
+      "CMAKE_CXX_COMPILER": "C:/Program Files/Microsoft Visual Studio/18/Professional/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe",
+      "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+      "consumer_checks": 81803,
+      "sdb_run_sha256": "c0617e11e52f6086a0588b950ce82c6c6a263b255c6c817a586b4444ea5c8ccd"
+    }
+  }
+}

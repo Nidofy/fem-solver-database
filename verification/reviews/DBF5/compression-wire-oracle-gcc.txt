@@ -1,0 +1,1 @@
+{"cases": [{"blocks": 840, "case": "repeated", "raw_bytes": 21624480, "zstd_blocks": 720}, {"blocks": 840, "case": "random", "raw_bytes": 21624480, "zstd_blocks": 720}], "result": "PASS", "zstd": "1.5.7"}

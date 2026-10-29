@@ -1,5 +1,22 @@
 # Actual capability matrix
 
+## DBF5 current additions
+
+| Capability | API / evidence | Boundary |
+|---|---|---|
+| Optional real zstd | io/compression.hpp; SDK feature test and installed package | None/Zstd; bounded custom allocator; no substitute codec |
+| Compressed typed results | CompressedIndexed4; persisted per-field policy; independent wire oracle | seven exact lanes, CRC/index/commit semantics retained; requires new reader |
+| Bounded recovery/read/admission | stored/raw/workspace limits and async reserve | recovery rejects oversized complete/truncated blocks before allocation/repair; persistent model/frame costs remain separate |
+| CLI verification/conversion | --verify, --convert-result, --compression | full logical scan or new-file conversion; no transferred restart authorization |
+| Consumer view v0 | consumer_views.hpp, existing TET4/HEX8 force kernels | exact tested CPU trajectories and lifetime/alias guards; private scratch; no production call-site replacement |
+| Measured view cost | paired small/large batches | workload-dependent; no universal <=1.3% guarantee |
+| Migration toolkit | migration/preprocessed.hpp + golden + DBF5_MIGRATION | copied FNL/FEG/IDARRAY snapshot, exact equations, scratch/reducer; native Felem ABI not compiled |
+
+DBF5_HANDOFF and DBF5_VERIFICATION contain final review and execution evidence.
+This supersedes historical statements that compression and consumer tooling are
+absent. Native integration, CUDA, full INP, Index64, units algebra and new physics
+remain separate gates, not implied by D1–D7 storage completion.
+
 ## DBF4 phase-two additions
 
 | Capability | API / evidence | Boundary |
@@ -14,7 +31,7 @@ Final acceptance status and source identities are recorded in DBF4_HANDOFF and
 DBF4_VERIFICATION. The historical DBF3 matrix below remains its original bounded
 acceptance record; its future-durability statement is superseded by DBF4.
 
-Current continuation: **DBF3 phase one**, source `c53ab3e`. Its table below
+Historical baseline: **DBF3 phase one**, source `c53ab3e`. Its table below
 supersedes the corresponding DBF2 limitations; historical tables retain their
 original scope. See DBF3_REQUIREMENTS, DBF3_CONTRACTS and DBF3_VERIFICATION for
 clause evidence and the exact final verification matrix. Independent Astra/high

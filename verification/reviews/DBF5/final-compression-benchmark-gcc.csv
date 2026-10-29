@@ -1,0 +1,5 @@
+case,format,rows,fields,frames,file_bytes,write_ms,open_ms,query_ms,query_read_bytes,raw_block_bytes,stored_block_bytes,compressed_blocks,decoded_value_bytes,frame_admission_bytes,codec_admission_reserve,reader_budget,source_unchanged,returned_rows
+repeated,native,10000,7,3,22811431,408.982,9.857,0.79,94026,0,0,0,2048,41597307,0,268435456,1,1
+repeated,compressed,10000,7,3,4590195,305.771,9.591,0.784,67553,27052,555,1,2048,41597307,44041216,268435456,1,1
+random,native,10000,7,3,22811431,406.385,9.704,0.785,94026,0,0,0,2048,41597307,0,268435456,1,1
+random,compressed,10000,7,3,5481867,318.796,9.261,0.867,69473,27052,2475,1,2048,41597307,44041216,268435456,1,1

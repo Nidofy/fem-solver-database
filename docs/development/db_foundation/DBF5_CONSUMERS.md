@@ -115,15 +115,15 @@ are covered. Pass fixture/scratch paths to include typed publication and restart
 
 ```text
 sdb_dbf5_consumer_tests tests/fixtures/abaqus/forced_tet.inp <scratch-dir>
-sdb_dbf5_consumer_benchmark 2000 200 21
-sdb_dbf5_consumer_benchmark 2 20000 21
+sdb_dbf5_consumer 2000 200 21
+sdb_dbf5_consumer 2 20000 21
 ```
 
 Local GCC15.2 `-std=c++20 -O0 -Wa,-mbig-obj` serial compilation and the final
 suite passed **81,803 checks**. GCC15.2 `-O2 -fopenmp`, four threads, passed
 **122,612 checks** including three OpenMP-baseline trajectories. Both include
 publication/restart integration and bitwise trajectory comparisons. Raw summaries
-are `verification/dbf5_consumer_serial.txt` and `dbf5_consumer_openmp.txt`.
+are `verification/reviews/DBF5/dbf5_consumer_serial.txt` and `dbf5_consumer_openmp.txt`.
 Final integrated serial/OpenMP/MSVC and review evidence is recorded by the DBF5
 handoff; do not infer a production or CUDA pass from these standalone tests.
 
@@ -146,7 +146,7 @@ A GCC15.2 `-O2 -DNDEBUG`, serial FP64 run on this Windows host measured:
 | 2,000 mixed elements, 12,000 nodes | 21 x 200 | 441.800 / 441.390 | -0.541% (-6.493%..+12.560%) | 495.135 / 479.020 |
 | 2 mixed elements, 12 nodes | 21 x 20,000 | 0.3816 / 0.5196 | +35.841% (+0.097%..+56.530%) | 0.44325 / 0.78735 |
 
-Raw output is in `verification/dbf5_consumer_benchmark*.txt`. This host was not
+Raw output is in `verification/reviews/DBF5/dbf5_consumer_benchmark*.txt`. This host was not
 reserved or frequency-pinned; distributions include scheduling noise. The tiny
 batch exposes the fixed weak-lifetime validation cost. The earlier <=1.3% claim
 is **not** a general contract guarantee: the large-batch median is within

@@ -1,0 +1,3 @@
+7ea0bf312619b019aa6dcd69f03731163e6ec6d4
+DBF5 compressed integration: 60 checks PASS zstd=0
+DBF5 CLI: 4 checks PASS zstd=0

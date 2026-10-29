@@ -1,0 +1,12 @@
+Internal ctest changing into directory: /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/off
+Test project /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf5-linux-final/off
+    Start 13: dbf5_codec
+1/3 Test #13: dbf5_codec .......................   Passed    0.01 sec
+    Start 14: dbf5_compressed
+2/3 Test #14: dbf5_compressed ..................   Passed    1.87 sec
+    Start 34: dbf5_cli
+3/3 Test #34: dbf5_cli .........................   Passed    0.15 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =   2.06 sec

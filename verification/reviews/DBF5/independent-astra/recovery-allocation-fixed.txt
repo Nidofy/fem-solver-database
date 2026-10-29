@@ -1,0 +1,2 @@
+recover_accepted=0 largest_new=1576 stored_cap=5242904 error=compressed recovery block exceeds stored limit
+defect_detector_exit=1 (1 means the original defect is no longer reproduced)
