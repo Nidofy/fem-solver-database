@@ -1,6 +1,7 @@
 #pragma once
 #include "contact.hpp"
 #include "state.hpp"
+#include "io/durability.hpp"
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -191,6 +192,8 @@ inline FaceId face(Reader &r) {
     return f;
 }
 template <class F> void atomic_stream_write(const std::filesystem::path &path, F fn) {
+    durability::PublicationError failure;
+    bool published = false, replace_attempted = false;
     static std::atomic<std::uint64_t> serial{0};
     auto temp = path;
     temp += ".tmp." + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "." +
@@ -200,51 +203,38 @@ template <class F> void atomic_stream_write(const std::filesystem::path &path, F
         if (!out)
             throw std::runtime_error("cannot create native temporary file");
         fn(out);
+        durability::fault(durability::FaultPoint::AfterTempWrite, path);
         out.flush();
         if (!out)
             throw std::runtime_error("native flush failed");
         out.close();
         if (!out)
             throw std::runtime_error("native close failed");
+        durability::sync_file(temp);
+        durability::fault(durability::FaultPoint::BeforeReplace, path);
+        replace_attempted = true;
 #ifdef _WIN32
-        auto handle = CreateFileW(temp.c_str(), GENERIC_WRITE, 0, nullptr, OPEN_EXISTING,
-                                  FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (handle == INVALID_HANDLE_VALUE)
-            throw std::runtime_error("native sync open failed");
-        bool synced = FlushFileBuffers(handle) != 0;
-        CloseHandle(handle);
-        if (!synced)
-            throw std::runtime_error("native sync failed");
         if (!MoveFileExW(temp.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
             throw std::runtime_error("native atomic replace failed");
 #else
-        int fd = ::open(temp.c_str(), O_RDONLY);
-        if (fd < 0)
-            throw std::runtime_error("native sync open failed");
-        int rc = fsync(fd);
-        ::close(fd);
-        if (rc)
-            throw std::runtime_error("native sync failed");
         std::filesystem::rename(temp, path);
-        auto parent = path.parent_path();
-        if (parent.empty())
-            parent = ".";
-        fd = ::open(parent.c_str(), O_RDONLY | O_DIRECTORY);
-        if (fd < 0)
-            throw std::runtime_error("native directory sync open failed");
-        rc = fsync(fd);
-        ::close(fd);
-        if (rc)
-            throw std::runtime_error("native directory sync failed");
+#endif
+        published = true;
+        durability::fault(durability::FaultPoint::AfterReplace, path);
+#ifndef _WIN32
+        durability::sync_parent(path);
 #endif
     } catch (...) {
+        failure.capture(published, replace_attempted);
         std::error_code ec;
-        std::filesystem::remove(temp, ec);
-        throw;
+        try { std::filesystem::remove(temp, ec); } catch (...) {} // preserve publication outcome
+        throw failure;
     }
 }
 
 inline void atomic_write(const std::filesystem::path &path, std::span<const std::uint8_t> bytes) {
+    durability::PublicationError failure;
+    bool published = false, replace_attempted = false;
     static std::atomic<std::uint64_t> serial{0};
     auto temp = path;
     temp += ".tmp." + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "." +
@@ -264,6 +254,8 @@ inline void atomic_write(const std::filesystem::path &path, std::span<const std:
     try {
         if (std::fwrite(bytes.data(), 1, bytes.size(), file) != bytes.size() || std::fflush(file) != 0)
             throw std::runtime_error("checkpoint write failed");
+        durability::fault(durability::FaultPoint::AfterTempWrite, path);
+        durability::fault(durability::FaultPoint::BeforeFileSync, temp);
 #ifdef _WIN32
         if (_commit(_fileno(file)) != 0)
             throw std::runtime_error("checkpoint flush failed");
@@ -271,33 +263,31 @@ inline void atomic_write(const std::filesystem::path &path, std::span<const std:
         if (fsync(fileno(file)) != 0)
             throw std::runtime_error("checkpoint flush failed");
 #endif
+        durability::fault(durability::FaultPoint::AfterFileSync, temp);
         auto rc = std::fclose(file);
         file = nullptr;
         if (rc)
             throw std::runtime_error("checkpoint close failed");
+        durability::fault(durability::FaultPoint::BeforeReplace, path);
+        replace_attempted = true;
 #ifdef _WIN32
         if (!MoveFileExW(temp.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
             throw std::runtime_error("checkpoint atomic replace failed");
 #else
         std::filesystem::rename(temp, path);
-        auto parent = path.parent_path();
-        if (parent.empty())
-            parent = ".";
-        int fd = open(parent.c_str(), O_RDONLY | O_DIRECTORY);
-        if (fd >= 0) {
-            int status = fsync(fd);
-            close(fd);
-            if (status)
-                throw std::runtime_error("checkpoint directory flush failed");
-        } else
-            throw std::runtime_error("checkpoint directory open failed");
+#endif
+        published = true;
+        durability::fault(durability::FaultPoint::AfterReplace, path);
+#ifndef _WIN32
+        durability::sync_parent(path);
 #endif
     } catch (...) {
+        failure.capture(published, replace_attempted);
         if (file)
             std::fclose(file);
         std::error_code ec;
-        std::filesystem::remove(temp, ec);
-        throw;
+        try { std::filesystem::remove(temp, ec); } catch (...) {} // preserve publication outcome
+        throw failure;
     }
 }
 } // namespace sdb::checkpoint_detail

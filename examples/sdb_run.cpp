@@ -16,6 +16,12 @@ std::uint64_t mib(const std::string &text) {
     return n * 1024 * 1024;
 }
 template <class T> int run(const Args &a) {
+    auto durability_level = durability::Level::FileSync;
+    const auto durability_name = a.contains("--durability") ? a.at("--durability") : "file";
+    if (durability_name == "stream") durability_level = durability::Level::StreamFlush;
+    else if (durability_name == "publication") durability_level = durability::Level::PublicationSync;
+    else if (durability_name != "file") throw std::invalid_argument("--durability requires stream, file or publication");
+    durability::require_supported(durability_level);
     auto model = a.contains("--model")
                      ? ModelStore::load<T>(a.at("--model"))
                      : ModelCompiler{}.compile<T>(ReaderRegistry{}.read(a.at("--input")).model);
@@ -77,11 +83,13 @@ template <class T> int run(const Args &a) {
     else
         writer.flush();
     if (a.contains("--checkpoint"))
-        CheckpointLink::publish(a.at("--output"), a.at("--checkpoint"), cpu, model);
+        CheckpointLink::publish_durable(storage, a.at("--checkpoint"), cpu, model, durability_level);
+    else
+        storage.barrier(durability_level);
     std::cout << std::setprecision(17) << "nodes=" << model.mesh.nodes()
               << " elements=" << model.mesh.elements() << " increments=" << cpu.state().data().step
               << " time=" << cpu.state().data().time << " precision=" << sizeof(T)
-              << " completed=" << cpu.finished() << "\n";
+              << " completed=" << cpu.finished() << " durability=" << durability_name << "\n";
     return 0;
 }
 int main(int argc, char **argv) {
@@ -92,7 +100,7 @@ int main(int argc, char **argv) {
             "--async-mib", "--ip",     "--input",      "--model",   "--save-model", "--backend",
             "--precision", "--output", "--checkpoint", "--restart", "--stop-after", "--buffer-mib",
             "--read",      "--field",  "--region",     "--time",    "--entity",     "--component",
-            "--vtk",       "--xdmf",   "--convert-v2"};
+            "--vtk",       "--xdmf",   "--convert-v2", "--durability"};
         for (int i = 1; i < argc; ++i) {
             std::string key = argv[i];
             if (flags.contains(key)) {
@@ -190,6 +198,15 @@ int main(int argc, char **argv) {
         if (precision == "double")
             return run<double>(a);
         throw std::invalid_argument("precision must be float or double");
+    } catch (const LinkPublicationError &e) {
+        std::cerr << "sdb_run: " << e.what() << " phase=" << static_cast<unsigned>(e.phase())
+                  << " restart_may_have_changed=" << e.restart_may_have_changed()
+                  << " link_may_have_changed=" << e.link_may_have_changed() << '\n';
+        return 1;
+    } catch (const durability::PublicationError &e) {
+        std::cerr << "sdb_run: " << e.what() << " published=" << e.published()
+                  << " replacement_may_have_happened=" << e.replacement_may_have_happened() << '\n';
+        return 1;
     } catch (const std::exception &e) {
         std::cerr << "sdb_run: " << e.what() << '\n';
         return 1;

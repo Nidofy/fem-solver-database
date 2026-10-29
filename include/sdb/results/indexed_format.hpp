@@ -470,6 +470,7 @@ class File {
         f.ancestors[0] = latest_offset;
         for (unsigned k = 1; k < 64 && f.count >= (std::uint64_t(1) << k); ++k)
             f.ancestors[k] = footer(f.ancestors[k - 1]).ancestors[k - 1];
+        durability::fault(durability::FaultPoint::IndexCommit, path_);
         auto ref = emit(out, 5, native::pack(f));
         out.flush();
         if (!out)

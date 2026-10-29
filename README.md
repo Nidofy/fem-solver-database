@@ -193,6 +193,23 @@ errors. Always explicitly close an `AsyncResultWriter` before reporting success.
 Compression is not enabled; float is widened losslessly to double for storage.
 A completed flush is not a guarantee of physical power-loss durability.
 
+`NativeResultStorage::barrier(level)` and `AsyncResultWriter::barrier(level)`
+acknowledge a byte-prefix watermark at `StreamFlush`, `FileSync`, or
+`PublicationSync`. The last level additionally syncs the parent directory and is
+explicitly unsupported on Windows. Async barriers execute on the worker after
+draining queued frames; `Stats::committed` still counts stream-flushed frames.
+Write/sync failures poison the writer and must be observed by the caller.
+
+CLI completion now defaults to `--durability file`; `stream` explicitly requests
+the weaker stream flush, and `publication` requests strict parent-directory sync.
+CLI checkpoints use `CheckpointLink::publish_durable` after joining async output:
+result barrier, atomic restart, then atomic link. This ordering is not a multi-file
+atomic transaction. `LinkPublicationError` reports the failing phase and whether
+restart/link destinations may have changed; `durability::PublicationError` reports
+replacement status and retains its underlying cause. Reopen and verify after an
+ambiguous failure. Existing path-based `publish` remains compatible with its
+caller-managed lease/flush contract. See [DBF4 contracts](docs/development/db_foundation/DBF4_CONTRACTS.md).
+
 CLI checkpoints publish a `.sdbrst.result-link` companion after result commit.
 Keep it with the checkpoint: append verifies the exact result prefix and refuses
 result-ahead, checkpoint-ahead, changed/missing files or an occupied writer.

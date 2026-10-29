@@ -12,6 +12,8 @@ namespace sdb::lifecycle {
 class AsyncResultWriter {
   public:
     struct Stats {
+        // committed means stream-flushed frames. Stronger durability is only
+        // acknowledged by a successful barrier(Level) return.
         std::uint64_t queued = 0, written = 0, committed = 0;
         std::uint64_t resident_bytes = 0, peak_bytes = 0;
         bool cancelled = false, failed = false;
@@ -85,6 +87,8 @@ class AsyncResultWriter {
     std::exception_ptr error_;
     bool stopping_ = false, closed_ = false;
     std::uint64_t flush_requested_ = 0, flush_completed_ = 0;
+    durability::Level requested_level_ = durability::Level::StreamFlush;
+    ResultBarrier receipt_;
     std::thread worker_;
 
     void healthy() const {
@@ -127,9 +131,13 @@ class AsyncResultWriter {
                     changed_.notify_all();
                 } else if (flush_requested_ != flush_completed_) {
                     auto ticket = flush_requested_;
+                    auto level = requested_level_;
                     lock.unlock();
-                    storage_.flush();
+                    auto receipt = storage_.barrier(level);
+                    if (receipt.level != level)
+                        throw std::runtime_error("result backend returned wrong durability level");
                     lock.lock();
+                    receipt_ = std::move(receipt);
                     flush_completed_ = ticket;
                     changed_.notify_all();
                 } else if (stopping_)
@@ -183,16 +191,25 @@ class AsyncResultWriter {
         stats_.peak_bytes = std::max(stats_.peak_bytes, stats_.resident_bytes);
         changed_.notify_all();
     }
-    void flush() {
+    // One producer issues writes/barriers/close in order. A control thread may
+    // only cancel. The worker owns storage until close() has joined it.
+    ResultBarrier barrier(durability::Level level) {
+        durability::require_supported(level);
         std::unique_lock lock(mutex_);
         healthy();
-        if (closed_)
-            return;
+        if (closed_) {
+            if (level != durability::Level::StreamFlush)
+                throw std::logic_error("durability barrier requires an open async writer");
+            return receipt_;
+        }
+        requested_level_ = level;
         const auto ticket = ++flush_requested_;
         changed_.notify_all();
         changed_.wait(lock, [&] { return error_ || stats_.cancelled || flush_completed_ >= ticket; });
         healthy();
+        return receipt_;
     }
+    void flush() { (void)barrier(durability::Level::StreamFlush); }
     void close() {
         std::exception_ptr failure;
         try {

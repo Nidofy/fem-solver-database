@@ -2,6 +2,28 @@
 #include "../lifecycle.hpp"
 
 namespace sdb::lifecycle {
+enum class LinkPublicationPhase { ResultBarrier, RestartPublication, RestartFingerprint, LinkPublication, Complete };
+struct LinkPublication {
+    ResultBarrier result;
+    bool restart_published = false, link_published = false;
+};
+// A failed three-file sequence is not rolled back. These flags tell callers
+// which destinations require inspection; they do not authorize a blind retry.
+class LinkPublicationError : public std::runtime_error {
+    LinkPublicationPhase phase_ = LinkPublicationPhase::ResultBarrier;
+    bool restart_changed_ = false, link_changed_ = false;
+    std::exception_ptr cause_;
+  public:
+    LinkPublicationError() : std::runtime_error("result/checkpoint/link publication failed; reopen and verify before append") {}
+    LinkPublicationPhase phase() const noexcept { return phase_; }
+    bool restart_may_have_changed() const noexcept { return restart_changed_; }
+    bool link_may_have_changed() const noexcept { return link_changed_; }
+    const std::exception_ptr &cause() const noexcept { return cause_; }
+    void capture(LinkPublicationPhase phase, bool restart, bool link) noexcept {
+        phase_ = phase; restart_changed_ = restart; link_changed_ = link;
+        cause_ = std::current_exception();
+    }
+};
 // Optional companion manifest, not a replacement ModelStore/ResultDB/Restart.
 // Legacy checkpoints still load; safe append requires a published link. A new
 // output file can branch from any valid legacy checkpoint.
@@ -63,6 +85,68 @@ struct CheckpointLink {
             native::prefix(out, 0x314b4e494c424453ull);
             native::record(out, 0, native::pack(link));
         });
+    }
+    // Additive durable API. The caller must first close/join any AsyncResultWriter
+    // using storage, and serialize run mutation. NativeResultStorage owns the
+    // result lease for the entire barrier/restart/link sequence.
+    template <class T>
+    static LinkPublication publish_durable(NativeResultStorage &storage, const std::filesystem::path &restart,
+                        CpuRun<T> &run, const CompiledModel<T> &model,
+                        durability::Level level = durability::Level::FileSync) {
+        durability::require_supported(level); // reject unsupported guarantees before mutations
+        auto same = [](const auto &a, const auto &b) {
+            return std::filesystem::weakly_canonical(a) == std::filesystem::weakly_canonical(b) ||
+                   (std::filesystem::exists(a) && std::filesystem::exists(b) && std::filesystem::equivalent(a, b));
+        };
+        const auto &result = storage.path();
+        const auto link_path = path(restart);
+        if (same(result, restart) || same(result, link_path) || same(restart, link_path))
+            throw std::invalid_argument("checkpoint, result and link destinations must be distinct");
+        const auto definition = ModelStore::identity(model);
+        if (ModelStore::identity(run.model()) != definition || storage.model().definition != definition ||
+            storage.model().configuration != run.configuration() || storage.model().mesh != model.mesh.fingerprint() ||
+            storage.model().precision != sizeof(T))
+            throw std::invalid_argument("result/checkpoint publication model or configuration mismatch");
+        if (const auto last = storage.last(); last && (last->time > run.state().data().time ||
+            last->id > run.state().data().step))
+            throw std::invalid_argument("result is ahead of checkpoint state");
+        native::FileLease restart_lease(restart);
+        native::FileLease link_lease(link_path);
+        LinkPublication outcome;
+        LinkPublicationError failure; // allocate error message before publication
+        auto phase = LinkPublicationPhase::ResultBarrier;
+        try {
+            outcome.result = storage.barrier(level);
+            CheckpointLink link;
+            link.definition = definition;
+            link.configuration = run.configuration();
+            link.total_increment = run.state().data().step;
+            link.result_bytes = outcome.result.bytes;
+            link.result_hash = fingerprint(result, link.result_bytes);
+            phase = LinkPublicationPhase::RestartPublication;
+            run.save(restart);
+            outcome.restart_published = true;
+            phase = LinkPublicationPhase::RestartFingerprint;
+            link.restart_bytes = std::filesystem::file_size(restart);
+            link.restart_hash = fingerprint(restart, link.restart_bytes);
+            phase = LinkPublicationPhase::LinkPublication;
+            durability::fault(durability::FaultPoint::BeforeLinkPublish, link_path);
+            native::atomic_stream(link_path, [&](auto &out) {
+                native::prefix(out, 0x314b4e494c424453ull);
+                native::record(out, 0, native::pack(link));
+            });
+            outcome.link_published = true;
+            durability::fault(durability::FaultPoint::AfterLinkPublish, link_path);
+            return outcome;
+        } catch (const durability::PublicationError &error) {
+            const bool changed = error.published() || error.replacement_may_have_happened();
+            failure.capture(phase, outcome.restart_published || (phase == LinkPublicationPhase::RestartPublication && changed),
+                outcome.link_published || (phase == LinkPublicationPhase::LinkPublication && changed));
+            throw failure;
+        } catch (...) {
+            failure.capture(phase, outcome.restart_published, outcome.link_published);
+            throw failure;
+        }
     }
     // Called inside NativeResultStorage's lease, BEFORE append/recovery mutation.
     template <class T>

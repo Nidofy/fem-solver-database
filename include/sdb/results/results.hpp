@@ -1,5 +1,6 @@
 #pragma once
 #include "../io/model_store.hpp"
+#include "../io/durability.hpp"
 #include "../dynamics.hpp"
 #include <functional>
 #include "typed.hpp"
@@ -1002,14 +1003,32 @@ class ResultQuery {
         return values;
     }
 };
+// A successful barrier certifies this exact visible prefix at the requested
+// level. StreamFlush is not a file-sync or power-loss guarantee. Receipts are
+// observations, not reusable authorization tokens: a later append changes them.
+struct ResultBarrier {
+    durability::Level level = durability::Level::StreamFlush;
+    std::filesystem::path path;
+    std::uint64_t bytes = 0;
+    std::optional<FrameInfo> last;
+};
 class IResultStorage {
   public:
     virtual ~IResultStorage() = default;
     virtual void append(const ResultFrame &) = 0;
     virtual void flush() = 0;
+    // Existing custom backends remain source compatible, but cannot silently
+    // advertise stronger durability than their implementation provides.
+    virtual ResultBarrier barrier(durability::Level level) {
+        if (level != durability::Level::StreamFlush)
+            throw std::invalid_argument("result backend does not support requested durability");
+        flush();
+        return {level, {}, 0, last()};
+    }
     virtual std::optional<FrameInfo> last() const = 0;
 };
 class NativeResultStorage final : public IResultStorage {
+    std::filesystem::path path_;
     native::FileLease lease_; // destroyed after output stream closes
     std::ofstream out_;
     ResultModel model_;
@@ -1023,7 +1042,7 @@ class NativeResultStorage final : public IResultStorage {
                         bool recover = false, std::uint64_t limit = native::default_limit,
                         std::function<void()> append_preflight = {}, bool indexed = false,
                         ResultFormat format = ResultFormat::Auto)
-        : lease_(path), model_(std::move(model)), limit_(limit) {
+        : path_(std::filesystem::absolute(path).lexically_normal()), lease_(path_), model_(std::move(model)), limit_(limit) {
         if (upper(path.extension().string()) == ".H5" || upper(path.extension().string()) == ".HDF5")
             throw std::invalid_argument("native backend requires a non-HDF5 suffix (.sdbres)");
         typed_detail::validate_model(model_,limit_);
@@ -1078,6 +1097,7 @@ class NativeResultStorage final : public IResultStorage {
             throw std::invalid_argument("legacy format rejects typed result before writing");
         validate_frame(frame, model_, last_);
         try {
+            durability::fault(durability::FaultPoint::ResultWrite, path_);
             if (indexed_)
                 indexed_->append(out_, frame);
             else {
@@ -1092,12 +1112,32 @@ class NativeResultStorage final : public IResultStorage {
         }
     }
     void flush() override {
+        if (failed_)
+            throw std::runtime_error("result writer is failed");
         out_.flush();
         if (!out_) {
             failed_ = true;
             throw std::runtime_error("result flush failed");
         }
     }
+    ResultBarrier barrier(durability::Level level) override {
+        durability::require_supported(level); // unsupported request does not poison an untouched writer
+        if (failed_)
+            throw std::runtime_error("result writer is failed");
+        try {
+            flush();
+            if (level != durability::Level::StreamFlush)
+                durability::sync_file(path_);
+            if (level == durability::Level::PublicationSync)
+                durability::sync_parent(path_);
+            return {level, path_, std::filesystem::file_size(path_), last_};
+        } catch (...) {
+            failed_ = true;
+            throw;
+        }
+    }
+    const std::filesystem::path &path() const noexcept { return path_; }
+    const ResultModel &model() const noexcept { return model_; }
     std::optional<FrameInfo> last() const override { return last_; }
 };
 class ResultWriter {
@@ -1110,5 +1150,6 @@ class ResultWriter {
             storage_.append(f);
     }
     void flush() { storage_.flush(); }
+    ResultBarrier barrier(durability::Level level) { return storage_.barrier(level); }
 };
 } // namespace sdb::lifecycle
