@@ -153,6 +153,26 @@ template<class T> void cpu_run_contracts(const std::filesystem::path &fixture,co
     optional.import_v2(v2);
     check(optional.state().template registered_field<Field<T>>("cache").read()(0)==T(.5),"v2 import reconstructs optional extensions");
 }
+template<class T> void rotation_restore(const std::filesystem::path &fixture,const std::filesystem::path &dir) {
+    auto model=ModelCompiler{}.compile<T>(ReaderRegistry{}.read(fixture).model);
+    StateDB<T> source(model.mesh,true), target(model.mesh,true);
+    register_fields(source); register_fields(target); source.data().dt=.01;
+    source.data().rotation->inertia.fill(T(2)); source.data().rotation->inverse_inertia.fill(T(.5));
+    auto path=dir/(sizeof(T)==4?"rotation-f.chk":"rotation-d.chk");
+    save_checkpoint(path,model.mesh,source); load_checkpoint(path,model.mesh,target);
+    for(auto pair:{std::pair<T,T>{-2,T(.5)}, {T(2),T(-.5)}, {T(0),T(.5)}, {T(2),T(.25)}}) {
+        source.data().rotation->inertia.write()(0,0)=pair.first;
+        source.data().rotation->inverse_inertia.write()(0,0)=pair.second;
+        save_checkpoint(path,model.mesh,source);
+        target.data().displacement.fill(T(31)); target.data().rotation->angle.fill(T(43));
+        target.template registered_field<Field<std::uint64_t>>("exact").fill(123456789123456789ull);
+        auto core=target.data().displacement.checked_read(), angle=target.data().rotation->angle.checked_read();
+        auto extension=target.template registered_field<Field<std::uint64_t>>("exact").checked_read();
+        rejects([&]{load_checkpoint(path,model.mesh,target);});
+        check(core.at(0)==T(31) && angle.at(0)==T(43) && extension.at(0)==123456789123456789ull,
+              "invalid inertia rejects before publishing core/rotation/extensions");
+    }
+}
 template<class T> void read_registered(const std::filesystem::path &fixture,const std::filesystem::path &dir) {
     auto model=ModelCompiler{}.compile<T>(ReaderRegistry{}.read(fixture).model);
     for(bool checkpoint:{false,true}) {
@@ -182,6 +202,7 @@ int main(int argc,char **argv) {
         std::filesystem::create_directories(argv[2]);
         contracts<float>(argv[1],argv[2]); contracts<double>(argv[1],argv[2]);
         cpu_run_contracts<float>(argv[1],argv[2]); cpu_run_contracts<double>(argv[1],argv[2]);
+        rotation_restore<float>(argv[1],argv[2]); rotation_restore<double>(argv[1],argv[2]);
         std::cout<<checks<<" DBF3 registered state checks passed\n";
     } catch(const std::exception &e) { std::cerr<<e.what()<<'\n'; return 1; }
 }

@@ -437,6 +437,15 @@ void load_checkpoint(const std::filesystem::path &path, const MeshDB<T> &mesh, S
             (mass(i) == 0 ? inverse(i) != 0
                           : std::abs(mass(i) * inverse(i) - 1) > T(64) * std::numeric_limits<T>::epsilon()))
             throw std::runtime_error("checkpoint mass inconsistency");
+    if (data.rotation) {
+        auto inertia = data.rotation->inertia.read(), inverse_inertia = data.rotation->inverse_inertia.read();
+        for (std::size_t i = 0; i < inertia.count; ++i)
+            for (unsigned c = 0; c < 3; ++c)
+                if (inertia(i,c) < 0 || inverse_inertia(i,c) < 0 ||
+                    (inertia(i,c) == 0 ? inverse_inertia(i,c) != 0 :
+                     std::abs(inertia(i,c) * inverse_inertia(i,c) - 1) > T(64) * std::numeric_limits<T>::epsilon()))
+                    throw std::runtime_error("checkpoint inertia inconsistency");
+    }
     std::vector<ContactHistory<T>> history;
     if (contact) {
         auto block = file.chunk(100);

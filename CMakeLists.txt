@@ -146,6 +146,8 @@ foreach(target IN ITEMS sdb_foundation_tests sdb_storage_tests sdb_lifecycle_sta
 endforeach()
 find_package(Python3 COMPONENTS Interpreter QUIET)
 if(Python3_Interpreter_FOUND)
+  add_test(NAME dbf3_wire_oracle COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/dbf3_wire_oracle.py ${CMAKE_CURRENT_BINARY_DIR}/dbf3-state-scratch)
+  set_tests_properties(dbf3_wire_oracle PROPERTIES FIXTURES_REQUIRED dbf3_state_files)
   add_test(NAME dbf3_legacy_golden COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/dbf3_legacy.py $<TARGET_FILE:sdb_foundation_integration_tests> ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/dbf3/legacy ${CMAKE_CURRENT_BINARY_DIR}/dbf3-legacy-scratch)
   add_test(NAME typed_process_pipeline COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/typed_pipeline.py $<TARGET_FILE:sdb_run> ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus/forced_tet.inp ${CMAKE_CURRENT_BINARY_DIR}/integration-scratch ${CMAKE_CURRENT_BINARY_DIR}/typed-pipeline-scratch)
   set_tests_properties(typed_process_pipeline PROPERTIES FIXTURES_REQUIRED integration_files)
