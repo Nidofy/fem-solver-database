@@ -242,7 +242,11 @@ struct CompiledFoundation {
         for (auto &x:coordinates) if(x.id==id) return x;
         throw std::out_of_range("unknown coordinate ID");
     }
-    const Rotation &orientation(OrientationId id) const { return orientation_bases.at(id); }
+    const Rotation &orientation(OrientationId id) const {
+        auto it = orientation_bases.find(id);
+        if (it == orientation_bases.end()) throw std::out_of_range("unknown orientation ID");
+        return it->second;
+    }
     const MaterialDefinition &material(MaterialId id) const {
         for(auto &x:definition.material_definitions) if(material_ids.at(x.material)==id) return x;
         throw std::out_of_range("material has no typed definition");

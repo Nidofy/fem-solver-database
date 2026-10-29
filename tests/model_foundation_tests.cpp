@@ -155,7 +155,7 @@ template<class T> void model_contracts(const std::filesystem::path &dir) {
     invalid([](auto &x){x.foundation.shell_sections[0].layers[1].material="MISSING";},"layer thickness/material");
     invalid([](auto &x){x.foundation.shell_sections[0].offset=2;},"offset");
     invalid([](auto &x){x.foundation.beam_sections[0].i12=100;},"beam");
-    invalid([](auto &x){x.foundation.beam_sections[0].assignment.orientation=OrientationId(99);},"map::at");
+    invalid([](auto &x){x.foundation.beam_sections[0].assignment.orientation=OrientationId(99);},"unknown orientation ID");
     invalid([](auto &x){x.foundation.equations[0].terms[0].node.label=999;},"identity");
     invalid([](auto &x){x.foundation.equations[0].terms[0].node.label=3;x.foundation.equations[0].terms[0].dof=Dof::RX;},"DOF unavailable");
     invalid([](auto &x){x.foundation.equations[0].terms[1]=x.foundation.equations[0].terms[0];},"duplicate equation");
