@@ -7,6 +7,51 @@
 using namespace sdb;
 using namespace sdb::lifecycle;
 using Args = std::map<std::string, std::string>;
+std::optional<CompressionSettings> compression_options(const Args &a) {
+    if (!a.contains("--compression")) {
+        if (a.contains("--compression-level") || a.contains("--compression-fields"))
+            throw std::invalid_argument("compression tuning requires --compression");
+        return std::nullopt;
+    }
+    CompressionSettings settings;
+    if (a.at("--compression") == "zstd") settings.defaults.codec = compression::Codec::Zstd;
+    else if (a.at("--compression") != "none") throw std::invalid_argument("--compression requires none or zstd");
+    auto level = [](const std::string &value) {
+        if (value.size() != 1 || value[0] < '1' || value[0] > '9')
+            throw std::invalid_argument("compression level must be 1..9");
+        return value[0] - '0';
+    };
+    if (a.contains("--compression-level")) {
+        if (settings.defaults.codec != compression::Codec::Zstd)
+            throw std::invalid_argument("compression level requires zstd default");
+        settings.defaults.level = level(a.at("--compression-level"));
+    }
+    if (a.contains("--compression-fields")) {
+        std::istringstream input(a.at("--compression-fields"));
+        std::string rule;
+        while (std::getline(input, rule, ',')) {
+            const auto split = rule.find(':');
+            if (split == std::string::npos || split == 0) throw std::invalid_argument("field compression expects NAME:LEVEL or NAME:none");
+            compression::Options options;
+            const auto value = rule.substr(split + 1);
+            if (value != "none") { options.codec = compression::Codec::Zstd; options.level = level(value); }
+            if (!settings.fields.emplace(rule.substr(0, split), options).second)
+                throw std::invalid_argument("duplicate field compression rule");
+        }
+        if (settings.fields.empty() || a.at("--compression-fields").back() == ',')
+            throw std::invalid_argument("empty field compression rule");
+    }
+    settings.validate();
+    return settings;
+}
+durability::Level requested_durability(const Args &a) {
+    const auto name = a.contains("--durability") ? a.at("--durability") : "file";
+    auto value = durability::Level::FileSync;
+    if (name == "stream") value = durability::Level::StreamFlush;
+    else if (name == "publication") value = durability::Level::PublicationSync;
+    else if (name != "file") throw std::invalid_argument("--durability requires stream, file or publication");
+    durability::require_supported(value); return value;
+}
 std::uint64_t mib(const std::string &text) {
     if (text.empty() || text.find_first_not_of("0123456789") != std::string::npos)
         throw std::invalid_argument("invalid memory budget");
@@ -16,12 +61,11 @@ std::uint64_t mib(const std::string &text) {
     return n * 1024 * 1024;
 }
 template <class T> int run(const Args &a) {
-    auto durability_level = durability::Level::FileSync;
+    const auto durability_level = requested_durability(a);
     const auto durability_name = a.contains("--durability") ? a.at("--durability") : "file";
-    if (durability_name == "stream") durability_level = durability::Level::StreamFlush;
-    else if (durability_name == "publication") durability_level = durability::Level::PublicationSync;
-    else if (durability_name != "file") throw std::invalid_argument("--durability requires stream, file or publication");
-    durability::require_supported(durability_level);
+    const auto compression_policy = compression_options(a);
+    const bool compressed = compression_policy && compression_policy->enabled();
+    if (compressed && a.contains("--indexed")) throw std::invalid_argument("compression cannot use indexed2");
     auto model = a.contains("--model")
                      ? ModelStore::load<T>(a.at("--model"))
                      : ModelCompiler{}.compile<T>(ReaderRegistry{}.read(a.at("--input")).model);
@@ -53,7 +97,8 @@ template <class T> int run(const Args &a) {
             CheckpointLink::verify(a.at("--output"), a.at("--restart"), cpu, model,
                                    a.contains("--recover-tail"));
         },
-        a.contains("--indexed"), a.contains("--typed-indexed") ? ResultFormat::TypedIndexed3 : ResultFormat::Auto);
+        a.contains("--indexed"), compressed ? ResultFormat::CompressedIndexed4 :
+            a.contains("--typed-indexed") ? ResultFormat::TypedIndexed3 : ResultFormat::Auto, compression_policy);
     ResultWriter writer(storage);
     if (auto last = storage.last(); last && last->time > cpu.state().data().time)
         throw std::runtime_error(
@@ -65,7 +110,7 @@ template <class T> int run(const Args &a) {
         auto last = async ? async->last() : storage.last();
         if (!last || cpu.state().data().time > last->time) {
             auto frame = cpu.snapshot(limit);
-            if (a.contains("--typed-indexed"))
+            if (storage.format() == ResultFormat::TypedIndexed3 || storage.format() == ResultFormat::CompressedIndexed4)
                 bind_result_frame(frame, ResultModel::from(model, cpu.configuration()));
             if (async)
                 async->write(std::move(frame));
@@ -95,12 +140,13 @@ template <class T> int run(const Args &a) {
 int main(int argc, char **argv) {
     try {
         Args a;
-        const std::set<std::string> flags{"--indexed", "--typed-indexed", "--typed", "--append", "--recover-tail", "--inspect"};
+        const std::set<std::string> flags{"--indexed", "--typed-indexed", "--typed", "--append", "--recover-tail", "--inspect", "--verify"};
         const std::set<std::string> value_options{
             "--async-mib", "--ip",     "--input",      "--model",   "--save-model", "--backend",
             "--precision", "--output", "--checkpoint", "--restart", "--stop-after", "--buffer-mib",
             "--read",      "--field",  "--region",     "--time",    "--entity",     "--component",
-            "--vtk",       "--xdmf",   "--convert-v2", "--durability"};
+            "--vtk",       "--xdmf",   "--convert-v2", "--durability", "--compression", "--compression-level",
+            "--compression-fields", "--convert-result"};
         for (int i = 1; i < argc; ++i) {
             std::string key = argv[i];
             if (flags.contains(key)) {
@@ -112,10 +158,34 @@ int main(int argc, char **argv) {
             } else
                 throw std::invalid_argument("unknown option/missing value: " + key);
         }
+        if ((a.contains("--verify") || a.contains("--convert-result")) && !a.contains("--read"))
+            throw std::invalid_argument("--verify and --convert-result require --read");
+        if (a.contains("--read") && !a.contains("--convert-result") &&
+            (a.contains("--compression") || a.contains("--compression-level") || a.contains("--compression-fields")))
+            throw std::invalid_argument("compression options when reading require --convert-result");
         if (a.contains("--read")) {
             auto limit = a.contains("--buffer-mib") ? mib(a.at("--buffer-mib")) : native::default_limit;
             ResultReader r(a.at("--read"), false, limit);
             std::cout << std::setprecision(17);
+            if (a.contains("--verify")) {
+                for (std::size_t i = 0; i < r.index.size(); ++i) (void)r.frame(i);
+                std::cout << "verified_frames=" << r.index.size() << '\n';
+            }
+            if (a.contains("--convert-result")) {
+                const auto policy = compression_options(a);
+                const auto target = policy && policy->enabled() ? ResultFormat::CompressedIndexed4 : ResultFormat::TypedIndexed3;
+                const auto level = requested_durability(a);
+                NativeResultStorage output(a.at("--convert-result"), r.model, false, false, limit, {}, false, target, policy);
+                for (std::size_t i = 0; i < r.index.size(); ++i) {
+                    auto frame = r.frame(i);
+                    if (!frame.binding) bind_result_frame(frame, r.model);
+                    output.append(frame);
+                }
+                const auto receipt = output.barrier(level);
+                std::cout << "converted_frames=" << r.index.size() << " format=" << static_cast<unsigned>(target)
+                          << " bytes=" << receipt.bytes << '\n';
+                return 0;
+            }
             if (a.contains("--vtk"))
                 ResultExporter::vtk(r, a.at("--vtk"));
             if (a.contains("--xdmf"))
@@ -170,7 +240,7 @@ int main(int argc, char **argv) {
                     std::cout << '\n';
                 }
             } else
-                std::cout << "frames=" << r.index.size() << " nodes=" << r.model.nodes.size()
+                std::cout << "format=" << static_cast<unsigned>(r.format()) << " frames=" << r.index.size() << " nodes=" << r.model.nodes.size()
                           << " elements=" << r.model.elements.size() << "\n";
             return 0;
         }

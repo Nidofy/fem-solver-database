@@ -20,7 +20,8 @@ class AsyncResultWriter {
     };
     // Conservative admission charge: owned capacities + native encoding +
     // validation tree scratch. Persistent model/storage and caller-owned frames
-    // are outside this queue budget. No compression/reorder buffers are used.
+    // are outside this queue budget. Storage-specific codec scratch is charged
+    // separately for each admitted frame (conservative for one worker).
     static std::uint64_t required_bytes(const ResultFrame &f) {
         std::size_t n = sizeof(ResultFrame) + 65536; // codec/footer/stream and list bookkeeping reserve
         auto add = [&](std::size_t v) { n = sum(n, v); };
@@ -79,6 +80,7 @@ class AsyncResultWriter {
     };
     IResultStorage &storage_;
     const std::uint64_t budget_;
+    const std::uint64_t storage_overhead_;
     mutable std::mutex mutex_;
     std::condition_variable changed_;
     std::list<Entry> queue_;
@@ -156,7 +158,7 @@ class AsyncResultWriter {
 
   public:
     explicit AsyncResultWriter(IResultStorage &storage, std::uint64_t budget)
-        : storage_(storage), budget_(budget), last_(storage.last()) {
+        : storage_(storage), budget_(budget), storage_overhead_(storage.admission_overhead()), last_(storage.last()) {
         if (!budget)
             throw std::invalid_argument("zero async result budget");
         worker_ = std::thread([this] { work(); });
@@ -172,7 +174,7 @@ class AsyncResultWriter {
         }
     }
     void write(ResultFrame &&frame) {
-        const auto bytes = frame.fields.empty() ? 0 : required_bytes(frame);
+        const auto bytes = frame.fields.empty() ? 0 : sum(required_bytes(frame), storage_overhead_);
         std::unique_lock lock(mutex_);
         healthy();
         if (stopping_ || closed_)

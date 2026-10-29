@@ -1,6 +1,55 @@
 #pragma once
 #include "state.hpp"
 namespace sdb {
+template <class T> struct HexViews {
+    View<const Index, 8> nodes;
+    View<const T, 24> gradients;
+    View<const T> weights, lambda, mu;
+    View<const std::size_t> ip_offsets;
+};
+// Shared unchanged HEX8 force algebra; setup and assembly remain outside the view contract.
+template <class T>
+void hex_force(std::size_t h, HexViews<T> t, View<const T, 3> u, View<T, 24> local,
+               View<T, 6> stress, View<T, 6> strain, bool active) {
+    auto conn = t.nodes;
+    auto g = t.gradients;
+    auto w = t.weights;
+    for (unsigned c = 0; c < 24; ++c)
+        local(h, c) = 0;
+    for (unsigned q = 0; q < 8; ++q) {
+        auto p = 8 * h + q, ip = t.ip_offsets(h) + q;
+        if (!active) {
+            for (unsigned c = 0; c < 6; ++c) {
+                stress(ip, c) = 0;
+                strain(ip, c) = 0;
+            }
+            continue;
+        }
+        T du[3][3]{};
+        for (unsigned a = 0; a < 8; ++a)
+            for (unsigned i = 0; i < 3; ++i)
+                for (unsigned j = 0; j < 3; ++j)
+                    du[i][j] += u(conn(h, a), i) * g(p, 3 * a + j);
+        T eps[6] = {du[0][0],
+                    du[1][1],
+                    du[2][2],
+                    T(.5) * (du[0][1] + du[1][0]),
+                    T(.5) * (du[1][2] + du[2][1]),
+                    T(.5) * (du[2][0] + du[0][2])};
+        T s[6], trace = eps[0] + eps[1] + eps[2];
+        for (unsigned c = 0; c < 6; ++c) {
+            s[c] = 2 * t.mu(h) * eps[c] + (c < 3 ? t.lambda(h) * trace : T(0));
+            stress(ip, c) = s[c];
+            strain(ip, c) = eps[c];
+        }
+        for (unsigned a = 0; a < 8; ++a) {
+            auto gx = g(p, 3 * a), gy = g(p, 3 * a + 1), gz = g(p, 3 * a + 2);
+            local(h, 3 * a) += w(p) * (s[0] * gx + s[3] * gy + s[5] * gz);
+            local(h, 3 * a + 1) += w(p) * (s[3] * gx + s[1] * gy + s[4] * gz);
+            local(h, 3 * a + 2) += w(p) * (s[5] * gx + s[4] * gy + s[2] * gz);
+        }
+    }
+}
 // CPU full-integration small-strain brick. See the formulation contract in docs.
 template <class T> class HexPlan {
   public:
@@ -138,44 +187,8 @@ template <class T> class HexPlan {
     }
     void force(std::size_t h, View<const T, 3> u, View<T, 24> local, View<T, 6> stress, View<T, 6> strain,
                bool active) const {
-        auto conn = nodes.read();
-        auto g = gradients.read();
-        auto w = weights.read();
-        for (unsigned c = 0; c < 24; ++c)
-            local(h, c) = 0;
-        for (unsigned q = 0; q < 8; ++q) {
-            auto p = 8 * h + q, ip = ip_offsets[h] + q;
-            if (!active) {
-                for (unsigned c = 0; c < 6; ++c) {
-                    stress(ip, c) = 0;
-                    strain(ip, c) = 0;
-                }
-                continue;
-            }
-            T du[3][3]{};
-            for (unsigned a = 0; a < 8; ++a)
-                for (unsigned i = 0; i < 3; ++i)
-                    for (unsigned j = 0; j < 3; ++j)
-                        du[i][j] += u(conn(h, a), i) * g(p, 3 * a + j);
-            T eps[6] = {du[0][0],
-                        du[1][1],
-                        du[2][2],
-                        T(.5) * (du[0][1] + du[1][0]),
-                        T(.5) * (du[1][2] + du[2][1]),
-                        T(.5) * (du[2][0] + du[0][2])};
-            T s[6], trace = eps[0] + eps[1] + eps[2];
-            for (unsigned c = 0; c < 6; ++c) {
-                s[c] = 2 * mu.read()(h) * eps[c] + (c < 3 ? lambda.read()(h) * trace : T(0));
-                stress(ip, c) = s[c];
-                strain(ip, c) = eps[c];
-            }
-            for (unsigned a = 0; a < 8; ++a) {
-                auto gx = g(p, 3 * a), gy = g(p, 3 * a + 1), gz = g(p, 3 * a + 2);
-                local(h, 3 * a) += w(p) * (s[0] * gx + s[3] * gy + s[5] * gz);
-                local(h, 3 * a + 1) += w(p) * (s[3] * gx + s[1] * gy + s[4] * gz);
-                local(h, 3 * a + 2) += w(p) * (s[5] * gx + s[4] * gy + s[2] * gz);
-            }
-        }
+        hex_force(h, HexViews<T>{nodes.read(), gradients.read(), weights.read(), lambda.read(), mu.read(),
+                  {ip_offsets.data(), ip_offsets.size()}}, u, local, stress, strain, active);
     }
 };
 } // namespace sdb

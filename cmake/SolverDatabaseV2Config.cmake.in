@@ -1,6 +1,10 @@
 @PACKAGE_INIT@
 include(CMakeFindDependencyMacro)
 find_dependency(Threads)
+if(@SDB_ZSTD@)
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+  find_dependency(SDBZstd)
+endif()
 if(@SDB_OPENMP@)
   find_dependency(OpenMP)
 endif()

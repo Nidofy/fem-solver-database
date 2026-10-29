@@ -47,10 +47,16 @@ template <class T, std::size_t C, class Layout> class CheckedView {
   public:
     CheckedView(View<T, C, Layout> v, const std::shared_ptr<ViewLifetime> &l)
         : view_(v), life_(l), generation_(l->generation) {}
-    T &at(std::size_t i, std::size_t c = 0) const {
+    void validate() const {
         auto life = life_.lock();
         if (!life || life->generation != generation_)
             throw std::logic_error("expired field view");
+    }
+    // Raw borrows are valid only while the caller prevents resize/move/swap/destruction.
+    View<T, C, Layout> raw() const { validate(); return view_; }
+    std::size_t size() const { validate(); return view_.count; }
+    T &at(std::size_t i, std::size_t c = 0) const {
+        validate();
         if (i >= view_.count || c >= C)
             throw std::out_of_range("field index");
         return view_(i, c);

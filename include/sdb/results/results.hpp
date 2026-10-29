@@ -712,7 +712,7 @@ class ResultReader {
         native::read(in, magic_bytes);
         native::Reader probe{magic_bytes};
         auto file_magic = probe.integer<std::uint64_t>();
-        if (file_magic == indexed_detail::magic || file_magic == typed_detail::magic) {
+        if (file_magic == indexed_detail::magic || file_magic == typed_detail::magic || file_magic == compressed_detail::magic) {
             indexed_ = std::make_shared<indexed_detail::File>(path, limit, allow_incomplete_tail);
             model = indexed_->model;
             index.bind(indexed_);
@@ -762,7 +762,9 @@ class ResultReader {
     }
     bool indexed() const { return bool(indexed_); }
     ResultFormat format() const { return !indexed_ ? ResultFormat::Native1 :
+        indexed_->compressed() ? ResultFormat::CompressedIndexed4 :
         indexed_->typed() ? ResultFormat::TypedIndexed3 : ResultFormat::Indexed2; }
+    CompressionSettings compression_settings() const { return indexed_ ? indexed_->compression_settings() : CompressionSettings{}; }
     ResultField typed_field(std::size_t frame_index, const std::string &name,
         std::optional<ResultAddress> exact = {}, std::optional<Id> entity = {}, const std::string &schema_id = "",
         std::optional<std::string> stored_region = {},std::optional<std::uint64_t> basis_id = {}) const {
@@ -1017,6 +1019,8 @@ class IResultStorage {
     virtual ~IResultStorage() = default;
     virtual void append(const ResultFrame &) = 0;
     virtual void flush() = 0;
+    // Immutable per-worker scratch bound, captured before the async worker starts.
+    virtual std::uint64_t admission_overhead() const { return 0; }
     // Existing custom backends remain source compatible, but cannot silently
     // advertise stronger durability than their implementation provides.
     virtual ResultBarrier barrier(durability::Level level) {
@@ -1041,16 +1045,20 @@ class NativeResultStorage final : public IResultStorage {
     NativeResultStorage(const std::filesystem::path &path, ResultModel model, bool append = false,
                         bool recover = false, std::uint64_t limit = native::default_limit,
                         std::function<void()> append_preflight = {}, bool indexed = false,
-                        ResultFormat format = ResultFormat::Auto)
+                        ResultFormat format = ResultFormat::Auto,
+                        std::optional<CompressionSettings> compression = std::nullopt)
         : path_(std::filesystem::absolute(path).lexically_normal()), lease_(path_), model_(std::move(model)), limit_(limit) {
         if (upper(path.extension().string()) == ".H5" || upper(path.extension().string()) == ".HDF5")
             throw std::invalid_argument("native backend requires a non-HDF5 suffix (.sdbres)");
         typed_detail::validate_model(model_,limit_);
         if (format != ResultFormat::Auto && format != ResultFormat::Native1 &&
-            format != ResultFormat::Indexed2 && format != ResultFormat::TypedIndexed3)
+            format != ResultFormat::Indexed2 && format != ResultFormat::TypedIndexed3 && format != ResultFormat::CompressedIndexed4)
             throw std::invalid_argument("unknown result format");
         auto requested = format == ResultFormat::Auto ? (indexed ? ResultFormat::Indexed2 : ResultFormat::Native1) : format;
-        if (!append && requested != ResultFormat::TypedIndexed3 && (!model_.samples.empty() || !model_.bases.empty()))
+        if (compression) compression->validate();
+        if (!append && compression && compression->enabled() && requested != ResultFormat::CompressedIndexed4)
+            throw std::invalid_argument("compression requires indexed4");
+        if (!append && requested != ResultFormat::TypedIndexed3 && requested != ResultFormat::CompressedIndexed4 && (!model_.samples.empty() || !model_.bases.empty()))
             throw std::invalid_argument("extended result model requires indexed3");
         if (append) {
             if (append_preflight)
@@ -1058,7 +1066,14 @@ class NativeResultStorage final : public IResultStorage {
             ResultReader existing(path, recover, limit);
             if (format != ResultFormat::Auto && existing.format() != format)
                 throw std::runtime_error("result append requested format mismatch");
-            const bool typed = existing.format() == ResultFormat::TypedIndexed3;
+            const bool typed = existing.format() == ResultFormat::TypedIndexed3 || existing.format() == ResultFormat::CompressedIndexed4;
+            if (compression) {
+                if (existing.format() != ResultFormat::CompressedIndexed4 && compression->enabled())
+                    throw std::invalid_argument("compression cannot append to an older format");
+                if (existing.format() == ResultFormat::CompressedIndexed4 &&
+                    compressed_detail::pack_settings(*compression) != compressed_detail::pack_settings(existing.compression_settings()))
+                    throw std::invalid_argument("result append compression policy mismatch");
+            }
             if (!typed && (!model_.samples.empty() || !model_.bases.empty()))
                 throw std::invalid_argument("extended model cannot append to legacy result");
             if (typed_detail::pack_model(existing.model, limit_, typed) != typed_detail::pack_model(model_, limit_, typed))
@@ -1075,8 +1090,9 @@ class NativeResultStorage final : public IResultStorage {
             if (std::filesystem::exists(path))
                 throw std::runtime_error("result exists; use explicit append or a new output path");
             out_.open(path, std::ios::binary | std::ios::trunc);
-            if (requested == ResultFormat::Indexed2 || requested == ResultFormat::TypedIndexed3) {
-                indexed_detail::File::create(out_, model_, limit_, requested == ResultFormat::TypedIndexed3);
+            if (requested == ResultFormat::Indexed2 || requested == ResultFormat::TypedIndexed3 || requested == ResultFormat::CompressedIndexed4) {
+                indexed_detail::File::create(out_, model_, limit_, requested != ResultFormat::Indexed2,
+                    requested == ResultFormat::CompressedIndexed4, compression.value_or(CompressionSettings{}));
                 indexed_ = std::make_unique<indexed_detail::File>(path, limit_);
             } else {
                 native::prefix(out_, result_magic);
@@ -1138,6 +1154,13 @@ class NativeResultStorage final : public IResultStorage {
     }
     const std::filesystem::path &path() const noexcept { return path_; }
     const ResultModel &model() const noexcept { return model_; }
+    ResultFormat format() const noexcept {
+        return !indexed_ ? ResultFormat::Native1 : indexed_->compressed() ? ResultFormat::CompressedIndexed4 :
+            indexed_->typed() ? ResultFormat::TypedIndexed3 : ResultFormat::Indexed2;
+    }
+    std::uint64_t admission_overhead() const override {
+        return indexed_ && indexed_->compressed() ? compressed_detail::admission_reserve : 0;
+    }
     std::optional<FrameInfo> last() const override { return last_; }
 };
 class ResultWriter {

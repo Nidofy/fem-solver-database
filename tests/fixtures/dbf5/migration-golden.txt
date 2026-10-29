@@ -1,0 +1,18 @@
+DBF5 FNL-FEG synthetic transfer golden v1
+nodes 13 elements 3 equations 38 storage_only 1
+node 10 seq 1 eq 0 38 37 x 0 0 0 u 0.5 38 37 f 0 4 0
+node 40 seq 2 eq 36 35 34 x 1 0 0 u 36 35 34 f 5 0 0
+node 20 seq 3 eq 33 32 31 x 0 1 0 u 33 32 31 f 0 0 0
+node 90 seq 4 eq 30 29 28 x 0 0 1 u 30 29 28 f 0 0 0
+node 70 seq 5 eq 27 26 25 x 1 1 1 u 27 26 25 f 0 0 0
+node 100 seq 6 eq 24 23 22 x 3 0 0 u 24 23 22 f 0 0 7
+node 110 seq 7 eq 21 20 19 x 4 0 0 u 21 20 19 f 0 0 0
+node 120 seq 8 eq 18 17 16 x 4 1 0 u 18 17 16 f 0 0 0
+node 130 seq 9 eq 15 14 13 x 3 1 0 u 15 14 13 f 0 0 0
+node 140 seq 10 eq 12 11 10 x 3 0 1 u 12 11 10 f 0 0 0
+node 150 seq 11 eq 9 8 7 x 4 0 1 u 9 8 7 f 0 0 0
+node 160 seq 12 eq 6 5 4 x 4 1 1 u 6 5 4 f 0 0 0
+node 170 seq 13 eq 3 2 1 x 3 1 1 u 3 2 1 f 0 0 0
+element 900 nodes 10 40 20 90 material 7 part 77 property 55 points 1
+element 100 nodes 40 20 90 70 material 7 part 77 property 55 points 1
+element 500 nodes 100 110 120 130 140 150 160 170 material 7 part 77 property 55 points 8

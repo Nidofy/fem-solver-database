@@ -5,7 +5,7 @@
 #include <optional>
 
 namespace sdb::lifecycle {
-enum class ResultFormat { Auto, Native1, Indexed2, TypedIndexed3 };
+enum class ResultFormat { Auto, Native1, Indexed2, TypedIndexed3, CompressedIndexed4 };
 struct ResultEndpoint {
     // kind: 0=node, 1=element-node, 2=element-face. Entity and local are
     // one-based (node local is zero); face side is +/-1, other sides zero.

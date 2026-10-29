@@ -4,9 +4,11 @@
 #include <numeric>
 #include <memory>
 #include "typed_format.hpp"
+#include "compressed_format.hpp"
 namespace sdb::lifecycle {
 struct ResultReadStats {
     std::uint64_t bytes = 0, decoded_value_bytes = 0;
+    std::uint64_t stored_block_bytes = 0, raw_block_bytes = 0, compressed_blocks = 0;
 };
 namespace indexed_detail {
 inline constexpr std::uint64_t magic = 0x32534552424453ull;
@@ -98,6 +100,8 @@ class File {
     std::uint64_t limit_, size_ = 0, begin_ = 0;
     Identity identity_;
     bool typed_ = false;
+    bool compressed_ = false;
+    CompressionSettings compression_;
     mutable ResultReadStats stats_;
     mutable std::ifstream stream_; // single caller; reused for bounded random metadata reads
     native::Bytes at(const Ref &ref, std::uint32_t kind, std::uint64_t upper, std::uint64_t limit) const {
@@ -114,6 +118,31 @@ class File {
         auto b = native::body(in, h);
         stats_.bytes += b.size();
         return b;
+    }
+    native::Bytes block_at(const Ref &ref, std::uint64_t end, std::uint64_t budget,
+                          std::uint64_t decoded_scratch) const {
+        if (!compressed_) return at(ref, 2, end, budget);
+        auto encoded = at(ref, 2, end, std::min<std::uint64_t>(budget,
+            compressed_detail::max_stored + compressed_detail::envelope_bytes));
+        const auto h = compressed_detail::inspect(encoded);
+        if (decoded_scratch > budget || encoded.size() > budget - decoded_scratch ||
+            h.raw > budget - decoded_scratch - encoded.size())
+            throw std::length_error("compressed block decode budget");
+        compression::Limits limits;
+        limits.max_raw_bytes = h.raw;
+        limits.max_stored_bytes = h.stored;
+        limits.max_workspace_bytes = std::min(compression::hard_workspace_limit,
+            budget - decoded_scratch - encoded.size() - h.raw);
+        auto decoded = compression::decode(h.codec,
+            std::span<const std::uint8_t>(encoded).subspan(compressed_detail::envelope_bytes), h.raw, h.crc, limits);
+        stats_.stored_block_bytes += h.stored;
+        stats_.raw_block_bytes += h.raw;
+        stats_.compressed_blocks += h.codec == compression::Codec::Zstd;
+        return decoded;
+    }
+    Ref emit_block(std::ostream &out, const std::string &name, const native::Bytes &raw) const {
+        if (compressed_) return emit(out, 2, compressed_detail::encode(raw, compression_.for_field(name)));
+        return emit(out, 2, raw);
     }
     Footer footer(std::uint64_t offset) const {
         if (offset < begin_ || offset > size_ || size_ - offset < footer_bytes())
@@ -236,12 +265,16 @@ class File {
                 if (b.ref.size > budget || product(b.count, sum(sizeof(ResultAddress) + 64,
                     product(values_width(d), sum(typed_detail::scalar_bytes(d.typed->schema.scalar), 1)))) > budget - b.ref.size)
                     throw std::length_error("typed block decode budget");
-                auto values = native::unpack<TypedFieldPayload>(at(b.ref, 2, end, budget), budget);
-                validate_typed_payload(values);
+                const auto scratch = product(b.count, sum(sizeof(ResultAddress) + 64,
+                    product(values_width(d), sum(typed_detail::scalar_bytes(d.typed->schema.scalar), 1))));
+                auto raw = block_at(b.ref, end, budget, scratch);
+                if (raw.size() > budget) throw std::length_error("typed decoded block budget");
+                auto values = native::unpack<TypedFieldPayload>(raw, compressed_ ? budget - raw.size() : budget);
                 if (native::pack(typed_detail::metadata(values)) != native::pack(*d.typed) ||
                     values.addresses.size() != b.count || values.addresses.front() != b.first_address ||
                     values.addresses.back() != b.last_address)
                     throw std::runtime_error("typed block schema/address bounds");
+                validate_typed_payload(values);
                 stats_.decoded_value_bytes += product(product(b.count, values.schema.component_count()),
                     typed_detail::scalar_bytes(values.schema.scalar));
                 for (std::size_t n = 0; n < values.addresses.size(); ++n) {
@@ -260,8 +293,8 @@ class File {
                 }
                 continue;
             }
-            auto values = native::unpack<std::pair<std::vector<Id>, std::vector<double>>>(
-                at(b.ref, 2, end, 32768), 65536);
+            auto raw = compressed_ ? block_at(b.ref, end, budget, 65536) : at(b.ref, 2, end, 32768);
+            auto values = native::unpack<std::pair<std::vector<Id>, std::vector<double>>>(raw, 65536);
             if (values.first.size() != b.count ||
                 values.second.size() != product(b.count, d.descriptor.components.size()) ||
                 values.first.front() != b.first || values.first.back() != b.last)
@@ -287,12 +320,17 @@ class File {
     Footer latest;
     std::uint64_t latest_offset = 0, valid_end = 0;
     bool incomplete_tail = false;
-    static void create(std::ostream &out, const ResultModel &model, std::uint64_t limit, bool typed = false) {
-        native::prefix(out, typed ? typed_detail::magic : magic);
+    static void create(std::ostream &out, const ResultModel &model, std::uint64_t limit, bool typed = false,
+                       bool compressed = false, const CompressionSettings &settings = {}) {
+        const auto policy = compressed ? compressed_detail::pack_settings(settings) : native::Bytes{};
+        if (compressed && !typed) throw std::invalid_argument("compressed results require typed directory semantics");
+        native::prefix(out, compressed ? compressed_detail::magic : (typed ? typed_detail::magic : magic));
         auto bytes = typed_detail::pack_model(model, limit, typed);
         native::record(out, 0, bytes);
+        if (compressed) native::record(out, 11, policy);
         std::random_device random;
-        Identity id{native::hash(bytes), (std::uint64_t(random()) << 32) ^ random()};
+        Identity id{compressed ? compressed_detail::identity_hash(bytes, policy) : native::hash(bytes),
+                    (std::uint64_t(random()) << 32) ^ random()};
         native::record(out, 10, native::pack(id));
         Footer f;
         f.identity = id;
@@ -307,13 +345,20 @@ class File {
         std::ifstream in(path, std::ios::binary);
         std::array<std::uint8_t,8> header{};
         native::read(in, header); native::Reader probe{header};
-        typed_ = probe.integer<std::uint64_t>() == typed_detail::magic;
-        in.seekg(0); native::prefix(in, typed_ ? typed_detail::magic : magic);
+        const auto file_magic = probe.integer<std::uint64_t>();
+        compressed_ = file_magic == compressed_detail::magic;
+        typed_ = compressed_ || file_magic == typed_detail::magic;
+        in.seekg(0); native::prefix(in, compressed_ ? compressed_detail::magic : (typed_ ? typed_detail::magic : magic));
         auto b = native::record(in, 0, limit);
         model = typed_detail::unpack_model(b, limit, typed_);
         typed_detail::validate_model(model,limit);
+        native::Bytes policy;
+        if (compressed_) {
+            policy = native::record(in, 11, std::min<std::uint64_t>(limit, 131072));
+            compression_ = compressed_detail::unpack_settings(policy);
+        }
         identity_ = native::unpack<Identity>(native::record(in, 10, 1024), 1024);
-        if (identity_.model != native::hash(b))
+        if (identity_.model != (compressed_ ? compressed_detail::identity_hash(b, policy) : native::hash(b)))
             throw std::runtime_error("indexed model identity mismatch");
         begin_ = static_cast<std::uint64_t>(in.tellg());
         stats_.bytes = begin_;
@@ -369,6 +414,8 @@ class File {
         }
     }
     bool typed() const { return typed_; }
+    bool compressed() const { return compressed_; }
+    const CompressionSettings &compression_settings() const { return compression_; }
     ResultReadStats stats() const { return stats_; }
     Footer frame_footer(std::size_t index) const {
         if (index >= latest.count)
@@ -428,15 +475,22 @@ class File {
                 std::vector<std::size_t> order(p.addresses.size());
                 std::iota(order.begin(), order.end(), 0);
                 std::sort(order.begin(), order.end(), [&](auto a, auto b) { return p.addresses[a] < p.addresses[b]; });
-                for (std::size_t start = 0; start < order.size(); start += 256) {
-                    auto block = typed_detail::metadata(p);
+                for (std::size_t start = 0; start < order.size();) {
                     auto count = std::min<std::size_t>(256, order.size()-start);
-                    for (std::size_t k = start; k < start+count; ++k) typed_detail::append_row(block,p,order[k]);
-                    auto ref = emit(out, 2, native::pack(block, limit_));
+                    auto block = typed_detail::metadata(p);
+                    for (;;) {
+                        block = typed_detail::metadata(p);
+                        for (std::size_t k = start; k < start+count; ++k) typed_detail::append_row(block,p,order[k]);
+                        if (!compressed_ || native::encoded_size(block, limit_) <= compression::hard_raw_limit) break;
+                        if (count == 1) throw std::length_error("one typed row exceeds compressed block limit");
+                        count = std::max<std::size_t>(1, count / 2);
+                    }
+                    auto ref = emit_block(out, field.descriptor.name, native::pack(block, limit_));
                     Block b{block.addresses.front().entity, block.addresses.back().entity,
                         static_cast<std::uint32_t>(count), ref};
                     b.first_address = block.addresses.front(); b.last_address = block.addresses.back();
                     fd.blocks.push_back(b);
+                    start += count;
                 }
                 d.fields.push_back(std::move(fd));
                 continue;
@@ -456,7 +510,7 @@ class File {
                                         field.values.begin() + (i + 1) * w);
                 }
                 const auto block_bytes = native::pack(block, 32768);
-                auto ref = emit(out, 2, block_bytes);
+                auto ref = emit_block(out, field.descriptor.name, block_bytes);
                 fd.blocks.push_back(
                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
             }
