@@ -1,5 +1,6 @@
 #pragma once
-#include "../model_ir/model_ir.hpp"
+#include "../model_ir/foundation_validate.hpp"
+#include <numbers>
 #include <fstream>
 #include <charconv>
 #include <cctype>
@@ -412,6 +413,67 @@ class AbaqusInpReader final : public IModelReader {
                                 members.push_back(upper(v));
                 }
                 add_members(nodes, required(nodes ? "NSET" : "ELSET"), members, b.at, param("INSTANCE"));
+            } else if (b.key == "EQUATION") {
+                params({});
+                if(in_part || in_instance || step) fail(b.at,"EQUATION supports root/assembly scope only");
+                m.schema=3;
+                if(b.data.empty()) fail(b.at,"empty EQUATION");
+                for(std::size_t row=0;row<b.data.size();) {
+                    auto f=fields(b.data[row]); count(f,1,1,b.data[row].at);
+                    auto n=label(f[0],b.data[row].at);
+                    if(n<2 || n>options.max_entities) fail(b.data[row].at,"equation term count/budget");
+                    IREquation e; e.id=ConstraintId(index_of(m.foundation.equations.size())); e.source=b.data[row++].at;
+                    while(e.terms.size()<n) {
+                        if(row==b.data.size()) fail(e.source,"truncated equation terms");
+                        auto at=b.data[row].at; auto terms=fields(b.data[row++]);
+                        while(!terms.empty() && terms.back().empty()) terms.pop_back();
+                        if(terms.empty() || terms.size()>12 || terms.size()%3 || terms.size()/3>n-e.terms.size())
+                            fail(at,"equation requires at most four node/DOF/coefficient triples per line");
+                        for(std::size_t t=0;t<terms.size();t+=3) {
+                            IREquationTerm term;
+                            auto target=upper(terms[t]); auto dot=target.find('.');
+                            if(dot!=target.npos) {
+                                if(dot==0 || target.find('.',dot+1)!=target.npos) fail(at,"invalid equation scoped node");
+                                term.node.instance=target.substr(0,dot); target=target.substr(dot+1);
+                            }
+                            if(!is_label(target)) fail(at,"equation node sets are outside the controlled subset");
+                            term.node.label=label(target,at);
+                            auto d=label(terms[t+1],at); if(d>6) fail(at,"equation DOF must be 1..6");
+                            term.dof=static_cast<Dof>(d-1); term.coefficient=number(terms[t+2],at);
+                            e.terms.push_back(std::move(term));
+                        }
+                    }
+                    m.foundation.equations.push_back(std::move(e));
+                }
+            } else if (b.key == "ORIENTATION") {
+                params({"NAME","SYSTEM","DEFINITION"});
+                if(in_part || in_instance || in_assembly || step || param("SYSTEM","RECTANGULAR")!="RECTANGULAR" || param("DEFINITION","COORDINATES")!="COORDINATES")
+                    fail(b.at,"ORIENTATION supports root rectangular coordinate definitions only");
+                if(b.data.empty() || b.data.size()>2) fail(b.at,"orientation requires one or two data lines");
+                auto f=fields(b.data[0]); while(!f.empty() && f.back().empty()) f.pop_back();
+                if(f.size()!=6 && f.size()!=9) fail(b.at,"orientation requires points a,b and optional c");
+                std::array<double,3> a{},v{},origin{},z{};
+                for(unsigned k=0;k<3;++k) {
+                    if(f.size()==9) origin[k]=f[k+6].empty()?0:number(f[k+6],b.at);
+                    a[k]=(f[k].empty()?0:number(f[k],b.at))-origin[k];
+                    v[k]=(f[k+3].empty()?0:number(f[k+3],b.at))-origin[k];
+                }
+                auto normalize=[&](auto &x) { double norm=std::hypot(x[0],x[1],x[2]); if(!(norm>0) || !std::isfinite(norm)) fail(b.at,"degenerate orientation points"); for(auto &q:x) q/=norm; };
+                normalize(a); normalize(v);
+                for(unsigned k=0;k<3;++k) z[k]=a[(k+1)%3]*v[(k+2)%3]-a[(k+2)%3]*v[(k+1)%3];
+                normalize(z);
+                for(unsigned k=0;k<3;++k) v[k]=z[(k+1)%3]*a[(k+2)%3]-z[(k+2)%3]*a[(k+1)%3];
+                IROrientation o; o.id=OrientationId(index_of(m.foundation.orientations.size())); o.name=required("NAME"); o.source=b.at;
+                for(unsigned k=0;k<3;++k) { o.rotation[k*3]=a[k]; o.rotation[k*3+1]=v[k]; o.rotation[k*3+2]=z[k]; }
+                if(b.data.size()==2) {
+                    auto r=fields(b.data[1]); count(r,1,2,b.data[1].at);
+                    auto axis=r[0].empty()?1:label(r[0],b.at); if(axis>3) fail(b.at,"orientation rotation axis must be 1..3");
+                    double angle=r.size()==1 || r[1].empty()?0:number(r[1],b.at)*std::numbers::pi/180;
+                    Rotation extra=identity_rotation; auto j=static_cast<unsigned>(axis%3),k=static_cast<unsigned>((axis+1)%3);
+                    extra[j*3+j]=extra[k*3+k]=std::cos(angle); extra[j*3+k]=-std::sin(angle); extra[k*3+j]=std::sin(angle);
+                    o.rotation=multiply_rotation(o.rotation,extra);
+                }
+                validate_rotation(o.rotation,b.at); m.schema=3; m.foundation.orientations.push_back(std::move(o));
             } else if (b.key == "MATERIAL") {
                 params({"NAME"});
                 if (in_part || in_instance || step)
@@ -621,6 +683,11 @@ class AbaqusInpReader final : public IModelReader {
         }
         if (in_part || in_assembly || in_instance || step)
             fail({path.string(), 1, 1}, "unclosed PART/ASSEMBLY/INSTANCE/STEP");
+        for(auto &e:m.foundation.equations) for(auto &t:e.terms) if(!t.node.instance.empty()) {
+            auto i=std::find_if(m.instances.begin(),m.instances.end(),[&](auto &v){return v.name==t.node.instance;});
+            if(i==m.instances.end()) fail(e.source,"unknown equation instance");
+            t.node.part=i->part;
+        }
         result.report.parsed = true;
         return result;
     }

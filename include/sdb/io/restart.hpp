@@ -19,11 +19,14 @@ class RestartDB {
     template <class T>
     static void save(const std::filesystem::path &path, const CompiledModel<T> &model,
                      const StateDB<T> &state, RestartInfo info) {
-        if (state.in_trial() || state.data().rotation)
-            throw std::logic_error("lifecycle restart requires committed translation state");
+        if (state.in_trial())
+            throw std::logic_error("lifecycle restart requires committed state");
         state.validate_shape();
         if (state.model_id() != model.mesh.fingerprint())
             throw std::invalid_argument("restart model mismatch");
+        // Schema 3 remains byte-compatible for translation-only states. Schema 4
+        // requires all six rotation fields after the existing fourteen fields.
+        info.state_schema = state.data().rotation ? 4 : 3;
         info.precision = sizeof(T);
         info.model_schema = model.definition.schema;
         info.mesh = model.mesh.fingerprint();
@@ -65,19 +68,19 @@ class RestartDB {
     static RestartInfo load(const std::filesystem::path &path, const CompiledModel<T> &model,
                             StateDB<T> &state, std::uint64_t configuration,
                             std::uint64_t max_file_bytes = 64ull * 1024 * 1024 * 1024) {
-        if (state.in_trial() || state.data().rotation || state.model_id() != model.mesh.fingerprint())
+        if (state.in_trial() || state.model_id() != model.mesh.fingerprint())
             throw std::logic_error("restart requires committed matching model");
         if (std::filesystem::file_size(path) > max_file_bytes)
             throw std::length_error("restart file budget");
         std::ifstream in(path, std::ios::binary);
         native::prefix(in, restart_magic);
         auto info = native::unpack<RestartInfo>(native::record(in, 0, 4096));
-        if (info.state_schema != 3 || info.model_schema != model.definition.schema || info.solver_version != 1 ||
+        if (info.state_schema != (state.data().rotation ? 4u : 3u) || info.model_schema != model.definition.schema || info.solver_version != 1 ||
             info.precision != sizeof(T) || info.mesh != model.mesh.fingerprint() ||
             info.definition != ModelStore::identity(model) || info.configuration != configuration ||
             info.time < 0 || info.dt <= 0)
             throw std::runtime_error("restart schema/model/solver/precision/configuration mismatch");
-        StateDB<T> next(model.mesh);
+        StateDB<T> next(model.mesh, state.data().rotation.has_value());
         auto &data = next.data();
         data.step = info.total_increment;
         data.time = info.time;
@@ -123,6 +126,15 @@ class RestartDB {
                 (mass == 0 ? inverse != 0
                            : std::abs(mass * inverse - 1) > 64 * std::numeric_limits<T>::epsilon()))
                 throw std::runtime_error("restart invalid mass/inverse");
+            if (data.rotation)
+                for (unsigned c = 0; c < 3; ++c) {
+                    auto inertia = data.rotation->inertia.read()(n,c);
+                    auto inverse_inertia = data.rotation->inverse_inertia.read()(n,c);
+                    if (inertia < 0 || inverse_inertia < 0 ||
+                        (inertia == 0 ? inverse_inertia != 0 :
+                         std::abs(inertia * inverse_inertia - 1) > 64 * std::numeric_limits<T>::epsilon()))
+                        throw std::runtime_error("restart invalid inertia/inverse");
+                }
         }
         state.data() = std::move(data);
         return info;

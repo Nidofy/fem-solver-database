@@ -13,6 +13,8 @@ template <class T> class HexPlan {
     T stable_step = std::numeric_limits<T>::max();
     HexPlan(const MeshDB<T> &mesh, const StateDB<T> &state, Field<T> &mass_field, Field<T> &dt_field,
             Field<T> &volumes, Field<T> &point_weights) {
+        if (mesh.requires_storage_only())
+            throw std::invalid_argument("model contracts require storage-only execution");
         for (Index e = 0; e < mesh.elements(); ++e)
             if (mesh.element(e).topology == Topology::Hex8)
                 elements.push_back(e);

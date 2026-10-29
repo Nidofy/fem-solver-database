@@ -1,17 +1,11 @@
 #pragma once
-#include "../model.hpp"
+#include "foundation.hpp"
 #include <filesystem>
 #include <sstream>
 #include <set>
 #include <functional>
 
 namespace sdb::lifecycle {
-struct Source {
-    std::string file;
-    std::uint64_t line = 1, column = 1;
-    std::string str() const { return file + ":" + std::to_string(line) + ":" + std::to_string(column); }
-    template <class F> void visit(F f) { f(file, line, column); }
-};
 struct Diagnostic {
     Source source;
     std::string message;
@@ -190,23 +184,19 @@ struct ModelIR {
     std::vector<IRStep> steps;
     std::vector<OpaqueBlock> opaque;
     std::vector<IRHistoryBinding> history_bindings;
-    // Coordinate systems other than the global Cartesian frame remain opaque and fail the solve gate.
+    ModelFoundation foundation;
     template <class F> void visit(F f) {
         f(schema);
-        if (schema != 1 && schema != 2)
+        if (schema != 1 && schema != 2 && schema != 3)
             throw std::runtime_error("unsupported ModelIR schema");
         f(units, assembly, mode, parts, instances, sets, materials, sections, surfaces, amplitudes,
           initial_boundaries, steps, opaque);
         if (schema >= 2) f(history_bindings);
         else if (!history_bindings.empty())
             throw std::runtime_error("history bindings require ModelIR schema 2");
+        if (schema >= 3) f(foundation);
+        else if (!foundation.empty()) throw std::runtime_error("foundation requires ModelIR schema 3");
     }
-};
-struct SourceKey {
-    std::string part, instance;
-    Id label = 0;
-    auto operator<=>(const SourceKey &) const = default;
-    template <class F> void visit(F f) { f(part, instance, label); }
 };
 struct SourceEntry {
     SourceKey key;
@@ -222,12 +212,18 @@ struct SourceMap {
         return node ? nodes.at(node_lookup.at(key)) : elements.at(element_lookup.at(key));
     }
     const SourceEntry &reverse(bool node, Index i) const { return node ? nodes.at(i) : elements.at(i); }
+    NodeId node_id(const SourceKey &key) const { return NodeId(lookup(true,key).index); }
+    ElementId element_id(const SourceKey &key) const { return ElementId(lookup(false,key).index); }
+    const SourceEntry &reverse(NodeId id) const { return nodes.at(id.value()); }
+    const SourceEntry &reverse(ElementId id) const { return elements.at(id.value()); }
     void add(bool node, SourceEntry e) {
         auto &v = node ? nodes : elements;
         auto &m = node ? node_lookup : element_lookup;
+        if (e.index != v.size()) fail(e.source, "SourceMap index must append densely");
         if (!m.emplace(e.key, e.index).second)
             fail(e.source, "duplicate scoped label");
-        v.push_back(std::move(e));
+        try { v.push_back(e); }
+        catch (...) { m.erase(e.key); throw; }
     }
 };
 struct SectionRecord {

@@ -1,0 +1,18 @@
+{
+  "source_commit": "25cd74c2bc713f865e9086bd58dc3982f4fcadf9",
+  "description": "Pre-DBF2 binaries generated before schema3/typed result work. Native1/indexed2: forced_tet.inp stop-after1. Schema2: DBF1 foundation double material-history fixture.",
+  "files": {
+    "native1.sdbres": {
+      "bytes": 4292,
+      "sha256": "c796cc2985388191883a8e1c58e595d6d8082ef142907a51fc5b769877c096dc"
+    },
+    "indexed2.sdbres": {
+      "bytes": 6144,
+      "sha256": "4b55c65a19a51b682d3ce05e9a11d4259cbc90615cd129cc0ca306f69db8243f"
+    },
+    "schema2.sdbmodel": {
+      "bytes": 7186,
+      "sha256": "501237b656863d4c711b08f3c219d6cab0d6ba1c354e2d2d3e8d9c67847466b6"
+    }
+  }
+}

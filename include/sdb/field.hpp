@@ -1,6 +1,7 @@
 #pragma once
 #include "memory.hpp"
 #include "schema.hpp"
+#include "types.hpp"
 #include <optional>
 #include <string>
 #include <typeindex>
@@ -141,19 +142,25 @@ class FieldRegistry {
         std::shared_ptr<void> field;
         std::string group;
         std::optional<FieldDescriptor> descriptor;
+        FieldId id;
     };
     std::unordered_map<std::string, Entry> entries_;
+    std::vector<std::string> names_;
     bool frozen_ = false;
 
   public:
     template <class F> F &add(std::string name, std::size_t count, std::string group = {}) {
         if (frozen_)
             throw std::logic_error("registry frozen");
+        if (entries_.contains(name)) throw std::invalid_argument("duplicate field");
         auto p = std::make_shared<F>(count);
-        auto [it, ok] = entries_.emplace(std::move(name), Entry{typeid(F), p, std::move(group), {}});
-        if (!ok)
-            throw std::invalid_argument("duplicate field");
-        return *static_cast<F *>(it->second.field.get());
+        auto id = FieldId::checked(names_.size());
+        names_.push_back(name);
+        try {
+            auto [it, ok] = entries_.emplace(std::move(name), Entry{typeid(F), p, std::move(group), {}, id});
+            if (!ok) throw std::invalid_argument("duplicate field");
+            return *static_cast<F *>(it->second.field.get());
+        } catch (...) { names_.pop_back(); throw; }
     }
     template <class F> F &add(FieldDescriptor descriptor, std::size_t count, std::string group = {}) {
         descriptor.validate();
@@ -177,6 +184,10 @@ class FieldRegistry {
             throw std::invalid_argument("field type mismatch");
         return *static_cast<F *>(e.field.get());
     }
+    FieldId field_id(const std::string &name) const { return entries_.at(name).id; }
+    const std::string &name(FieldId id) const { return names_.at(id.value()); }
+    template <class F> F &get(FieldId id) const { return get<F>(name(id)); }
+    const FieldDescriptor &descriptor(FieldId id) const { return descriptor(name(id)); }
     void freeze() noexcept { frozen_ = true; }
     bool contains(const std::string &name) const { return entries_.contains(name); }
 };

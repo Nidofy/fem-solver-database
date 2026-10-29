@@ -76,6 +76,8 @@ template <class T> class StateDB {
     StateData<T> data_;
     std::optional<StateData<T>> backup_;
     std::vector<std::size_t> ip_offsets_{0}, history_offsets_{0};
+    // Allocated only for heterogeneous/layered sample layouts.
+    std::vector<std::size_t> point_history_offsets_;
     std::uint64_t model_id_;
     std::size_t node_count_;
 
@@ -96,23 +98,31 @@ template <class T> class StateDB {
         data_.node_active.fill(1);
         data_.element_active.resize(e);
         data_.element_active.fill(1);
+        if (mesh.has_sample_layout()) point_history_offsets_.push_back(0);
         for (Index i = 0; i < e; ++i) {
             const auto &el = mesh.element(i);
-            ip_offsets_.push_back(sum(ip_offsets_.back(), el.integration_points));
-            history_offsets_.push_back(
-                sum(history_offsets_.back(),
-                    product(el.integration_points, mesh.materials()[el.material].history_variables)));
+            const auto points = mesh.sample_point_count(i);
+            ip_offsets_.push_back(sum(ip_offsets_.back(), points));
+            if (mesh.has_sample_layout()) {
+                for (std::size_t q = 0; q < points; ++q)
+                    point_history_offsets_.push_back(sum(point_history_offsets_.back(),
+                        mesh.materials()[mesh.sample_point(i, q).material].history_variables));
+                history_offsets_.push_back(point_history_offsets_.back());
+            } else
+                history_offsets_.push_back(sum(history_offsets_.back(),
+                    product(points, mesh.materials()[el.material].history_variables)));
         }
         data_.stress.resize(ip_offsets_.back());
         data_.strain.resize(ip_offsets_.back());
         data_.history.resize(history_offsets_.back());
         auto history = data_.history.write();
         for (Index i = 0; i < e; ++i) {
-            const auto &el = mesh.element(i);
-            const auto &material = mesh.materials()[el.material];
-            if (material.history_schema.empty()) continue;
-            for (std::size_t ip = 0; ip < el.integration_points; ++ip) {
-                auto address = sum(history_offsets_[i], product(ip, material.history_variables));
+            for (std::size_t ip = 0; ip < mesh.sample_point_count(i); ++ip) {
+                const auto &material = mesh.materials()[mesh.sample_point(i, ip).material];
+                if (material.history_schema.empty()) continue;
+                auto address = point_history_offsets_.empty()
+                    ? sum(history_offsets_[i], product(ip, material.history_variables))
+                    : point_history_offsets_.at(ip_offsets_[i] + ip);
                 for (const auto &variable : material.history_schema.variables)
                     for (double initial : variable.initial)
                         history(address++) = static_cast<T>(initial);
@@ -125,21 +135,34 @@ template <class T> class StateDB {
     const StateData<T> &data() const noexcept { return data_; }
     const auto &ip_offsets() const noexcept { return ip_offsets_; }
     const auto &history_offsets() const noexcept { return history_offsets_; }
+    const auto &point_history_offsets() const noexcept { return point_history_offsets_; }
     std::size_t history_address(const MeshDB<T> &mesh, Index element, std::size_t ip,
-                                const std::string &name, std::size_t component = 0) const {
+                                const std::string &name, std::size_t component = 0,
+                                std::uint32_t layer = 0, std::uint32_t section_point = 0) const {
+        if (ip >= mesh.element(element).integration_points) throw std::out_of_range("history integration point");
+        for (std::size_t q = 0; q < mesh.sample_point_count(element); ++q) {
+            const auto p = mesh.sample_point(element, q);
+            if (p.integration_point == ip + 1 && p.layer == layer && p.section_point == section_point)
+                return history_address_at(mesh, element, q, name, component);
+        }
+        throw std::out_of_range("history layer/section point");
+    }
+    std::size_t history_address_at(const MeshDB<T> &mesh, Index element, std::size_t point,
+                                   const std::string &name, std::size_t component = 0) const {
         validate_shape();
         if (mesh.fingerprint() != model_id_)
             throw std::invalid_argument("history address model mismatch");
-        const auto &el = mesh.element(element);
-        if (ip >= el.integration_points) throw std::out_of_range("history integration point");
-        const auto &material = mesh.materials()[el.material];
+        const auto sample = mesh.sample_point(element, point);
+        const auto &material = mesh.materials()[sample.material];
         auto offset = material.history_schema.offset(name);
         for (const auto &variable : material.history_schema.variables)
             if (variable.field.name == name) {
                 if (component >= variable.field.component_count())
                     throw std::out_of_range("history component");
-                return sum(history_offsets_.at(element),
-                           sum(product(ip, material.history_variables), sum(offset, component)));
+                const auto base = point_history_offsets_.empty()
+                    ? sum(history_offsets_.at(element), product(point, material.history_variables))
+                    : point_history_offsets_.at(ip_offsets_.at(element) + point);
+                return sum(base, sum(offset, component));
             }
         throw std::out_of_range("unknown history variable");
     }

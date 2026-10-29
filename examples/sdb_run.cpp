@@ -47,7 +47,7 @@ template <class T> int run(const Args &a) {
             CheckpointLink::verify(a.at("--output"), a.at("--restart"), cpu, model,
                                    a.contains("--recover-tail"));
         },
-        a.contains("--indexed"));
+        a.contains("--indexed"), a.contains("--typed-indexed") ? ResultFormat::TypedIndexed3 : ResultFormat::Auto);
     ResultWriter writer(storage);
     if (auto last = storage.last(); last && last->time > cpu.state().data().time)
         throw std::runtime_error(
@@ -59,6 +59,8 @@ template <class T> int run(const Args &a) {
         auto last = async ? async->last() : storage.last();
         if (!last || cpu.state().data().time > last->time) {
             auto frame = cpu.snapshot(limit);
+            if (a.contains("--typed-indexed"))
+                bind_result_frame(frame, ResultModel::from(model, cpu.configuration()));
             if (async)
                 async->write(std::move(frame));
             else
@@ -85,7 +87,7 @@ template <class T> int run(const Args &a) {
 int main(int argc, char **argv) {
     try {
         Args a;
-        const std::set<std::string> flags{"--indexed", "--append", "--recover-tail", "--inspect"};
+        const std::set<std::string> flags{"--indexed", "--typed-indexed", "--typed", "--append", "--recover-tail", "--inspect"};
         const std::set<std::string> value_options{
             "--async-mib", "--ip",     "--input",      "--model",   "--save-model", "--backend",
             "--precision", "--output", "--checkpoint", "--restart", "--stop-after", "--buffer-mib",
@@ -110,7 +112,32 @@ int main(int argc, char **argv) {
                 ResultExporter::vtk(r, a.at("--vtk"));
             if (a.contains("--xdmf"))
                 ResultExporter::xdmf(r, a.at("--xdmf"));
-            if (a.contains("--field")) {
+            if (a.contains("--typed") && a.contains("--field")) {
+                if (a.contains("--region") || a.contains("--component") || a.contains("--ip"))
+                    throw std::invalid_argument("typed CLI emits full addresses/components; these legacy filters are unsupported");
+                auto index = a.contains("--time") ? r.by_time(std::stod(a.at("--time"))) : r.index.size() - 1;
+                auto f = r.typed_field(index, a.at("--field"), {}, a.contains("--entity")
+                    ? std::optional<Id>(std::stoull(a.at("--entity"))) : std::nullopt);
+                const auto &p = *f.typed;
+                std::cout << "time=" << r.index.at(index).time << " scalar=" << unsigned(p.schema.scalar)
+                          << " basis=" << p.basis_id << " schema=" << p.schema_id << '\n';
+                std::cout << "entity,ip,layer,section_point,element_node,face,side,domain,generation,interaction,contact_point,endpoint_a_kind,endpoint_a_entity,endpoint_a_local,endpoint_a_side,endpoint_b_kind,endpoint_b_entity,endpoint_b_local,endpoint_b_side,component,valid,value\n";
+                std::visit([&](const auto &values) {
+                    auto width = p.schema.component_count();
+                    for (std::size_t row = 0; row < p.addresses.size(); ++row) {
+                        const auto &v = p.addresses[row];
+                        for (std::size_t c = 0; c < width; ++c) {
+                            auto n = row * width + c;
+                            std::cout << v.entity << ',' << v.integration_point << ',' << v.layer << ',' << v.section_point << ','
+                                << v.element_node << ',' << v.face << ',' << v.side << ',' << v.domain << ',' << v.contact_generation << ','
+                                << v.interaction << ',' << v.contact_point << ',' << v.endpoint_a.kind << ',' << v.endpoint_a.entity << ','
+                                << v.endpoint_a.local << ',' << v.endpoint_a.side << ',' << v.endpoint_b.kind << ',' << v.endpoint_b.entity << ','
+                                << v.endpoint_b.local << ',' << v.endpoint_b.side << ',' << c << ',' << (p.validity.empty() ? 1 : int(p.validity[n]))
+                                << ',' << +values[n] << '\n';
+                        }
+                    }
+                }, p.values);
+            } else if (a.contains("--field")) {
                 auto region = a.contains("--region") ? a.at("--region") : "";
                 if (a.contains("--entity")) {
                     auto values = ResultQuery::history(

@@ -35,13 +35,36 @@ class AsyncResultWriter {
                 str(c);
             add(product(field.ids.capacity(), sizeof(Id)));
             add(product(field.values.capacity(), sizeof(double)));
+            if (field.typed) {
+                const auto &p = *field.typed;
+                validate_typed_payload(p);
+                str(p.schema_id); str(p.schema.name); str(p.schema.units); str(p.schema.basis);
+                add(product(p.schema.shape.capacity(), sizeof(std::uint32_t)));
+                add(product(p.schema.components.capacity(), sizeof(std::string)));
+                for (const auto &c : p.schema.components) str(c);
+                add(product(p.addresses.capacity(),sizeof(ResultAddress)));
+                add(p.validity.capacity());
+                std::visit([&](const auto &v) { add(product(v.capacity(),sizeof(typename std::decay_t<decltype(v)>::value_type))); },p.values);
+                // Address validation tree, sorted row permutation, block/codec scratch,
+                // and directory metadata. Charges are conservative and checked.
+                add(product(p.addresses.size(),sizeof(ResultAddress)+64+sizeof(std::size_t)));
+                add(product(3, native::encoded_size(p,std::numeric_limits<std::size_t>::max())));
+            }
             // validate_frame builds per-field entity sets and one key per field.
             add(product(field.ids.size(), 64));
             add(256);
             str(d.name);
             str(d.region);
         }
-        add(static_cast<std::size_t>(native::encoded_size(f, std::numeric_limits<std::size_t>::max())));
+        if (std::none_of(f.fields.begin(),f.fields.end(),[](const auto &v){return bool(v.typed);}))
+            add(static_cast<std::size_t>(native::encoded_size(f, std::numeric_limits<std::size_t>::max())));
+        else {
+            add(native::encoded_size(f.info,std::numeric_limits<std::size_t>::max()));
+            for (const auto &field : f.fields) {
+                add(native::encoded_size(field.descriptor,std::numeric_limits<std::size_t>::max()));
+                if (!field.typed) add(native::encoded_size(field,std::numeric_limits<std::size_t>::max()));
+            }
+        }
         return n;
     }
 

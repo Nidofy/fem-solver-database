@@ -1,6 +1,7 @@
 #pragma once
 #include "field.hpp"
 #include "schema.hpp"
+#include "types.hpp"
 #include <array>
 #include <bit>
 #include <cmath>
@@ -118,6 +119,12 @@ struct Element {
     Index material, part;
     std::uint32_t integration_points;
 };
+struct SamplePoint {
+    std::uint32_t integration_point = 1, layer = 0, section_point = 0;
+    Index material = 0;
+    auto operator<=>(const SamplePoint &) const = default;
+    template <class F> void visit(F f) { f(integration_point, layer, section_point, material); }
+};
 struct ElementBatch {
     Topology topology;
     Index material;
@@ -144,6 +151,9 @@ template <class T> class MeshDB {
     std::vector<ElementSet> element_sets_;
     std::vector<Constraint> constraints_;
     std::vector<Surface> surfaces_;
+    bool storage_only_ = false;
+    std::uint64_t semantic_contract_ = 0;
+    std::map<Index, std::vector<SamplePoint>> sample_points_;
     MeshDB() = default;
 
   public:
@@ -170,6 +180,23 @@ template <class T> class MeshDB {
     const auto &element_sets() const { return element_sets_; }
     const auto &constraints() const { return constraints_; }
     const auto &surfaces() const { return surfaces_; }
+    bool requires_storage_only() const noexcept { return storage_only_; }
+    bool has_sample_layout() const noexcept { return !sample_points_.empty(); }
+    std::size_t sample_point_count(Index e) const {
+        const auto &el = element(e);
+        auto it = sample_points_.find(e);
+        return it == sample_points_.end() ? el.integration_points : it->second.size();
+    }
+    SamplePoint sample_point(Index e, std::size_t q) const {
+        const auto &el = element(e);
+        if (q >= sample_point_count(e)) throw std::out_of_range("sample point");
+        auto it = sample_points_.find(e);
+        return it == sample_points_.end() ? SamplePoint{static_cast<std::uint32_t>(q + 1), 0, 0, el.material}
+                                          : it->second[q];
+    }
+    ExternalLabel external_label(NodeId i) const { return ExternalLabel(node_id(i.value())); }
+    NodeId node(ExternalLabel label) const { return NodeId(node_index(label.value())); }
+    const Element &element(ElementId i) const { return element(i.value()); }
     void validate_face(FaceId f) const {
         const auto &e = element(element_index(f.element));
         if (f.local >= face_count(e.topology) || (f.side != 1 && f.side != -1))
@@ -285,6 +312,18 @@ template <class T> class MeshDB {
             for (Index i = 0; i < materials_.size(); ++i)
                 semantic(semantic, materials_[i].history_schema);
         }
+        if (storage_only_ || !sample_points_.empty()) {
+            integer(0x534442434f4e5433ull);
+            integer(storage_only_);
+            integer(semantic_contract_);
+            integer(sample_points_.size());
+            for (const auto &[element, points] : sample_points_) {
+                integer(element); integer(points.size());
+                for (const auto &p : points) {
+                    integer(p.integration_point); integer(p.layer); integer(p.section_point); integer(p.material);
+                }
+            }
+        }
         return h;
     }
 };
@@ -309,6 +348,9 @@ template <class T> class ModelBuilder {
     std::vector<std::pair<Id, std::vector<Id>>> node_sets_, element_sets_;
     std::vector<std::tuple<Id, std::uint8_t, double>> constraints_;
     std::vector<Surface> surfaces_;
+    bool storage_only_ = false;
+    std::uint64_t semantic_contract_ = 0;
+    std::map<Id, std::vector<SamplePoint>> sample_points_;
     bool finalized_ = false;
     void building() const {
         if (finalized_)
@@ -316,6 +358,15 @@ template <class T> class ModelBuilder {
     }
 
   public:
+    void set_storage_contract(std::uint64_t identity) {
+        building(); storage_only_ = true; semantic_contract_ = identity;
+    }
+    void set_sample_points(Id element, std::vector<SamplePoint> points) {
+        building();
+        if (points.empty() || !sample_points_.emplace(element, std::move(points)).second)
+            throw std::invalid_argument("empty/duplicate sample point layout");
+        storage_only_ = true;
+    }
     void reserve(std::size_t nodes, std::size_t elements) {
         building();
         index_of(nodes);
@@ -457,6 +508,18 @@ template <class T> class ModelBuilder {
             for (auto f : s.faces)
                 m.validate_face(f);
             m.surfaces_.push_back(s);
+        }
+        m.storage_only_ = storage_only_;
+        m.semantic_contract_ = semantic_contract_;
+        for (const auto &[id, points] : sample_points_) {
+            auto e = m.element_index(id);
+            std::set<std::tuple<std::uint32_t, std::uint32_t, std::uint32_t>> seen;
+            for (const auto &p : points)
+                if (!p.integration_point || p.integration_point > m.element(e).integration_points ||
+                    p.material >= m.materials_.size() || bool(p.layer) != bool(p.section_point) ||
+                    !seen.emplace(p.integration_point, p.layer, p.section_point).second)
+                    throw std::invalid_argument("invalid/duplicate state sample point");
+            m.sample_points_.emplace(e, points);
         }
         m.fingerprint_ = m.compute_fingerprint();
         finalized_ = true;

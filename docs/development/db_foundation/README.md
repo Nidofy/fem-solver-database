@@ -1,4 +1,22 @@
-# DBF1 foundation implementation
+# Database foundation implementation
+
+## Current continuation: DBF2
+
+The DBF1 independent Astra/high review passed within its declared scope; its report
+is retained under `verification/reviews/DBF1/independent-astra/report.md` and committed
+in `25cd74c2bc713f865e9086bd58dc3982f4fcadf9`. Development continued immediately.
+
+DBF2 adds the ModelIR3 foundation schema, typed identities and matrix DTOs,
+coordinate/material/section/load/constraint definitions, heterogeneous layer
+histories, TypedIndexed3 results, schema4 rotational restart, a synthetic composite
+and independent-process compatibility tests. No new physics kernel was added.
+
+Read [DBF2 contracts](DBF2_CONTRACTS.md), the current table in
+[CAPABILITY_MATRIX](CAPABILITY_MATRIX.md), [DBF2 verification](DBF2_VERIFICATION.md)
+and [DBF2 handoff](DBF2_HANDOFF.md). The sections below retain DBF1's original scope
+and exclusions as historical evidence; they are not DBF2's current gap list.
+
+## Historical DBF1 implementation
 
 2026-10-29 (Asia/Shanghai). This is the first bounded implementation batch from
 `docs/SDB_DB_FOUNDATION_COMPLETION_KIT`, not completion of all D1–D7 goals.

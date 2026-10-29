@@ -1,6 +1,7 @@
 #pragma once
 #include "../input/abaqus.hpp"
 #include "../state.hpp"
+#include "../model_ir/foundation_validate.hpp"
 #include <numbers>
 
 namespace sdb::lifecycle {
@@ -25,10 +26,57 @@ inline std::vector<unsigned> abaqus_face(const ElementDescriptor &d, const std::
     }
     fail(at, "invalid surface face " + name + " for " + d.token);
 }
+// Semantic identity ignores source text location and ordering of identity-keyed
+// definitions. Connectivity, layer/axis/component/history/step order stays meaningful.
+inline ModelIR canonical_definition(ModelIR ir) {
+    auto strip=[](auto &&self,auto &x)->void {
+        using X=std::remove_cvref_t<decltype(x)>;
+        if constexpr(std::is_same_v<X,Source>) x={};
+        else if constexpr(requires { x.first; x.second; }) { self(self,x.first); self(self,x.second); }
+        else if constexpr(requires { x.visit([](auto &...){}); }) x.visit([&](auto &...v){(self(self,v),...);});
+        else if constexpr(!std::is_same_v<X,std::string> && requires { x.begin(); x.end(); }) for(auto &v:x) self(self,v);
+    };
+    strip(strip,ir);
+    auto by_name=[](auto &v) { std::sort(v.begin(),v.end(),[](auto &a,auto &b){return a.name<b.name;}); };
+    by_name(ir.parts); by_name(ir.instances); by_name(ir.materials); by_name(ir.amplitudes);
+    for(auto &p:ir.parts) {
+        std::sort(p.nodes.begin(),p.nodes.end(),[](auto &a,auto &b){return a.label<b.label;});
+        std::sort(p.elements.begin(),p.elements.end(),[](auto &a,auto &b){return a.label<b.label;});
+    }
+    for(auto &s:ir.sets) { std::sort(s.members.begin(),s.members.end()); s.members.erase(std::unique(s.members.begin(),s.members.end()),s.members.end()); }
+    std::sort(ir.sets.begin(),ir.sets.end(),[](auto &a,auto &b){return std::tie(a.scope,a.name,a.nodes,a.instance,a.members)<std::tie(b.scope,b.name,b.nodes,b.instance,b.members);});
+    std::sort(ir.sections.begin(),ir.sections.end(),[](auto &a,auto &b){return std::tie(a.scope,a.set)<std::tie(b.scope,b.set);});
+    std::sort(ir.surfaces.begin(),ir.surfaces.end(),[](auto &a,auto &b){return std::tie(a.scope,a.name)<std::tie(b.scope,b.name);});
+    for(auto &s:ir.surfaces) std::sort(s.faces.begin(),s.faces.end());
+    std::sort(ir.history_bindings.begin(),ir.history_bindings.end(),[](auto &a,auto &b){return a.material<b.material;});
+    auto &f=ir.foundation;
+    auto by_id=[](auto &v) { std::sort(v.begin(),v.end(),[](auto &a,auto &b){return a.id<b.id;}); };
+    by_id(f.coordinates); by_id(f.orientations); by_id(f.equations); by_id(f.ties); by_id(f.rigids); by_id(f.initial_conditions); by_id(f.activations);
+    auto by_assignment=[](auto &v) { std::sort(v.begin(),v.end(),[](auto &a,auto &b){return a.assignment.id<b.assignment.id;}); };
+    by_assignment(f.solid_sections); by_assignment(f.shell_sections); by_assignment(f.beam_sections);
+    auto by_event=[](auto &v) { std::sort(v.begin(),v.end(),[](auto &a,auto &b){return std::tie(a.definition.id,a.definition.step)<std::tie(b.definition.id,b.definition.step);}); };
+    by_event(f.nodal_loads); by_event(f.face_loads); by_event(f.body_loads);
+    std::sort(f.material_definitions.begin(),f.material_definitions.end(),[](auto &a,auto &b){return a.material<b.material;});
+    for(auto &m:f.material_definitions) { by_name(m.parameters); by_name(m.tables); }
+    return ir;
+}
+inline std::uint64_t canonical_semantic_hash(const ModelIR &ir) { return semantic_hash(canonical_definition(ir)); }
+struct AnalysisIdentity {
+    std::vector<IRAmplitude> amplitudes;
+    std::vector<IRActionBlock> initial_boundaries;
+    std::vector<IRStep> steps;
+    std::vector<IRNodalLoad> nodal_loads;
+    std::vector<IRFaceLoad> face_loads;
+    std::vector<IRBodyLoad> body_loads;
+    std::vector<IRInitialCondition> initial_conditions;
+    std::vector<IRActivation> activations;
+    template<class F> void visit(F f) { f(amplitudes,initial_boundaries,steps,nodal_loads,face_loads,body_loads,initial_conditions,activations); }
+};
 template <class T> struct CompiledModel {
     ModelIR definition;
     MeshDB<T> mesh;
     SourceMap sources;
+    CompiledFoundation foundation;
     SectionDB sections;
     AnalysisDB analysis;
     OutputRequestDB outputs;
@@ -42,6 +90,12 @@ template <class T> struct CompiledModel {
             throw std::invalid_argument("unknown region: " + name);
         return it->second;
     }
+    std::uint64_t layout_identity() const { return mesh.fingerprint(); }
+    std::uint64_t semantic_identity() const { return canonical_semantic_hash(definition); }
+    std::uint64_t analysis_identity() const {
+        auto ir=canonical_definition(definition);
+        return semantic_hash(AnalysisIdentity{ir.amplitudes,ir.initial_boundaries,ir.steps,ir.foundation.nodal_loads,ir.foundation.face_loads,ir.foundation.body_loads,ir.foundation.initial_conditions,ir.foundation.activations});
+    }
     void require_cpu() const {
         if (!report.executable_cpu) {
             std::string text = "model has no executable CPU capability";
@@ -54,13 +108,17 @@ template <class T> struct CompiledModel {
 class ModelCompiler {
   public:
     template <class T> CompiledModel<T> compile(ModelIR ir) const {
-        if (ir.schema != 1 && ir.schema != 2)
+        if (ir.schema != 1 && ir.schema != 2 && ir.schema != 3)
             throw std::runtime_error("unsupported ModelIR schema");
         if (ir.schema == 1 && !ir.history_bindings.empty())
             throw std::runtime_error("history bindings require ModelIR schema 2");
         if (ir.parts.empty() || (ir.mode != ImportMode::Solve && ir.mode != ImportMode::MeshOnly))
             throw std::runtime_error("invalid ModelIR root/mode");
+        if (ir.schema < 3 && !ir.foundation.empty())
+            throw std::runtime_error("foundation requires ModelIR schema 3");
+        auto foundation = validate_foundation<T>(ir.foundation);
         ModelBuilder<T> b;
+        std::vector<std::uint8_t> node_dofs;
         SourceMap source;
         SectionDB sections;
         AnalysisDB analysis;
@@ -73,6 +131,10 @@ class ModelCompiler {
             executable = false;
             report.diagnostics.push_back({s, why, false});
         };
+        if (!ir.foundation.empty()) {
+            b.set_storage_contract(semantic_hash(ir.foundation));
+            incapable({}, "schema-3 foundation semantics are storage-only; CPU kernel unavailable");
+        }
         for (auto &o : ir.opaque)
             incapable(o.source, "opaque unsupported semantics: " + o.keyword);
         std::map<std::string, const IRPart *> parts;
@@ -104,6 +166,11 @@ class ModelCompiler {
                     dofs = 6;
                     break;
                 }
+            std::set<Id> rotation_nodes;
+            if (ir.schema >= 3)
+                for (auto &e : c.part->elements)
+                    if (e.descriptor.formulation != Formulation::Solid)
+                        rotation_nodes.insert(e.nodes.begin(), e.nodes.end());
             for (auto &n : c.part->nodes) {
                 auto x = n.x;
                 if (c.instance) {
@@ -137,7 +204,8 @@ class ModelCompiler {
                 if (!lookup[{true, name}].emplace(n.label, index).second)
                     fail(n.source, "duplicate node label");
                 b.add_node(Id(index) + 1, {static_cast<T>(x[0]), static_cast<T>(x[1]), static_cast<T>(x[2])},
-                           dofs);
+                           ir.schema >= 3 ? (rotation_nodes.contains(n.label) ? 6 : 3) : dofs);
+                node_dofs.push_back(ir.schema >= 3 ? (rotation_nodes.contains(n.label) ? 6 : 3) : dofs);
                 source.add(true, {{c.part->name, name, n.label}, Id(index) + 1, index, n.source});
             }
             for (auto &e : c.part->elements) {
@@ -201,6 +269,8 @@ class ModelCompiler {
         };
         std::map<std::string, std::vector<Index>> regions;
         for (auto &s : ir.sets) {
+            if(s.name.empty() || (!s.scope.empty() && !parts.contains(s.scope))) fail(s.source,"invalid set name/scope");
+            if(!s.instance.empty() && !contexts.contains(s.instance)) fail(s.source,"unknown set INSTANCE");
             std::vector<std::string> cs;
             if (s.scope.empty())
                 cs.push_back("");
@@ -229,27 +299,88 @@ class ModelCompiler {
                 throw std::invalid_argument("empty/duplicate material history binding");
             binding.history_schema.template validate<T>();
         }
+        std::map<std::string, const MaterialDefinition*> typed_materials;
+        for (auto &m : ir.foundation.material_definitions) {
+            if(std::none_of(ir.materials.begin(),ir.materials.end(),[&](const auto &anchor){return anchor.name==m.material;}))
+                fail(m.source,"typed material missing material anchor");
+            typed_materials.emplace(m.material,&m);
+        }
         for (auto &m : ir.materials) {
             Index idx = index_of(materials.size());
             if (!materials.emplace(m.name, idx).second)
                 fail(m.source, "duplicate material name");
-            if (!(m.density > 0 && m.young > 0 && m.poisson > -1 && m.poisson < .5))
-                fail(m.source, "material requires positive density/E and -1 < nu < 0.5");
-            Material<T> material{Id(idx) + 1, 1,
-                {static_cast<T>(m.density), static_cast<T>(m.young), static_cast<T>(m.poisson)}, 0};
+            for(double x:{m.density,m.young,m.poisson}) foundation_real<T>(x,m.source);
+            Material<T> material;
+            material.id = Id(idx) + 1;
+            if (typed_materials.contains(m.name)) {
+                // Model 0 is a cold, declarative material. The actual algorithm and typed
+                // parameters remain in foundation; never fabricate an elastic surrogate.
+                material.model = 0;
+                incapable(m.source, "typed material schema is storage-only");
+            } else {
+                if (!(m.density > 0 && m.young > 0 && m.poisson > -1 && m.poisson < .5))
+                    fail(m.source, "material requires positive density/E and -1 < nu < 0.5");
+                material.model = 1;
+                material.parameters = {static_cast<T>(m.density), static_cast<T>(m.young), static_cast<T>(m.poisson)};
+            }
+            foundation.material_ids.emplace(m.name, MaterialId(idx));
             if (auto it = history_bindings.find(m.name); it != history_bindings.end()) {
-                material.model = it->second->model;
+                if (typed_materials.contains(m.name) && typed_materials.at(m.name)->algorithm != it->second->model)
+                    fail(m.source,"typed material/history algorithm identity mismatch");
+                if (!typed_materials.contains(m.name)) material.model = it->second->model;
                 material.history_schema = it->second->history_schema;
                 material.history_variables = material.history_schema.template validate<T>();
                 incapable(m.source, "explicit material history is storage-only; CPU kernel unavailable");
             }
             b.add_material(std::move(material));
         }
+        for (const auto &[name, definition] : typed_materials)
+            if (!materials.contains(name)) fail(definition->source,"typed material missing material anchor");
         for (const auto &[name, binding] : history_bindings)
             if (!materials.contains(name))
                 throw std::invalid_argument("unknown material history binding: " + name);
+        // Normalize typed sections only in a local compilation view. The original IR
+        // remains canonical and round-trippable, including layers and orientation IDs.
+        std::vector<IRSection> all_sections = ir.sections;
+        const auto legacy_sections = all_sections.size();
+        std::vector<const SectionAssignment*> typed_assignments;
+        std::vector<const IRShellSection*> typed_shells;
+        std::set<SectionId> section_ids;
+        auto add_section = [&](const SectionAssignment &a, std::string kind, std::vector<double> properties, const IRShellSection *shell = nullptr) {
+            if (!a.id.valid() || a.set.empty() || !section_ids.insert(a.id).second)
+                fail(a.source,"invalid/duplicate typed section ID");
+            if (a.orientation.valid()) (void)foundation.orientation(a.orientation);
+            all_sections.push_back({a.scope,a.set,a.material,std::move(kind),std::move(properties),a.source});
+            typed_assignments.push_back(&a); typed_shells.push_back(shell);
+        };
+        for (auto &s : ir.foundation.solid_sections) add_section(s.assignment,"SOLID SECTION",{});
+        for (auto &s : ir.foundation.shell_sections) {
+            foundation_real<T>(s.thickness,s.assignment.source); foundation_real<T>(s.offset,s.assignment.source);
+            if (!(s.thickness>0) || std::abs(s.offset)>.5 || !s.section_points || s.section_points>99)
+                fail(s.assignment.source,"invalid shell thickness/offset/section points");
+            double sum=0;
+            for (auto &l:s.layers) {
+                foundation_real<T>(l.thickness,s.assignment.source); foundation_real<T>(l.angle_degrees,s.assignment.source);
+                if (!(l.thickness>0) || !l.section_points || l.section_points>99 || !materials.contains(l.material))
+                    fail(s.assignment.source,"invalid shell layer thickness/material/points");
+                if(l.orientation.valid()) (void)foundation.orientation(l.orientation);
+                sum+=l.thickness;
+            }
+            if (!s.layers.empty() && (!std::isfinite(sum) || std::abs(sum-s.thickness)>1e-10*std::max(sum,s.thickness)))
+                fail(s.assignment.source,"shell layer thickness sum differs from section thickness");
+            add_section(s.assignment,"SHELL SECTION",{s.thickness},&s);
+        }
+        for (auto &s : ir.foundation.beam_sections) {
+            for(double x:{s.area,s.i11,s.i22,s.i12,s.torsion}) foundation_real<T>(x,s.assignment.source);
+            if (!(s.area>0 && s.i11>0 && s.i22>0 && s.torsion>0) ||
+                std::abs(s.i12)/std::sqrt(s.i11)>=std::sqrt(s.i22) || !s.assignment.orientation.valid())
+                fail(s.assignment.source,"invalid beam area/inertia/torsion/orientation");
+            add_section(s.assignment,"BEAM SECTION",{s.area,s.i11,s.i22,s.i12,s.torsion});
+        }
         std::vector<const IRSection *> assignment(source.elements.size(), nullptr);
-        for (auto &s : ir.sections) {
+        std::vector<const IRShellSection*> shell_assignment(source.elements.size(),nullptr);
+        for (std::size_t si=0;si<all_sections.size();++si) {
+            auto &s=all_sections[si];
             if (!materials.contains(s.material))
                 fail(s.source, "unknown section material: " + s.material);
             std::vector<std::string> cs;
@@ -259,13 +390,28 @@ class ModelCompiler {
                 for (auto &[name, c] : contexts)
                     if (c.part->name == s.scope)
                         cs.push_back(name);
+            if (cs.empty()) fail(s.source,"unknown section scope");
+            ResolvedSection resolved;
+            if(si>=legacy_sections) {
+                resolved.id=typed_assignments[si-legacy_sections]->id;
+                resolved.material=MaterialId(materials.at(s.material));
+            }
             for (auto &ctx : cs)
                 for (auto e : resolve(false, s.set, ctx, s.source)) {
                     if (assignment[e])
                         fail(s.source, "overlapping section assignments");
                     assignment[e] = &s;
+                    if(si>=legacy_sections) {
+                        shell_assignment[e]=typed_shells[si-legacy_sections];
+                        resolved.elements.push_back(ElementId(e));
+                    }
                 }
+            if(si>=legacy_sections) {
+                if(resolved.elements.empty()) fail(s.source,"empty typed section assignment");
+                foundation.sections.push_back(std::move(resolved));
+            }
         }
+        std::uint64_t sample_layout_count=0;
         bool unassigned_material = false;
         for (auto &[name, c] : contexts)
             for (auto &e : c.part->elements) {
@@ -319,9 +465,32 @@ class ModelCompiler {
                     nodes.push_back(Id(it->second) + 1);
                 }
                 b.add_element(Id(ei) + 1, d.shape, std::move(nodes), mat, c.id, d.points);
+                if (auto *shell=shell_assignment[ei]) {
+                    std::vector<SamplePoint> points;
+                    std::uint64_t per_ip=shell->layers.empty()?shell->section_points:0;
+                    for(auto &l:shell->layers) per_ip+=l.section_points;
+                    auto point_count=foundation_product(per_ip,d.points,shell->assignment.source);
+                    constexpr std::uint64_t sample_budget=(256ull*1024*1024)/sizeof(SamplePoint);
+                    if(point_count>sample_budget-sample_layout_count) fail(shell->assignment.source,"sample layout metadata budget");
+                    sample_layout_count+=point_count;
+                    points.reserve(static_cast<std::size_t>(point_count));
+                    for(std::uint32_t ip=1;ip<=d.points;++ip) {
+                        if(shell->layers.empty()) {
+                            for(std::uint32_t sp=1;sp<=shell->section_points;++sp)
+                                points.push_back({ip,1,sp,materials.at(shell->assignment.material)});
+                        } else for(std::size_t layer=0;layer<shell->layers.size();++layer) {
+                            auto &l=shell->layers[layer];
+                            for(std::uint32_t sp=1;sp<=l.section_points;++sp)
+                                points.push_back({ip,static_cast<std::uint32_t>(layer+1),sp,materials.at(l.material)});
+                        }
+                    }
+                    b.set_sample_points(Id(ei)+1,std::move(points));
+                    d.section_points=static_cast<std::uint32_t>(per_ip);
+                }
                 descriptions.push_back(d);
             }
         for (auto &s : ir.surfaces) {
+            if(s.name.empty() || (!s.scope.empty() && !parts.contains(s.scope))) fail(s.source,"invalid surface name/scope");
             std::vector<std::string> cs;
             if (s.scope.empty())
                 cs.push_back("");
@@ -329,6 +498,7 @@ class ModelCompiler {
                 for (auto &[name, c] : contexts)
                     if (c.part->name == s.scope)
                         cs.push_back(name);
+            if(cs.empty()) fail(s.source,"uninstantiated surface scope");
             for (auto &ctx : cs) {
                 std::vector<FaceId> faces;
                 for (auto &[target, face] : s.faces)
@@ -340,6 +510,9 @@ class ModelCompiler {
                                              d.formulation == Formulation::Shell ? 0 : face[1] - '1'),
                                          static_cast<std::int8_t>(face == "SNEG" ? -1 : 1)});
                     }
+                auto surface_name=(ctx.empty()?"":ctx+".")+s.name;
+                if(faces.empty() || !foundation.surface_ids.emplace(surface_name,SurfaceId(index_of(foundation.surface_ids.size()))).second)
+                    fail(s.source,"empty/duplicate semantic surface");
                 b.add_surface(setid++, std::move(faces));
             }
         }
@@ -432,9 +605,11 @@ class ModelCompiler {
         }
         if (ir.steps.empty())
             incapable(ir.parts.front().source, "no executable analysis step");
+        resolve_foundation<T>(ir,foundation,source,node_dofs,resolve);
         auto mesh = b.finalize();
         CompiledModel<T> result(std::move(ir), std::move(mesh));
         result.sources = std::move(source);
+        result.foundation = std::move(foundation);
         result.sections = std::move(sections);
         result.descriptors = std::move(descriptions);
         result.regions = std::move(regions);

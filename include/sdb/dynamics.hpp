@@ -77,6 +77,8 @@ template <class T> class TetPlan {
         : nodes(mesh.elements()), gradients(mesh.elements()), volume(mesh.elements()),
           lambda(mesh.elements()), mu(mesh.elements()), local_force(mesh.elements()), fixed(mesh.nodes()),
           model_id(mesh.fingerprint()) {
+        if (mesh.requires_storage_only())
+            throw std::invalid_argument("model contracts require storage-only execution");
         if (state.model_id() != model_id)
             throw std::invalid_argument("state model mismatch");
         for (const auto &c : mesh.constraints()) {

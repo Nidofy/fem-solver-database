@@ -37,7 +37,7 @@ class ModelStore {
         std::ifstream in(path, std::ios::binary);
         native::prefix(in, model_magic);
         auto manifest = native::unpack<ModelManifest>(native::record(in, 0));
-        if ((manifest.schema != 1 && manifest.schema != 2) || manifest.compiler_version != 1 || manifest.precision != sizeof(T))
+        if ((manifest.schema != 1 && manifest.schema != 2 && manifest.schema != 3) || manifest.compiler_version != 1 || manifest.precision != sizeof(T))
             throw std::runtime_error("model schema/compiler/precision mismatch");
         auto bytes = native::record(in, 1);
         native::end(in);

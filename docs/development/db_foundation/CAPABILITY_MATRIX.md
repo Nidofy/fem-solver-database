@@ -1,5 +1,8 @@
 # Actual capability matrix
 
+The first table is the retained DBF1 audit snapshot. The DBF2 table below
+supersedes its gap statuses; it does not retroactively change DBF1's scope.
+
 Evidence is from REVIEW_HEAD `9a3d754` and the DBF1 diff, not a remote snapshot.
 P/V/S/Q/R/E are Parsed / Validated / Stored / Queryable / Reloadable / Executable.
 `—` means not applicable; `subset` is deliberately narrower than full support.
@@ -35,3 +38,40 @@ Exact symbol/file/line anchors are retained in
 
 This matrix does not turn storage into physical execution. It also does not
 equate absence of a failing test with a completed independent ALR1 review.
+
+## DBF2 continuation
+
+Construction through the programmatic ModelIR API is distinct from INP parsing.
+Detailed semantics and intentionally bounded scope: [DBF2 contracts](DBF2_CONTRACTS.md).
+Final verification and review evidence: [DBF2 verification](DBF2_VERIFICATION.md).
+
+| Capability | Symbol/file; runtime storage | Serialization / independent query | Test | P/V/S/Q/R/E | Status |
+|---|---|---|---|---|---|
+| Strong identities | types.hpp StrongId; SourceMap::{node_id,element_id,reverse}; FieldRegistry::field_id | native fixed-width unsigned; existing source manifests | foundation_boundaries, model_foundation_contracts | —/yes/yes/yes/yes/subset | PRESENT_VERIFIED; additive typed boundaries, old APIs retained |
+| CSR/BSR DTO | implicit.hpp MatrixData/SparseMatrix::data/from_data | encode/decode with schema/index/block metadata | foundation_boundaries | —/yes/yes/yes/yes/existing apply | PRESENT_VERIFIED CPU |
+| Coordinate graph/orientations | foundation.hpp IRCoordinate/IROrientation; CompiledFoundation queries | ModelIR3; resolved result basis catalog | model_foundation_contracts/process_reader; integration | subset/yes/yes/yes/yes/no | PRESENT_VERIFIED storage-only |
+| Typed materials/tables | MaterialDefinition/Parameter/Table; scalar lanes + axis arrays | ModelIR3; material(MaterialId) | model_foundation_contracts; exact uint64 oracle | no/yes/yes/yes/yes/no | PRESENT_VERIFIED storage-only; evaluator deferred |
+| Solid/shell/beam sections | IRSolidSection/IRShellSection/IRBeamSection; resolved element IDs | ModelIR3, section(SectionId) | model_foundation_contracts/process_reader | legacy subset/yes/yes/yes/yes/no | PRESENT_VERIFIED storage-only new schema |
+| Layer/IP/material histories | model.hpp SamplePoint; StateDB point_history_offsets_, history_address_at | ModelIR3, checkpoint2, Restart3/4, TypedIndexed3 | boundaries + integration float/double | no/yes/yes/yes/yes/no | PRESENT_VERIFIED persistent FP32/FP64 histories |
+| Per-node DOFs | compiler node DOF map; DofMap::equation(NodeId,Dof) | reconstructed schema3 layout | model_foundation solid-only vs shared shell nodes | yes/yes/yes/yes/yes/no for new physics | PRESENT_VERIFIED storage allocation |
+| Equations/tie/rigids | IREquation/IRTie/IRRigid; resolved typed references | ModelIR3 + CompiledFoundation | model_foundation references/DOFs/constraints | equation subset/yes/yes/yes/yes/no | PRESENT_VERIFIED storage-only |
+| Nodal/face/body loads | IR*Load; load ID + step update, scoped region and coordinate | ModelIR3 + load(LoadId,StepId) | model_foundation load identity/lifetime/references | legacy subset/yes/yes/yes/yes/no new types | PRESENT_VERIFIED storage-only |
+| Initial/activation | IRInitialCondition/IRActivation, resolved IDs; State active flags | ModelIR3; checkpoint and restart flags | model + integration independent reader | no/yes/yes/yes/yes/no events | PRESENT_VERIFIED storage; event executor deferred |
+| Exact typed result/missingness | results/typed.hpp TypedValues, TypedFieldPayload | indexed3 blocks; typed_field/typed_history<T> | typed_results_contracts + typed_process_pipeline | —/yes/yes/yes/yes/— | PRESENT_VERIFIED seven scalar types |
+| Full result address | ResultAddress + SourceMap + ResultSample | full-address block ranges; exact/entity/schema filters | 300-layer selective query, integration all associations | —/yes/yes/yes/yes/— | PRESENT_VERIFIED |
+| Local tensor basis | ResultBasis; deterministic coordinate/orientation adapter | indexed3 model catalog and per-field basis_id | integration tensor/basis oracle; missing basis rejection | —/yes/yes/yes/yes/— | PRESENT_VERIFIED explicit fields; automatic local history adapter DEFERRED and rejects |
+| Committed history output | ResultPublisher::snapshot_history/append_history | owns scalar buffers; async admission accounting | typed trial/immutability/budget tests; integration | —/yes/yes/yes/yes/— | PRESENT_VERIFIED |
+| Rotational restart | io/restart.hpp State schema4, six optional fields | RestartDB temporary load and shape/capability check | integration truncation/mismatch/inertia atomicity | —/yes/yes/yes/yes/no new kernels | PRESENT_VERIFIED storage-only |
+| Format compatibility | ModelStore schemas1/2/3; Native1/Indexed2/TypedIndexed3 | frozen pre-DBF1 and pre-DBF2 .hex fixtures | foundation_legacy_golden, foundation3_legacy_golden | —/yes/yes/yes/yes/subset | PRESENT_VERIFIED tested fixtures |
+| Semantic/analysis/layout identity | CompiledModel::*_identity; canonical_definition | strict serialized ModelStore identity still guards restore | model reorder/provenance/material/load/history tests | —/yes/yes/yes/yes/— | PRESENT_VERIFIED; no automatic restart remap |
+| D7 composite | two instances, transformations, mixed topology, material/layer/beam/load/constraint/activation data | Model3 → Restart4/typed result → fresh-process reader | foundation_integration + process_reader | programmatic/yes/yes/yes/yes/no | PRESENT_VERIFIED synthetic storage, not a numerical solution |
+| Real CPU lifecycle | existing TET/HEX CpuRun and output scheduler | typed container + linked restart; existing old formats | lifecycle/hex8/pipeline + typed_process_pipeline | yes/yes/yes/yes/yes/yes subset | PRESENT_VERIFIED CPU |
+| Entity/field/frame scaling | typed_results_scaling; async admission bytes and read_stats | 12 measured combinations retained as CSV | immutable-source + independent expected scalar | —/yes/yes/yes/yes/— | PRESENT_VERIFIED measured workload; no fixed speed guarantee |
+| CUDA / production adapters | existing CUDA contracts; new cold host metadata | requires reviewed adapter/build validation | no available production SDK/device proof | —/—/—/—/—/— | BLOCKED_ENV / not locally compiled or verified |
+
+Remaining deliberate limits: no Index64 runtime, complex/frequency samples, general
+unit algebra, arbitrary dynamic integer StateDB histories, full INP grammar,
+automatic local-material-history basis adapter, new physical kernels, MPI or GPU
+algorithms. The foundation provides storage for shell/beam/unknown material data
+and rejects execution. These limits are not hidden behind an overall "supported"
+label.

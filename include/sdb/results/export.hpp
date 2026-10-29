@@ -29,6 +29,7 @@ inline std::string xml(std::string s) {
     return out;
 }
 inline std::vector<double> dense(const ResultField &f, std::size_t count) {
+    if (f.typed) throw std::invalid_argument("legacy dense export cannot represent typed results");
     auto width = f.descriptor.components.size();
     std::vector<double> out(product(count, width), std::numeric_limits<double>::quiet_NaN());
     for (std::size_t i = 0; i < f.ids.size(); ++i) {
@@ -44,8 +45,13 @@ inline std::string field_name(const ResultDescriptor &d) {
            (d.integration_point > 1 ? "@IP" + std::to_string(d.integration_point) : "");
 }
 class ResultExporter {
+    static void preflight(const ResultReader &reader) {
+        if (reader.format() == ResultFormat::TypedIndexed3 || !reader.model.samples.empty() || !reader.model.bases.empty())
+            throw std::invalid_argument("VTK/XDMF exporter does not yet represent typed/layered results; no output written");
+    }
   public:
     static void vtk(const ResultReader &reader, const std::filesystem::path &directory) {
+        preflight(reader);
         std::filesystem::create_directories(directory);
         std::ofstream pvd(directory / "series.pvd");
         pvd << std::setprecision(17)
@@ -111,6 +117,7 @@ class ResultExporter {
     }
     // Dependency-free XDMF XML DataItems. No HDF5 URI or .h5 files are fabricated.
     static void xdmf(const ResultReader &reader, const std::filesystem::path &path) {
+        preflight(reader);
         std::ofstream out(path);
         out << std::setprecision(17)
             << "<?xml version=\"1.0\"?><Xdmf Version=\"3.0\"><Domain><Grid Name=\"Results\" "

@@ -1,5 +1,6 @@
 #pragma once
 #include "state.hpp"
+#include "io/native.hpp"
 
 namespace sdb {
 class DofMap {
@@ -24,14 +25,31 @@ class DofMap {
         return equations_[offsets_[n] + c];
     }
     std::size_t size() const { return free_; }
+    std::int64_t equation(NodeId node, Dof component) const {
+        return equation(node.value(), static_cast<unsigned>(component));
+    }
 };
 // B=1 is CSR, B>1 stores dense row-major blocks. Input columns sorted and unique.
+enum class MatrixSymmetry : std::uint8_t { General, Symmetric };
+template <class T> struct MatrixData {
+    std::uint32_t schema = 1, index_bits = 32, block_size = 1;
+    ScalarType scalar = scalar_type<T>();
+    std::uint64_t block_rows = 0;
+    MatrixSymmetry symmetry = MatrixSymmetry::General;
+    std::vector<std::uint64_t> offsets;
+    std::vector<Index> columns;
+    std::vector<T> values;
+    template <class F> void visit(F f) {
+        f(schema, index_bits, block_size, scalar, block_rows, symmetry, offsets, columns, values);
+    }
+};
 template <class T, std::size_t B = 1> class SparseMatrix {
-    static_assert(B > 0);
+    static_assert(B > 0 && B < invalid_index);
     std::size_t rows_;
     std::vector<std::size_t> offsets_;
     std::vector<Index> columns_;
     AlignedVector<T> values_;
+    MatrixSymmetry symmetry_ = MatrixSymmetry::General;
 
   public:
     SparseMatrix(std::size_t rows, std::vector<std::size_t> offsets, std::vector<Index> columns)
@@ -51,6 +69,63 @@ template <class T, std::size_t B = 1> class SparseMatrix {
     std::span<T> values() { return values_; }
     std::span<const T> values() const { return values_; }
     std::size_t size() const { return product(rows_, B); }
+    std::size_t block_rows() const noexcept { return rows_; }
+    std::span<const std::size_t> offsets() const { return offsets_; }
+    std::span<const Index> columns() const { return columns_; }
+    MatrixSymmetry symmetry() const noexcept { return symmetry_; }
+    void validate_values(MatrixSymmetry symmetry) const {
+        if (!enum_at_most(symmetry, MatrixSymmetry::Symmetric))
+            throw std::invalid_argument("unknown matrix symmetry");
+        for (auto v : values_) if (!std::isfinite(v)) throw std::invalid_argument("nonfinite matrix value");
+        if (symmetry == MatrixSymmetry::General) return;
+        for (std::size_t r = 0; r < rows_; ++r)
+            for (auto j = offsets_[r]; j < offsets_[r + 1]; ++j) {
+                auto c = columns_[j];
+                auto lo = columns_.begin() + offsets_[c], hi = columns_.begin() + offsets_[c + 1];
+                auto it = std::lower_bound(lo, hi, static_cast<Index>(r));
+                if (it == hi || *it != r) throw std::invalid_argument("asymmetric matrix structure");
+                auto k = static_cast<std::size_t>(it - columns_.begin());
+                for (std::size_t a = 0; a < B; ++a)
+                    for (std::size_t b = 0; b < B; ++b)
+                        if (values_[j * B * B + a * B + b] != values_[k * B * B + b * B + a])
+                            throw std::invalid_argument("asymmetric matrix values");
+            }
+    }
+    void set_symmetry(MatrixSymmetry symmetry) { validate_values(symmetry); symmetry_ = symmetry; }
+    MatrixData<T> data() const {
+        validate_values(symmetry_);
+        MatrixData<T> d;
+        d.block_size = B; d.block_rows = rows_; d.symmetry = symmetry_;
+        d.offsets.assign(offsets_.begin(), offsets_.end());
+        d.columns = columns_; d.values.assign(values_.begin(), values_.end());
+        return d;
+    }
+    static SparseMatrix from_data(const MatrixData<T> &d) {
+        if (d.schema != 1 || d.index_bits != 32 || d.block_size != B || d.scalar != scalar_type<T>() ||
+            d.block_rows >= invalid_index || d.block_rows > std::numeric_limits<std::size_t>::max())
+            throw std::invalid_argument("matrix schema/dimension mismatch");
+        std::vector<std::size_t> offsets;
+        offsets.reserve(d.offsets.size());
+        for (auto v : d.offsets) {
+            if (v > std::numeric_limits<std::size_t>::max()) throw std::length_error("matrix offset overflow");
+            offsets.push_back(static_cast<std::size_t>(v));
+        }
+        SparseMatrix out(static_cast<std::size_t>(d.block_rows), std::move(offsets), d.columns);
+        if (d.values.size() != out.values_.size()) throw std::invalid_argument("matrix value shape");
+        std::copy(d.values.begin(), d.values.end(), out.values_.begin());
+        out.set_symmetry(d.symmetry);
+        return out;
+    }
+    auto encode(std::uint64_t budget = lifecycle::native::default_limit) const {
+        auto bytes = sum(52, sum(product(offsets_.size(), 8),
+            sum(product(columns_.size(), 4), product(values_.size(), sizeof(T)))));
+        if (bytes > budget) throw std::length_error("matrix encoding budget");
+        return lifecycle::native::pack(data(), budget);
+    }
+    static SparseMatrix decode(std::span<const std::uint8_t> bytes,
+                               std::uint64_t budget = lifecycle::native::default_limit) {
+        return from_data(lifecycle::native::unpack<MatrixData<T>>(bytes, budget));
+    }
     void apply(std::span<const T> x, std::span<T> y) const {
         if (x.size() != size() || y.size() != size())
             throw std::invalid_argument("sparse vector dimension");

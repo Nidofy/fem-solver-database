@@ -2,6 +2,7 @@
 #include "../io/model_store.hpp"
 #include "../dynamics.hpp"
 #include <functional>
+#include "typed.hpp"
 
 namespace sdb::lifecycle {
 enum class Location : std::uint8_t { Node, Element, IntegrationPoint, SectionPoint, Face, Contact, Global };
@@ -22,7 +23,11 @@ struct ResultField {
     ResultDescriptor descriptor;
     std::vector<Id> ids;
     std::vector<double> values; // entity-major, lossless widening of float source
-    template <class F> void visit(F f) { f(descriptor, ids, values); }
+    std::optional<TypedFieldPayload> typed;
+    template <class F> void visit(F f) {
+        if (typed) throw std::invalid_argument("typed result requires indexed3 codec");
+        f(descriptor, ids, values);
+    }
 };
 struct FrameInfo {
     std::uint64_t id = 0, step = 0, increment = 0, mesh_revision = 0;
@@ -35,6 +40,7 @@ struct FrameInfo {
 struct ResultFrame {
     FrameInfo info;
     std::vector<ResultField> fields;
+    std::optional<ResultBinding> binding;
     template <class F> void visit(F f) { f(info, fields); }
 };
 struct ResultModel {
@@ -45,6 +51,8 @@ struct ResultModel {
     std::vector<ElementDescriptor> descriptors;
     std::vector<SourceEntry> nodes, elements;
     std::vector<std::pair<std::string, std::vector<Index>>> regions;
+    std::vector<std::vector<ResultSample>> samples;
+    std::vector<ResultBasis> bases;
     template <class F> void visit(F f) {
         f(mesh, definition, configuration, precision, coordinates, connectivity, descriptors, nodes, elements,
           regions);
@@ -67,9 +75,64 @@ struct ResultModel {
             auto ns = m.mesh.connectivity(e);
             out.connectivity.emplace_back(ns.begin(), ns.end());
         }
+        bool extended = false;
+        if (m.mesh.has_sample_layout()) for (Index e = 0; e < m.mesh.elements(); ++e) {
+            std::vector<ResultSample> points;
+            for (std::size_t q = 0; q < m.mesh.sample_point_count(e); ++q) {
+                auto p = m.mesh.sample_point(e, q);
+                points.push_back({p.integration_point, p.layer, p.section_point, p.material});
+                extended = extended || p.layer || p.section_point ||
+                    p.integration_point != q + 1 || p.material != m.mesh.element(e).material;
+            }
+            out.samples.push_back(std::move(points));
+        }
+        if (!extended) out.samples.clear();
+        // Wire basis namespaces: 0=global; 1+OrientationId; 2^32+CoordinateId.
+        // Every stored matrix maps local vectors to global, row major; no origins.
+        for (const auto &[id,rotation] : m.foundation.orientation_bases)
+            out.bases.push_back({1 + std::uint64_t(id.value()),rotation});
+        for (const auto &coordinate : m.foundation.coordinates)
+            if (coordinate.id.value() != 0)
+                out.bases.push_back({(std::uint64_t(1)<<32) + coordinate.id.value(),coordinate.rotation});
         return out;
     }
 };
+inline void bind_result_frame(ResultFrame &frame, const ResultModel &model) {
+    frame.binding = ResultBinding{model.mesh, model.definition, model.configuration,
+        frame.info.step, frame.info.increment, frame.info.time};
+    frame.info.mesh_revision = model.mesh;
+    frame.info.precision = model.precision;
+    frame.info.storage_precision = 0;
+}
+template<class T> ResultField make_typed_field(FieldDescriptor schema, std::vector<ResultAddress> addresses,
+    std::vector<T> values, std::vector<std::uint8_t> validity = {}, const std::string &region = "", bool history = false) {
+    if (schema.scalar != scalar_type<T>()) throw std::invalid_argument("typed field scalar mismatch");
+    ResultField out;
+    auto &d = out.descriptor;
+    d.name = schema.name; d.region = region; d.history = history; d.basis = schema.basis;
+    d.components = schema.components;
+    d.tensor_shear = schema.shear == ShearConvention::Tensor;
+    d.time_level = schema.time == PhysicalTime::HalfStep ? TimeLevel::HalfStep : TimeLevel::Current;
+    d.location = schema.association == Association::Node ? Location::Node :
+        schema.association == Association::Face ? Location::Face :
+        schema.association == Association::Contact ? Location::Contact :
+        schema.association == Association::Global ? Location::Global :
+        schema.location == FieldLocation::IntegrationPoint ? Location::IntegrationPoint :
+        schema.location == FieldLocation::SectionPoint ? Location::SectionPoint : Location::Element;
+    out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+    validate_typed_payload(*out.typed);
+    return out;
+}
+template<class T> const std::vector<T> &typed_values(const ResultField &field) {
+    if (!field.typed) throw std::invalid_argument("legacy result is not typed");
+    return std::get<std::vector<T>>(field.typed->values);
+}
+// Unqualified global bases accepted for legacy/default descriptors. Every other
+// basis label requires a nonzero resolved catalog reference when published.
+inline bool global_result_basis(const std::string &name) {
+    auto normalized=upper(name);
+    return normalized=="UNSPECIFIED" || normalized=="GLOBAL" || normalized=="GLOBAL CARTESIAN";
+}
 class OutputScheduler {
   public:
     static bool due(const IROutput &r, std::uint64_t increment, std::uint64_t total) {
@@ -83,6 +146,84 @@ class OutputScheduler {
 };
 class ResultPublisher {
   public:
+    template<class T> static void append_history(ResultFrame &frame, const CompiledModel<T> &model,
+        const StateDB<T> &state, std::vector<std::string> names = {}, std::uint64_t budget = native::default_limit) {
+        if (state.in_trial() || state.model_id() != model.mesh.fingerprint())
+            throw std::invalid_argument("history snapshot requires matching committed state");
+        state.validate_shape();
+        std::vector<ResultField> fields;
+        std::map<std::string,std::size_t> groups;
+        std::set<std::string> found;
+        std::size_t used = 0;
+        auto history = state.data().history.read();
+        for (Index e = 0; e < model.mesh.elements(); ++e)
+            for (std::size_t q = 0; q < model.mesh.sample_point_count(e); ++q) {
+                auto point = model.mesh.sample_point(e,q);
+                auto &schema = model.mesh.materials()[point.material].history_schema;
+                for (const auto &v : schema.variables) {
+                    if (!names.empty() && std::find(names.begin(), names.end(), v.field.name) == names.end()) continue;
+                    if (!global_result_basis(v.field.basis))
+                        throw std::invalid_argument("history snapshot requires explicit resolved local basis adapter");
+                    found.insert(v.field.name);
+                    auto signature = native::pack(v.field);
+                    auto key = schema.id + ":" + std::to_string(schema.version) + ":" +
+                        std::string(reinterpret_cast<const char*>(signature.data()),signature.size());
+                    auto [it, added] = groups.emplace(key, fields.size());
+                    if (added) {
+                        auto field = make_typed_field<T>(v.field, {}, {}, {}, "", true);
+                        field.typed->schema_id = schema.id;
+                        field.typed->schema_version = schema.version;
+                        used = sum(used, sum(signature.size()*3, sizeof(ResultField) + key.size()*2 + 256));
+                        if (used > budget) throw std::length_error("history snapshot metadata budget");
+                        fields.push_back(std::move(field));
+                    }
+                    used = sum(used, product(2, sum(sizeof(ResultAddress), product(sizeof(T), v.field.component_count()))));
+                    if (used > budget) throw std::length_error("history snapshot memory budget");
+                    auto &p = *fields[it->second].typed;
+                    ResultAddress a; a.entity = Id(e)+1; a.integration_point = point.integration_point;
+                    a.layer = point.layer; a.section_point = point.section_point;
+                    p.addresses.push_back(a);
+                    auto &values = std::get<std::vector<T>>(p.values);
+                    for (std::size_t c = 0; c < v.field.component_count(); ++c)
+                        values.push_back(history(state.history_address_at(model.mesh,e,q,v.field.name,c)));
+                }
+            }
+        for (const auto &name : names) if (!found.contains(name)) throw std::out_of_range("unknown history snapshot variable");
+        auto config = frame.binding ? frame.binding->configuration : 0;
+        ResultBinding binding{model.mesh.fingerprint(),ModelStore::identity(model),config,
+            frame.info.step,frame.info.increment,frame.info.time};
+        if (frame.binding && *frame.binding != binding) throw std::invalid_argument("history frame binding mismatch");
+        for (const auto &field : fields) {
+            validate_typed_payload(*field.typed);
+            for (const auto &old : frame.fields)
+                if (old.typed && old.descriptor.name == field.descriptor.name && old.descriptor.history &&
+                    old.descriptor.region.empty() && old.typed->schema_id == field.typed->schema_id &&
+                    old.typed->schema_version == field.typed->schema_version &&
+                    native::pack(old.typed->schema)==native::pack(field.typed->schema))
+                    throw std::invalid_argument("duplicate history snapshot field");
+        }
+        auto needed=sum(frame.fields.size(),fields.size());
+        if (product(needed,sizeof(ResultField)) > budget-used) throw std::length_error("history frame directory budget");
+        frame.fields.reserve(needed); // all potentially throwing work precedes publication
+        frame.fields.insert(frame.fields.end(),std::make_move_iterator(fields.begin()),std::make_move_iterator(fields.end()));
+        frame.binding=binding;
+        frame.info.mesh_revision=binding.mesh; frame.info.precision=sizeof(T); frame.info.storage_precision=0;
+    }
+    template<class T> static ResultFrame snapshot_history(const CompiledModel<T> &model, const StateDB<T> &state,
+        FrameInfo info = {}, std::vector<std::string> names = {}, std::uint64_t budget = native::default_limit,
+        std::uint64_t configuration = 0) {
+        // A default FrameInfo snapshots the committed state's physical time and increment.
+        // StateDB::step is the accumulated integration count, not analysis-step ID.
+        if (info.id==0 && info.step==0 && info.increment==0 && info.time==0 && info.local_time==0) {
+            info.id=state.data().step; info.increment=state.data().step;
+            info.time=state.data().time; info.local_time=state.data().time;
+        }
+        ResultFrame frame; frame.info=info;
+        frame.binding=ResultBinding{model.mesh.fingerprint(),ModelStore::identity(model),configuration,
+            info.step,info.increment,info.time};
+        append_history(frame,model,state,std::move(names),budget);
+        return frame;
+    }
     template <class T>
     static ResultFrame publish(const CompiledModel<T> &model, const StateDB<T> &state, CpuExplicit<T> &cpu,
                                FrameInfo info, const std::vector<IROutput> &requests,
@@ -219,18 +360,102 @@ class ResultPublisher {
     }
 };
 inline constexpr std::uint64_t result_magic = 0x31534552424453ull;
+inline void validate_result_address(const ResultAddress &a, const FieldDescriptor &d, const ResultModel &m) {
+    const ResultEndpoint empty;
+    if (a.domain > 1 || a.side < -1 || a.side > 1) throw std::runtime_error("invalid result domain/side");
+    if (d.association == Association::Contact) {
+        if (a.domain != 1 || a.entity || !a.contact_generation || !a.interaction || !a.contact_point ||
+            a.integration_point || a.layer || a.section_point || a.element_node || a.face || a.side)
+            throw std::runtime_error("contact result needs stable identity");
+        auto endpoint = [&](const ResultEndpoint &e) {
+            if (e.kind > 2 || !e.entity || e.side < -1 || e.side > 1 ||
+                e.entity > (e.kind == 0 ? m.nodes.size() : m.elements.size()) ||
+                (e.kind == 0 ? (e.local != 0 || e.side != 0) : !e.local))
+                throw std::runtime_error("contact endpoint outside model");
+            if (e.kind == 1 && (e.side != 0 || e.local > m.connectivity.at(e.entity - 1).size()))
+                throw std::runtime_error("contact endpoint local node out of bounds");
+            if (e.kind == 2 && (!e.side || e.local > face_count(m.descriptors.at(e.entity-1).shape)))
+                throw std::runtime_error("contact endpoint face out of bounds");
+        };
+        endpoint(a.endpoint_a); endpoint(a.endpoint_b);
+        if (a.endpoint_a == a.endpoint_b) throw std::runtime_error("identical contact endpoints");
+        return;
+    }
+    if (a.domain || a.contact_generation || a.interaction || a.contact_point ||
+        a.endpoint_a != empty || a.endpoint_b != empty) throw std::runtime_error("mesh result has contact identity");
+    if (d.association == Association::Global) {
+        if (a != ResultAddress{}) throw std::runtime_error("global result address");
+        return;
+    }
+    if (!a.entity || a.entity > (d.association == Association::Node ? m.nodes.size() : m.elements.size()))
+        throw std::runtime_error("typed result entity out of bounds");
+    if (d.association == Association::Face) {
+        auto maxface = face_count(m.descriptors.at(a.entity-1).shape);
+        if (!a.face || !a.side || a.face > maxface || a.integration_point || a.layer || a.section_point || a.element_node)
+            throw std::runtime_error("face result address");
+        return;
+    }
+    if (a.face || a.side) throw std::runtime_error("nonface result has face identity");
+    if (d.location == FieldLocation::Entity) {
+        if (a.integration_point || a.layer || a.section_point || a.element_node)
+            throw std::runtime_error("entity result has sample address");
+    } else if (d.location == FieldLocation::ElementNode) {
+        if (!a.element_node || a.element_node > m.connectivity.at(a.entity-1).size() ||
+            a.integration_point || a.layer || a.section_point) throw std::runtime_error("element node address");
+    } else {
+        if (!a.integration_point || a.element_node || (bool(a.layer) != bool(a.section_point)))
+            throw std::runtime_error("invalid sample address");
+        if (d.location == FieldLocation::SectionPoint && !a.section_point)
+            throw std::runtime_error("section point address required");
+        if (!m.samples.empty()) {
+            const auto &samples = m.samples.at(a.entity-1);
+            if (std::none_of(samples.begin(), samples.end(), [&](const auto &q) {
+                return q.integration_point == a.integration_point && q.layer == a.layer && q.section_point == a.section_point;
+            })) throw std::runtime_error("sample address outside model");
+        } else if (a.layer || a.section_point || a.integration_point > m.descriptors.at(a.entity-1).points)
+            throw std::runtime_error("sample address outside legacy model");
+    }
+}
 inline void validate_frame(const ResultFrame &f, const ResultModel &model,
                            const std::optional<FrameInfo> &previous) {
     auto &i = f.info;
-    if (i.mesh_revision != model.mesh || i.precision != model.precision || i.storage_precision != 8 ||
+    if (i.mesh_revision != model.mesh || i.precision != model.precision || (i.storage_precision != 8 && i.storage_precision != 0) ||
         !std::isfinite(i.time) || !std::isfinite(i.local_time) || i.time < 0 || i.local_time < 0)
         throw std::runtime_error("invalid frame metadata");
     if (previous && (i.id <= previous->id || i.time <= previous->time || i.step < previous->step ||
                      (i.step == previous->step && i.increment <= previous->increment)))
         throw std::runtime_error("duplicate or nonmonotonic result frame");
+    if (i.storage_precision == 0 && (!f.binding || *f.binding != ResultBinding{
+        model.mesh, model.definition, model.configuration, i.step, i.increment, i.time}))
+        throw std::runtime_error("typed result binding mismatch");
+    if (i.storage_precision == 8 && f.binding) throw std::runtime_error("legacy result has typed binding");
     std::set<std::tuple<std::string, std::string, bool, std::uint32_t, std::uint32_t>> keys;
+    std::set<std::tuple<std::string, std::string, bool, std::string, std::uint32_t,native::Bytes>> typed_keys;
     for (auto &field : f.fields) {
         auto &d = field.descriptor;
+        if (field.typed) {
+            const auto &p = *field.typed;
+            validate_typed_payload(p);
+            if (!p.basis_id && !global_result_basis(p.schema.basis))
+                throw std::runtime_error("local result basis requires catalog reference");
+            if (p.basis_id && std::none_of(model.bases.begin(),model.bases.end(),[&](const auto &b){return b.id==p.basis_id;}))
+                throw std::runtime_error("unknown typed result basis reference");
+            const auto expected_location = p.schema.association == Association::Node ? Location::Node :
+                p.schema.association == Association::Face ? Location::Face :
+                p.schema.association == Association::Contact ? Location::Contact :
+                p.schema.association == Association::Global ? Location::Global :
+                p.schema.location == FieldLocation::IntegrationPoint ? Location::IntegrationPoint :
+                p.schema.location == FieldLocation::SectionPoint ? Location::SectionPoint : Location::Element;
+            if (i.storage_precision != 0 || !field.ids.empty() || !field.values.empty() ||
+                d.location != expected_location || d.integration_point || d.section_point ||
+                d.tensor_shear != (p.schema.shear == ShearConvention::Tensor) ||
+                d.time_level != (p.schema.time == PhysicalTime::HalfStep ? TimeLevel::HalfStep : TimeLevel::Current) ||
+                d.name != p.schema.name || d.components != p.schema.components || d.basis != p.schema.basis ||
+                !typed_keys.emplace(d.name, d.region, d.history, p.schema_id, p.schema_version,native::pack(p.schema)).second)
+                throw std::runtime_error("typed field envelope mismatch/duplicate");
+            for (const auto &a : p.addresses) validate_result_address(a, p.schema, model);
+            continue;
+        }
         if (!keys.emplace(d.name, d.region, d.history, d.integration_point, d.section_point).second ||
             d.components.empty() || d.components.size() > 9 ||
             field.values.size() != product(field.ids.size(), d.components.size()) ||
@@ -281,7 +506,8 @@ class ResultReader {
         std::array<std::uint8_t, 8> magic_bytes{};
         native::read(in, magic_bytes);
         native::Reader probe{magic_bytes};
-        if (probe.integer<std::uint64_t>() == indexed_detail::magic) {
+        auto file_magic = probe.integer<std::uint64_t>();
+        if (file_magic == indexed_detail::magic || file_magic == typed_detail::magic) {
             indexed_ = std::make_shared<indexed_detail::File>(path, limit, allow_incomplete_tail);
             model = indexed_->model;
             index.bind(indexed_);
@@ -329,6 +555,16 @@ class ResultReader {
             throw std::runtime_error("incomplete result tail (explicit recovery required)");
     }
     bool indexed() const { return bool(indexed_); }
+    ResultFormat format() const { return !indexed_ ? ResultFormat::Native1 :
+        indexed_->typed() ? ResultFormat::TypedIndexed3 : ResultFormat::Indexed2; }
+    ResultField typed_field(std::size_t frame_index, const std::string &name,
+        std::optional<ResultAddress> exact = {}, std::optional<Id> entity = {}, const std::string &schema_id = "") const {
+        if (!indexed_ || !indexed_->typed()) throw std::invalid_argument("typed query requires indexed3");
+        auto f = indexed_->frame(frame_index, &name, false, entity, {}, 1, exact, true, schema_id.empty() ? nullptr : &schema_id);
+        if (f.fields.empty()) throw std::out_of_range("typed field not stored");
+        if (f.fields.size() != 1) throw std::invalid_argument("ambiguous typed field schemas/regions");
+        return std::move(f.fields.front());
+    }
     ResultReadStats read_stats() const { return indexed_ ? indexed_->stats() : ResultReadStats{}; }
     ResultFrame frame(std::size_t i) const {
         if (indexed_)
@@ -473,6 +709,26 @@ class ResultReader {
 };
 class ResultQuery {
   public:
+    template<class T> static std::vector<std::pair<double,std::optional<T>>> typed_history(
+        const ResultReader &reader, const std::string &name, ResultAddress address, unsigned component = 0,
+        double time_begin = 0, double time_end = std::numeric_limits<double>::max(), const std::string &schema_id = "") {
+        if (!std::isfinite(time_begin) || !std::isfinite(time_end) || time_begin > time_end)
+            throw std::invalid_argument("invalid typed history interval");
+        std::vector<std::pair<double,std::optional<T>>> values;
+        for (std::size_t i=0; i<reader.index.size(); ++i) {
+            auto time = reader.index[i].time;
+            if (time < time_begin) continue;
+            if (time > time_end) break;
+            ResultField field;
+            try { field=reader.typed_field(i,name,address,{},schema_id); } catch(const std::out_of_range&) { continue; }
+            auto &p=*field.typed;
+            if (component >= p.schema.component_count()) throw std::out_of_range("typed history component");
+            auto &v=typed_values<T>(field);
+            if (!p.addresses.empty()) values.emplace_back(time,
+                p.validity.empty() || p.validity[component] ? std::optional<T>(v[component]) : std::nullopt);
+        }
+        return values;
+    }
     static std::vector<std::pair<double, double>>
     history(const ResultReader &reader, const std::string &field, Id entity, unsigned component = 0,
             const std::string &region = "", bool history_request = false, double time_begin = 0,
@@ -527,15 +783,28 @@ class NativeResultStorage final : public IResultStorage {
   public:
     NativeResultStorage(const std::filesystem::path &path, ResultModel model, bool append = false,
                         bool recover = false, std::uint64_t limit = native::default_limit,
-                        std::function<void()> append_preflight = {}, bool indexed = false)
+                        std::function<void()> append_preflight = {}, bool indexed = false,
+                        ResultFormat format = ResultFormat::Auto)
         : lease_(path), model_(std::move(model)), limit_(limit) {
         if (upper(path.extension().string()) == ".H5" || upper(path.extension().string()) == ".HDF5")
             throw std::invalid_argument("native backend requires a non-HDF5 suffix (.sdbres)");
+        typed_detail::validate_model(model_);
+        if (format != ResultFormat::Auto && format != ResultFormat::Native1 &&
+            format != ResultFormat::Indexed2 && format != ResultFormat::TypedIndexed3)
+            throw std::invalid_argument("unknown result format");
+        auto requested = format == ResultFormat::Auto ? (indexed ? ResultFormat::Indexed2 : ResultFormat::Native1) : format;
+        if (!append && requested != ResultFormat::TypedIndexed3 && (!model_.samples.empty() || !model_.bases.empty()))
+            throw std::invalid_argument("extended result model requires indexed3");
         if (append) {
             if (append_preflight)
                 append_preflight();
             ResultReader existing(path, recover, limit);
-            if (native::pack(existing.model, limit_) != native::pack(model_, limit_))
+            if (format != ResultFormat::Auto && existing.format() != format)
+                throw std::runtime_error("result append requested format mismatch");
+            const bool typed = existing.format() == ResultFormat::TypedIndexed3;
+            if (!typed && (!model_.samples.empty() || !model_.bases.empty()))
+                throw std::invalid_argument("extended model cannot append to legacy result");
+            if (typed_detail::pack_model(existing.model, limit_, typed) != typed_detail::pack_model(model_, limit_, typed))
                 throw std::runtime_error("result append model/configuration mismatch");
             if (existing.incomplete_tail)
                 std::filesystem::resize_file(path, existing.valid_end);
@@ -549,8 +818,8 @@ class NativeResultStorage final : public IResultStorage {
             if (std::filesystem::exists(path))
                 throw std::runtime_error("result exists; use explicit append or a new output path");
             out_.open(path, std::ios::binary | std::ios::trunc);
-            if (indexed) {
-                indexed_detail::File::create(out_, model_, limit_);
+            if (requested == ResultFormat::Indexed2 || requested == ResultFormat::TypedIndexed3) {
+                indexed_detail::File::create(out_, model_, limit_, requested == ResultFormat::TypedIndexed3);
                 indexed_ = std::make_unique<indexed_detail::File>(path, limit_);
             } else {
                 native::prefix(out_, result_magic);
@@ -564,6 +833,11 @@ class NativeResultStorage final : public IResultStorage {
     void append(const ResultFrame &frame) override {
         if (failed_)
             throw std::runtime_error("result writer is failed");
+        if (indexed_ && indexed_->typed()) {
+            if (frame.info.storage_precision != 0) throw std::invalid_argument("indexed3 requires bound frame");
+        } else if (frame.binding || frame.info.storage_precision != 8 ||
+            std::any_of(frame.fields.begin(),frame.fields.end(),[](const auto &f){return bool(f.typed);}))
+            throw std::invalid_argument("legacy format rejects typed result before writing");
         validate_frame(frame, model_, last_);
         try {
             if (indexed_)

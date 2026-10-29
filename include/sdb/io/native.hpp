@@ -23,7 +23,9 @@ template <class X> void encode(Writer &w, const X &value) {
                          }) {
         encode(w, value.first);
         encode(w, value.second);
-    } else if constexpr (requires { const_cast<X &>(value).visit([](auto & ...) {}); })
+    } else if constexpr (requires { value.visit([](const auto & ...) {}); })
+        value.visit([&](const auto &...v) { (encode(w, v), ...); });
+    else if constexpr (requires { const_cast<X &>(value).visit([](auto & ...) {}); })
         const_cast<X &>(value).visit([&](auto &...v) { (encode(w, v), ...); });
     else {
         if constexpr (requires { value.resize(0); })
@@ -99,7 +101,9 @@ template <class X> std::uint64_t encoded_size(const X &x, std::uint64_t limit) {
                          }) {
         add(encoded_size(x.first, limit - size));
         add(encoded_size(x.second, limit - size));
-    } else if constexpr (requires { const_cast<X &>(x).visit([](auto & ...) {}); })
+    } else if constexpr (requires { x.visit([](const auto & ...) {}); })
+        x.visit([&](const auto &...v) { (add(encoded_size(v, limit - size)), ...); });
+    else if constexpr (requires { const_cast<X &>(x).visit([](auto & ...) {}); })
         const_cast<X &>(x).visit([&](auto &...v) { (add(encoded_size(v, limit - size)), ...); });
     else {
         if constexpr (requires(X v) { v.resize(0); })
