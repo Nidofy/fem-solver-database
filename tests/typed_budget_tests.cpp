@@ -6,10 +6,12 @@ using namespace sdb;
 using namespace sdb::lifecycle;
 // Count actual ordinary heap allocations only inside the admission operation.
 // This catches a validation tree allocated before a tiny queue budget rejects.
-static std::atomic<bool> measuring{false};
-static std::atomic<std::size_t> allocated{0};
+// Measure the producer operation, not the independently starting worker's STL
+// list sentinel (MSVC allocates it even for an empty list; libstdc++ does not).
+static thread_local bool measuring=false;
+static thread_local std::size_t allocated=0;
 void *operator new(std::size_t n) {
-    if (measuring.load()) allocated.fetch_add(n);
+    if (measuring) allocated+=n;
     if (auto p=std::malloc(n ? n : 1)) return p;
     throw std::bad_alloc();
 }
@@ -32,11 +34,11 @@ int main() {
         allocated=0;measuring=true;
         auto charge=AsyncResultWriter::required_bytes(frame);
         measuring=false;
-        if(allocated.load()!=0 || charge<=1024) throw std::runtime_error("admission accounting allocates scratch");
+        if(allocated!=0 || charge<=1024) throw std::runtime_error("admission accounting allocates scratch");
         allocated=0;measuring=true;bool rejected=false;
         try { writer.write(std::move(frame)); } catch(const std::length_error &) { rejected=true; }
         measuring=false;
-        const auto rejection_bytes=allocated.load();
+        const auto rejection_bytes=allocated;
         writer.close();
         if(!rejected || rejection_bytes>4096 || frame.fields.at(0).typed->addresses.size()!=100000)
             throw std::runtime_error("rejected admission allocated unbounded scratch or consumed source");
