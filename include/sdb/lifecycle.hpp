@@ -29,6 +29,22 @@ template <class T> class CpuRun {
         LoadEvaluator::apply(model_.analysis, step_, double(increment_) * plans_[step_].dt,
                              state_.data().time, state_);
     }
+    // Prepare every throwing operation on the candidate. set_constraints checks
+    // all inputs before its nonallocating mask/velocity/acceleration writes.
+    // After that point state/cursor publication is a no-throw commit.
+    void publish_restored(StateDB<T> &candidate, std::uint64_t step, std::uint64_t increment) {
+        std::vector<Constraint> constraints;
+        for (const auto &a : model_.analysis.steps.at(step).boundaries)
+            constraints.push_back({a.node, a.component, a.value});
+        LoadEvaluator::apply(model_.analysis, step, double(increment) * plans_.at(step).dt,
+                             candidate.data().time, candidate);
+        cpu_.set_constraints(constraints, candidate);
+        static_assert(std::is_nothrow_move_assignable_v<StateData<T>>);
+        state_.data() = std::move(candidate.data());
+        step_ = step;
+        increment_ = increment;
+        initialized_ = true;
+    }
     void next_step() {
         // Rephase half-step velocity around the same physical time when dt/load/mask changes.
         cpu_.forces(state_);
@@ -161,12 +177,7 @@ template <class T> class CpuRun {
         for (auto &a : model_.analysis.steps[info.step].boundaries)
             if (restored.data().displacement.read()(a.node, a.component) != T(0))
                 throw std::runtime_error("restart violates homogeneous boundary");
-        state_.data() = std::move(restored.data());
-        step_ = info.step;
-        increment_ = info.increment;
-        mask(step_);
-        loads();
-        initialized_ = true;
+        publish_restored(restored, info.step, info.increment);
     }
     // Explicit v2 conversion is tied to the chosen compiled model; v2 itself had no analysis identity.
     void import_v2(const std::filesystem::path &path) {
@@ -192,12 +203,7 @@ template <class T> class CpuRun {
         for (auto &a : model_.analysis.steps[candidate_step].boundaries)
             if (s.displacement.read()(a.node, a.component) != T(0))
                 throw std::runtime_error("v2 checkpoint violates boundary");
-        state_.data() = std::move(candidate.data());
-        step_ = candidate_step;
-        increment_ = remain;
-        mask(step_);
-        loads();
-        initialized_ = true;
+        publish_restored(candidate, candidate_step, remain);
     }
 };
 } // namespace sdb::lifecycle
