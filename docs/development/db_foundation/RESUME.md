@@ -1,6 +1,26 @@
 # Resume DB foundation work
 
-## Current DBF2 state
+## Current DBF3 phase-one continuation
+
+Start with DBF3_HANDOFF, DBF3_VERIFICATION, DBF3_REQUIREMENTS and the independent
+`verification/reviews/DBF3/independent-astra/REVIEW.md`. Final reviewed library
+source is `c53ab3e462bc44740f1de91f91efa72db0eefbbf`. It includes the three
+independently reproduced P1 fixes and the InstanceId documentation correction.
+Verify the DBF3 manifest before reusing its evidence. Do not repeat the historical
+DBF2 gap list: registered typed State, local history basis and schema4 semantic
+definitions are now implemented within their documented contracts.
+
+Keep packed FP32/64 material histories distinct from seven-lane registered dense
+fields; generic Face/Contact registration is not supported. Existing CPU kernels
+remain the numerical subset; new physical definitions are storage-only. Old
+affected step-time-amplitude run configurations cannot silently resume after the
+continuation correction. The original user kit remains preserved and untracked.
+
+The user authorized phase one only for this continuation. Later durability,
+compression and production-adapter phases are not started here. ALR1 and B02c
+are not automatically accepted or merged. Preserve all unrelated parent work.
+
+## Historical DBF2 state
 
 Do not repeat the completed DBF1/DBF2 implementation tasks listed in the historical
 section below. Read DBF2_HANDOFF, DBF2_VERIFICATION, DBF2_REVIEW_FIXES and the independent

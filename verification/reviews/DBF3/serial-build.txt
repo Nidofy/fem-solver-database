@@ -1,0 +1,679 @@
+[0/1] Re-running CMake...
+-- Configuring done (0.5s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-serial
+[1/53] Building CXX object CMakeFiles/sdb_general_contact_tests.dir/tests/general_contact_tests.cpp.obj
+[2/53] Building CXX object CMakeFiles/sdb_general_contact_demo.dir/examples/general_contact.cpp.obj
+[3/53] Building CXX object CMakeFiles/sdb_contact_geometry_tests.dir/tests/general_contact_geometry_tests.cpp.obj
+[4/53] Building CXX object CMakeFiles/sdb_contact_domain_demo.dir/examples/general_contact_domain.cpp.obj
+[5/53] Building CXX object CMakeFiles/sdb_run.dir/examples/sdb_run.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/examples/sdb_run.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+[6/53] Building CXX object CMakeFiles/sdb_lifecycle_tests.dir/tests/lifecycle_tests.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/lifecycle_tests.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+[7/53] Building CXX object CMakeFiles/sdb_foundation_tests.dir/tests/foundation_tests.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/foundation_tests.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+[8/53] Building CXX object CMakeFiles/sdb_storage_tests.dir/tests/storage_tests.cpp.obj
+[9/53] Building CXX object CMakeFiles/sdb_foundation_boundary_tests.dir/tests/foundation_boundary_tests.cpp.obj
+[10/53] Building CXX object CMakeFiles/sdb_model_foundation_tests.dir/tests/model_foundation_tests.cpp.obj
+[11/53] Building CXX object CMakeFiles/sdb_typed_results_tests.dir/tests/typed_results_tests.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = double; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:52:76:   required from here
+   52 |     ResultFrame original;original.fields.push_back(make_typed_field<double>(d,{a},{10,20}));
+      |                                                    ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = long long unsigned int; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:139:50:   required from here
+  139 |         auto mask=make_typed_field<std::uint64_t>(sd,{a},{0,UINT64_MAX},{0,1});
+      |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = float; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:19:43:   required from 'void scalar_field(sdb::lifecycle::ResultFrame&, std::string, sdb::lifecycle::ResultAddress, T) [with T = float; std::string = std::__cxx11::basic_string<char>]'
+   19 |     f.fields.push_back(make_typed_field<T>(schema<T>(name),{a},{value}));
+      |                        ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:131:28:   required from here
+  131 |         scalar_field<float>(f,"F32",a,1.25f);
+      |         ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = int; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:19:43:   required from 'void scalar_field(sdb::lifecycle::ResultFrame&, std::string, sdb::lifecycle::ResultAddress, T) [with T = int; std::string = std::__cxx11::basic_string<char>]'
+   19 |     f.fields.push_back(make_typed_field<T>(schema<T>(name),{a},{value}));
+      |                        ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:133:35:   required from here
+  133 |         scalar_field<std::int32_t>(f,"I32",a,INT32_MIN);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = unsigned int; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:19:43:   required from 'void scalar_field(sdb::lifecycle::ResultFrame&, std::string, sdb::lifecycle::ResultAddress, T) [with T = unsigned int; std::string = std::__cxx11::basic_string<char>]'
+   19 |     f.fields.push_back(make_typed_field<T>(schema<T>(name),{a},{value}));
+      |                        ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:134:36:   required from here
+  134 |         scalar_field<std::uint32_t>(f,"U32",a,UINT32_MAX);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = long long int; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:19:43:   required from 'void scalar_field(sdb::lifecycle::ResultFrame&, std::string, sdb::lifecycle::ResultAddress, T) [with T = long long int; std::string = std::__cxx11::basic_string<char>]'
+   19 |     f.fields.push_back(make_typed_field<T>(schema<T>(name),{a},{value}));
+      |                        ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:135:35:   required from here
+  135 |         scalar_field<std::int64_t>(f,"I64",a,INT64_MIN);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = unsigned char; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:19:43:   required from 'void scalar_field(sdb::lifecycle::ResultFrame&, std::string, sdb::lifecycle::ResultAddress, T) [with T = unsigned char; std::string = std::__cxx11::basic_string<char>]'
+   19 |     f.fields.push_back(make_typed_field<T>(schema<T>(name),{a},{value}));
+      |                        ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:137:35:   required from here
+  137 |         scalar_field<std::uint8_t>(f,"U8",a,255);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+[12/53] Building CXX object CMakeFiles/sdb_foundation_integration_tests.dir/tests/foundation_integration_tests.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/foundation_integration_tests.cpp:3:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = float; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/foundation_integration_tests.cpp:65:47:   required from 'void write_fixture(const std::filesystem::__cxx11::path&, const std::filesystem::__cxx11::path&) [with T = float]'
+   65 |     f.fields.push_back(make_typed_field<float>(node,{n1,n2},{1.25f,-2.f}));
+      |                        ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/foundation_integration_tests.cpp:141:80:   required from here
+  141 |         else {std::filesystem::create_directories(argv[2]);write_fixture<float>(argv[1],argv[2]);write_fixture<double>(argv[1],argv[2]);}
+      |                                                            ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = long long unsigned int; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/foundation_integration_tests.cpp:68:55:   required from 'void write_fixture(const std::filesystem::__cxx11::path&, const std::filesystem::__cxx11::path&) [with T = float]'
+   68 |     f.fields.push_back(make_typed_field<std::uint64_t>(flags,{e1,e2},{UINT64_MAX,0},{1,0}));
+      |                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/foundation_integration_tests.cpp:141:80:   required from here
+  141 |         else {std::filesystem::create_directories(argv[2]);write_fixture<float>(argv[1],argv[2]);write_fixture<double>(argv[1],argv[2]);}
+      |                                                            ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = double; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/foundation_integration_tests.cpp:73:41:   required from 'void write_fixture(const std::filesystem::__cxx11::path&, const std::filesystem::__cxx11::path&) [with T = float]'
+   73 |     auto tensor=make_typed_field<double>(local,{p},{1,2,3,4,5,6});tensor.typed->basis_id=8;f.fields.push_back(tensor);
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/foundation_integration_tests.cpp:141:80:   required from here
+  141 |         else {std::filesystem::create_directories(argv[2]);write_fixture<float>(argv[1],argv[2]);write_fixture<double>(argv[1],argv[2]);}
+      |                                                            ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = int; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/foundation_integration_tests.cpp:79:54:   required from 'void write_fixture(const std::filesystem::__cxx11::path&, const std::filesystem::__cxx11::path&) [with T = float]'
+   79 |     f.fields.push_back(make_typed_field<std::int32_t>(desc<std::int32_t>("ELEMENT_NODE",Association::Element,FieldLocation::ElementNode),{en},{-7}));
+      |                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/foundation_integration_tests.cpp:141:80:   required from here
+  141 |         else {std::filesystem::create_directories(argv[2]);write_fixture<float>(argv[1],argv[2]);write_fixture<double>(argv[1],argv[2]);}
+      |                                                            ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+[13/53] Building CXX object CMakeFiles/sdb_typed_budget_tests.dir/tests/typed_budget_tests.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/async_writer.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_budget_tests.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = long long unsigned int; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_budget_tests.cpp:32:63:   required from here
+   32 |         frame.fields.push_back(make_typed_field<std::uint64_t>(schema,std::move(addresses),std::vector<std::uint64_t>(100000)));
+      |                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+[14/53] Building CXX object CMakeFiles/sdb_typed_results_scaling.dir/tests/typed_results_scaling.cpp.obj
+[15/53] Building CXX object CMakeFiles/sdb_dbf3_contract_tests.dir/tests/dbf3_contract_tests.cpp.obj
+[16/53] Building CXX object CMakeFiles/sdb_dbf3_model_tests.dir/tests/dbf3_model_tests.cpp.obj
+[17/53] Building CXX object CMakeFiles/sdb_dbf3_state_tests.dir/tests/dbf3_state_tests.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf3_state_tests.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+[18/53] Building CXX object CMakeFiles/sdb_dbf3_result_tests.dir/tests/dbf3_result_tests.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/async_writer.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf3_result_tests.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = float; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:397:24:   required from 'sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)> [with auto:137 = std::vector<float>]'
+  397 |                 return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+      |                        ^~~~~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2781:26:   required by substitution of 'template<class _Fn, class ... _Args> static std::__result_of_success<decltype (declval<_Fn>()((declval<_Args>)()...)), std::__invoke_other> std::__result_of_other_impl::_S_test(int) [with _Fn = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Args = {std::vector<float, std::allocator<float> >&&}]'
+ 2781 |       std::declval<_Fn>()(std::declval<_Args>()...)
+      |       ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2792:60:   required from 'struct std::__result_of_impl<false, false, sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<float, std::allocator<float> >&&>'
+ 2792 |       using type = decltype(_S_test<_Functor, _ArgTypes...>(0));
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2797:12:   required from 'struct std::__invoke_result<sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<float, std::allocator<float> >&&>'
+ 2797 |     struct __invoke_result
+      |            ^~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:3284:12:   required from 'struct std::invoke_result<sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<float, std::allocator<float> >&&>'
+ 3284 |     struct invoke_result
+      |            ^~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:3296:11:   required by substitution of 'template<class _Fn, class ... _Args> using std::invoke_result_t = typename std::invoke_result::type [with _Fn = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Args = {std::vector<float, std::allocator<float> >&&}]'
+ 3296 |     using invoke_result_t = typename invoke_result<_Fn, _Args...>::type;
+      |           ^~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/variant:1120:11:   required by substitution of 'template<class _Visitor, class ... _Variants> using std::__detail::__variant::__visit_result_t = std::invoke_result_t<_Visitor, std::__detail::__variant::__get_t<0, _Variants, decltype (std::__detail::__variant::__as(declval<_Variants>())), typename std::variant_alternative<0, typename std::remove_reference<decltype (std::__detail::__variant::__as(declval<_Variants>()))>::type>::type>...> [with _Visitor = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Variants = {std::variant<std::vector<float, std::allocator<float> >, std::vector<double, std::allocator<double> >, std::vector<int, std::allocator<int> >, std::vector<unsigned int, std::allocator<unsigned int> >, std::vector<long long int, std::allocator<long long int> >, std::vector<long long unsigned int, std::allocator<long long unsigned int> >, std::vector<unsigned char, std::allocator<unsigned char> > >}]'
+ 1120 |     using __visit_result_t
+      |           ^~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/variant:1927:5:   required by substitution of 'template<class _Visitor, class ... _Variants> constexpr std::__detail::__variant::__visit_result_t<_Visitor, _Variants ...> std::visit(_Visitor&&, _Variants&& ...) [with _Visitor = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Variants = {std::variant<std::vector<float, std::allocator<float> >, std::vector<double, std::allocator<double> >, std::vector<int, std::allocator<int> >, std::vector<unsigned int, std::allocator<unsigned int> >, std::vector<long long int, std::allocator<long long int> >, std::vector<long long unsigned int, std::allocator<long long unsigned int> >, std::vector<unsigned char, std::allocator<unsigned char> > >}]'
+ 1927 |     visit(_Visitor&& __visitor, _Variants&&... __variants)
+      |     ^~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:395:34:   required from 'static void sdb::lifecycle::ResultPublisher::append_registered(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<T>&, const sdb::StateDB<T>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t) [with T = double; uint64_t = long long unsigned int]'
+  395 |             auto field=std::visit([&](auto &&v) {
+      |                        ~~~~~~~~~~^~~~~~~~~~~~~~~~
+  396 |                 using V=typename std::decay_t<decltype(v)>::value_type;
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  397 |                 return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  398 |             },std::move(values));
+      |             ~~~~~~~~~~~~~~~~~~~~  
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf3_result_tests.cpp:78:43:   required from here
+   78 |         ResultPublisher::append_registered(frame,model,state);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = double; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:289:57:   required from 'static void sdb::lifecycle::ResultPublisher::append_history(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<T>&, const sdb::StateDB<T>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t) [with T = double; uint64_t = long long unsigned int]'
+  289 |                         auto field = make_typed_field<T>(v.field, {}, {}, {}, "", true);
+      |                                      ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:341:23:   required from 'static sdb::lifecycle::ResultFrame sdb::lifecycle::ResultPublisher::snapshot_history(const sdb::lifecycle::CompiledModel<T>&, const sdb::StateDB<T>&, sdb::lifecycle::FrameInfo, std::vector<std::__cxx11::basic_string<char> >, uint64_t, uint64_t) [with T = double; uint64_t = long long unsigned int]'
+  341 |         append_history(frame,model,state,std::move(names),budget);
+      |         ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf3_result_tests.cpp:65:54:   required from here
+   65 |         rejects([&]{ResultPublisher::snapshot_history(axis_model,axis_state);});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = int; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:397:24:   required from 'sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)> [with auto:137 = std::vector<int>]'
+  397 |                 return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+      |                        ^~~~~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2781:26:   required by substitution of 'template<class _Fn, class ... _Args> static std::__result_of_success<decltype (declval<_Fn>()((declval<_Args>)()...)), std::__invoke_other> std::__result_of_other_impl::_S_test(int) [with _Fn = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Args = {std::vector<int, std::allocator<int> >&&}]'
+ 2781 |       std::declval<_Fn>()(std::declval<_Args>()...)
+      |       ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2792:60:   required from 'struct std::__result_of_impl<false, false, sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<int, std::allocator<int> >&&>'
+ 2792 |       using type = decltype(_S_test<_Functor, _ArgTypes...>(0));
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2797:12:   required from 'struct std::__invoke_result<sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<int, std::allocator<int> >&&>'
+ 2797 |     struct __invoke_result
+      |            ^~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:3284:12:   required from 'struct std::invoke_result<sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<int, std::allocator<int> >&&>'
+ 3284 |     struct invoke_result
+      |            ^~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/variant:1129:14:   required from 'constexpr bool std::__detail::__variant::__check_visitor_results(std::index_sequence<_Idx ...>) [with _Visitor = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Variant = std::variant<std::vector<float, std::allocator<float> >, std::vector<double, std::allocator<double> >, std::vector<int, std::allocator<int> >, std::vector<unsigned int, std::allocator<unsigned int> >, std::vector<long long int, std::allocator<long long int> >, std::vector<long long unsigned int, std::allocator<long long unsigned int> >, std::vector<unsigned char, std::allocator<unsigned char> > >&&; long long unsigned int ..._Idxs = {0, 1, 2, 3, 4, 5, 6}; std::index_sequence<_Idx ...> = std::integer_sequence<long long unsigned int, 0, 1, 2, 3, 4, 5, 6>]'
+ 1129 |       return __same_types<
+      |              ^~~~~~~~~~~~~
+ 1130 |         invoke_result_t<_Visitor, __get_t<_Idxs, _Variant>>...
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1131 |         >;
+      |         ~     
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/variant:1944:44:   required from 'constexpr std::__detail::__variant::__visit_result_t<_Visitor, _Variants ...> std::visit(_Visitor&&, _Variants&& ...) [with _Visitor = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Variants = {variant<vector<float, allocator<float> >, vector<double, allocator<double> >, vector<int, allocator<int> >, vector<unsigned int, allocator<unsigned int> >, vector<long long int, allocator<long long int> >, vector<long long unsigned int, allocator<long long unsigned int> >, vector<unsigned char, allocator<unsigned char> > >}; __detail::__variant::__visit_result_t<_Visitor, _Variants ...> = sdb::lifecycle::ResultField]'
+ 1943 |           constexpr bool __visit_rettypes_match = __detail::__variant::
+      |                                                   ~~~~~~~~~~~~~~~~~~~~~
+ 1944 |             __check_visitor_results<_Visitor, _Vp>(
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+ 1945 |               make_index_sequence<variant_size_v<remove_reference_t<_Vp>>>());
+      |               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:395:34:   required from 'static void sdb::lifecycle::ResultPublisher::append_registered(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<T>&, const sdb::StateDB<T>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t) [with T = double; uint64_t = long long unsigned int]'
+  395 |             auto field=std::visit([&](auto &&v) {
+      |                        ~~~~~~~~~~^~~~~~~~~~~~~~~~
+  396 |                 using V=typename std::decay_t<decltype(v)>::value_type;
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  397 |                 return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  398 |             },std::move(values));
+      |             ~~~~~~~~~~~~~~~~~~~~  
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf3_result_tests.cpp:78:43:   required from here
+   78 |         ResultPublisher::append_registered(frame,model,state);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = unsigned int; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:397:24:   required from 'sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)> [with auto:137 = std::vector<unsigned int>]'
+  397 |                 return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+      |                        ^~~~~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2781:26:   required by substitution of 'template<class _Fn, class ... _Args> static std::__result_of_success<decltype (declval<_Fn>()((declval<_Args>)()...)), std::__invoke_other> std::__result_of_other_impl::_S_test(int) [with _Fn = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Args = {std::vector<unsigned int, std::allocator<unsigned int> >&&}]'
+ 2781 |       std::declval<_Fn>()(std::declval<_Args>()...)
+      |       ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2792:60:   required from 'struct std::__result_of_impl<false, false, sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<unsigned int, std::allocator<unsigned int> >&&>'
+ 2792 |       using type = decltype(_S_test<_Functor, _ArgTypes...>(0));
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2797:12:   required from 'struct std::__invoke_result<sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<unsigned int, std::allocator<unsigned int> >&&>'
+ 2797 |     struct __invoke_result
+      |            ^~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:3284:12:   required from 'struct std::invoke_result<sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<unsigned int, std::allocator<unsigned int> >&&>'
+ 3284 |     struct invoke_result
+      |            ^~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/variant:1129:14:   required from 'constexpr bool std::__detail::__variant::__check_visitor_results(std::index_sequence<_Idx ...>) [with _Visitor = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Variant = std::variant<std::vector<float, std::allocator<float> >, std::vector<double, std::allocator<double> >, std::vector<int, std::allocator<int> >, std::vector<unsigned int, std::allocator<unsigned int> >, std::vector<long long int, std::allocator<long long int> >, std::vector<long long unsigned int, std::allocator<long long unsigned int> >, std::vector<unsigned char, std::allocator<unsigned char> > >&&; long long unsigned int ..._Idxs = {0, 1, 2, 3, 4, 5, 6}; std::index_sequence<_Idx ...> = std::integer_sequence<long long unsigned int, 0, 1, 2, 3, 4, 5, 6>]'
+ 1129 |       return __same_types<
+      |              ^~~~~~~~~~~~~
+ 1130 |         invoke_result_t<_Visitor, __get_t<_Idxs, _Variant>>...
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1131 |         >;
+      |         ~     
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/variant:1944:44:   required from 'constexpr std::__detail::__variant::__visit_result_t<_Visitor, _Variants ...> std::visit(_Visitor&&, _Variants&& ...) [with _Visitor = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Variants = {variant<vector<float, allocator<float> >, vector<double, allocator<double> >, vector<int, allocator<int> >, vector<unsigned int, allocator<unsigned int> >, vector<long long int, allocator<long long int> >, vector<long long unsigned int, allocator<long long unsigned int> >, vector<unsigned char, allocator<unsigned char> > >}; __detail::__variant::__visit_result_t<_Visitor, _Variants ...> = sdb::lifecycle::ResultField]'
+ 1943 |           constexpr bool __visit_rettypes_match = __detail::__variant::
+      |                                                   ~~~~~~~~~~~~~~~~~~~~~
+ 1944 |             __check_visitor_results<_Visitor, _Vp>(
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+ 1945 |               make_index_sequence<variant_size_v<remove_reference_t<_Vp>>>());
+      |               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:395:34:   required from 'static void sdb::lifecycle::ResultPublisher::append_registered(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<T>&, const sdb::StateDB<T>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t) [with T = double; uint64_t = long long unsigned int]'
+  395 |             auto field=std::visit([&](auto &&v) {
+      |                        ~~~~~~~~~~^~~~~~~~~~~~~~~~
+  396 |                 using V=typename std::decay_t<decltype(v)>::value_type;
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  397 |                 return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  398 |             },std::move(values));
+      |             ~~~~~~~~~~~~~~~~~~~~  
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf3_result_tests.cpp:78:43:   required from here
+   78 |         ResultPublisher::append_registered(frame,model,state);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = long long int; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:397:24:   required from 'sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)> [with auto:137 = std::vector<long long int>]'
+  397 |                 return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+      |                        ^~~~~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2781:26:   required by substitution of 'template<class _Fn, class ... _Args> static std::__result_of_success<decltype (declval<_Fn>()((declval<_Args>)()...)), std::__invoke_other> std::__result_of_other_impl::_S_test(int) [with _Fn = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Args = {std::vector<long long int, std::allocator<long long int> >&&}]'
+ 2781 |       std::declval<_Fn>()(std::declval<_Args>()...)
+      |       ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2792:60:   required from 'struct std::__result_of_impl<false, false, sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<long long int, std::allocator<long long int> >&&>'
+ 2792 |       using type = decltype(_S_test<_Functor, _ArgTypes...>(0));
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2797:12:   required from 'struct std::__invoke_result<sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<long long int, std::allocator<long long int> >&&>'
+ 2797 |     struct __invoke_result
+      |            ^~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:3284:12:   required from 'struct std::invoke_result<sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<long long int, std::allocator<long long int> >&&>'
+ 3284 |     struct invoke_result
+      |            ^~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/variant:1129:14:   required from 'constexpr bool std::__detail::__variant::__check_visitor_results(std::index_sequence<_Idx ...>) [with _Visitor = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Variant = std::variant<std::vector<float, std::allocator<float> >, std::vector<double, std::allocator<double> >, std::vector<int, std::allocator<int> >, std::vector<unsigned int, std::allocator<unsigned int> >, std::vector<long long int, std::allocator<long long int> >, std::vector<long long unsigned int, std::allocator<long long unsigned int> >, std::vector<unsigned char, std::allocator<unsigned char> > >&&; long long unsigned int ..._Idxs = {0, 1, 2, 3, 4, 5, 6}; std::index_sequence<_Idx ...> = std::integer_sequence<long long unsigned int, 0, 1, 2, 3, 4, 5, 6>]'
+ 1129 |       return __same_types<
+      |              ^~~~~~~~~~~~~
+ 1130 |         invoke_result_t<_Visitor, __get_t<_Idxs, _Variant>>...
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1131 |         >;
+      |         ~     
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/variant:1944:44:   required from 'constexpr std::__detail::__variant::__visit_result_t<_Visitor, _Variants ...> std::visit(_Visitor&&, _Variants&& ...) [with _Visitor = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Variants = {variant<vector<float, allocator<float> >, vector<double, allocator<double> >, vector<int, allocator<int> >, vector<unsigned int, allocator<unsigned int> >, vector<long long int, allocator<long long int> >, vector<long long unsigned int, allocator<long long unsigned int> >, vector<unsigned char, allocator<unsigned char> > >}; __detail::__variant::__visit_result_t<_Visitor, _Variants ...> = sdb::lifecycle::ResultField]'
+ 1943 |           constexpr bool __visit_rettypes_match = __detail::__variant::
+      |                                                   ~~~~~~~~~~~~~~~~~~~~~
+ 1944 |             __check_visitor_results<_Visitor, _Vp>(
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+ 1945 |               make_index_sequence<variant_size_v<remove_reference_t<_Vp>>>());
+      |               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:395:34:   required from 'static void sdb::lifecycle::ResultPublisher::append_registered(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<T>&, const sdb::StateDB<T>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t) [with T = double; uint64_t = long long unsigned int]'
+  395 |             auto field=std::visit([&](auto &&v) {
+      |                        ~~~~~~~~~~^~~~~~~~~~~~~~~~
+  396 |                 using V=typename std::decay_t<decltype(v)>::value_type;
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  397 |                 return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  398 |             },std::move(values));
+      |             ~~~~~~~~~~~~~~~~~~~~  
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf3_result_tests.cpp:78:43:   required from here
+   78 |         ResultPublisher::append_registered(frame,model,state);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = long long unsigned int; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:397:24:   required from 'sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)> [with auto:137 = std::vector<long long unsigned int>]'
+  397 |                 return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+      |                        ^~~~~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2781:26:   required by substitution of 'template<class _Fn, class ... _Args> static std::__result_of_success<decltype (declval<_Fn>()((declval<_Args>)()...)), std::__invoke_other> std::__result_of_other_impl::_S_test(int) [with _Fn = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Args = {std::vector<long long unsigned int, std::allocator<long long unsigned int> >&&}]'
+ 2781 |       std::declval<_Fn>()(std::declval<_Args>()...)
+      |       ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2792:60:   required from 'struct std::__result_of_impl<false, false, sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<long long unsigned int, std::allocator<long long unsigned int> >&&>'
+ 2792 |       using type = decltype(_S_test<_Functor, _ArgTypes...>(0));
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2797:12:   required from 'struct std::__invoke_result<sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<long long unsigned int, std::allocator<long long unsigned int> >&&>'
+ 2797 |     struct __invoke_result
+      |            ^~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:3284:12:   required from 'struct std::invoke_result<sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<long long unsigned int, std::allocator<long long unsigned int> >&&>'
+ 3284 |     struct invoke_result
+      |            ^~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/variant:1129:14:   required from 'constexpr bool std::__detail::__variant::__check_visitor_results(std::index_sequence<_Idx ...>) [with _Visitor = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Variant = std::variant<std::vector<float, std::allocator<float> >, std::vector<double, std::allocator<double> >, std::vector<int, std::allocator<int> >, std::vector<unsigned int, std::allocator<unsigned int> >, std::vector<long long int, std::allocator<long long int> >, std::vector<long long unsigned int, std::allocator<long long unsigned int> >, std::vector<unsigned char, std::allocator<unsigned char> > >&&; long long unsigned int ..._Idxs = {0, 1, 2, 3, 4, 5, 6}; std::index_sequence<_Idx ...> = std::integer_sequence<long long unsigned int, 0, 1, 2, 3, 4, 5, 6>]'
+ 1129 |       return __same_types<
+      |              ^~~~~~~~~~~~~
+ 1130 |         invoke_result_t<_Visitor, __get_t<_Idxs, _Variant>>...
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1131 |         >;
+      |         ~     
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/variant:1944:44:   required from 'constexpr std::__detail::__variant::__visit_result_t<_Visitor, _Variants ...> std::visit(_Visitor&&, _Variants&& ...) [with _Visitor = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Variants = {variant<vector<float, allocator<float> >, vector<double, allocator<double> >, vector<int, allocator<int> >, vector<unsigned int, allocator<unsigned int> >, vector<long long int, allocator<long long int> >, vector<long long unsigned int, allocator<long long unsigned int> >, vector<unsigned char, allocator<unsigned char> > >}; __detail::__variant::__visit_result_t<_Visitor, _Variants ...> = sdb::lifecycle::ResultField]'
+ 1943 |           constexpr bool __visit_rettypes_match = __detail::__variant::
+      |                                                   ~~~~~~~~~~~~~~~~~~~~~
+ 1944 |             __check_visitor_results<_Visitor, _Vp>(
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+ 1945 |               make_index_sequence<variant_size_v<remove_reference_t<_Vp>>>());
+      |               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:395:34:   required from 'static void sdb::lifecycle::ResultPublisher::append_registered(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<T>&, const sdb::StateDB<T>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t) [with T = double; uint64_t = long long unsigned int]'
+  395 |             auto field=std::visit([&](auto &&v) {
+      |                        ~~~~~~~~~~^~~~~~~~~~~~~~~~
+  396 |                 using V=typename std::decay_t<decltype(v)>::value_type;
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  397 |                 return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  398 |             },std::move(values));
+      |             ~~~~~~~~~~~~~~~~~~~~  
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf3_result_tests.cpp:78:43:   required from here
+   78 |         ResultPublisher::append_registered(frame,model,state);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of 'sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = unsigned char; std::string = std::__cxx11::basic_string<char>]':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:397:24:   required from 'sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)> [with auto:137 = std::vector<unsigned char>]'
+  397 |                 return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+      |                        ^~~~~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2781:26:   required by substitution of 'template<class _Fn, class ... _Args> static std::__result_of_success<decltype (declval<_Fn>()((declval<_Args>)()...)), std::__invoke_other> std::__result_of_other_impl::_S_test(int) [with _Fn = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Args = {std::vector<unsigned char, std::allocator<unsigned char> >&&}]'
+ 2781 |       std::declval<_Fn>()(std::declval<_Args>()...)
+      |       ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2792:60:   required from 'struct std::__result_of_impl<false, false, sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<unsigned char, std::allocator<unsigned char> >&&>'
+ 2792 |       using type = decltype(_S_test<_Functor, _ArgTypes...>(0));
+      |                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:2797:12:   required from 'struct std::__invoke_result<sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<unsigned char, std::allocator<unsigned char> >&&>'
+ 2797 |     struct __invoke_result
+      |            ^~~~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/type_traits:3284:12:   required from 'struct std::invoke_result<sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>, std::vector<unsigned char, std::allocator<unsigned char> >&&>'
+ 3284 |     struct invoke_result
+      |            ^~~~~~~~~~~~~
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/variant:1129:14:   required from 'constexpr bool std::__detail::__variant::__check_visitor_results(std::index_sequence<_Idx ...>) [with _Visitor = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Variant = std::variant<std::vector<float, std::allocator<float> >, std::vector<double, std::allocator<double> >, std::vector<int, std::allocator<int> >, std::vector<unsigned int, std::allocator<unsigned int> >, std::vector<long long int, std::allocator<long long int> >, std::vector<long long unsigned int, std::allocator<long long unsigned int> >, std::vector<unsigned char, std::allocator<unsigned char> > >&&; long long unsigned int ..._Idxs = {0, 1, 2, 3, 4, 5, 6}; std::index_sequence<_Idx ...> = std::integer_sequence<long long unsigned int, 0, 1, 2, 3, 4, 5, 6>]'
+ 1129 |       return __same_types<
+      |              ^~~~~~~~~~~~~
+ 1130 |         invoke_result_t<_Visitor, __get_t<_Idxs, _Variant>>...
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1131 |         >;
+      |         ~     
+D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/variant:1944:44:   required from 'constexpr std::__detail::__variant::__visit_result_t<_Visitor, _Variants ...> std::visit(_Visitor&&, _Variants&& ...) [with _Visitor = sdb::lifecycle::ResultPublisher::append_registered<double>(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<double>&, const sdb::StateDB<double>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t)::<lambda(auto:137&&)>; _Variants = {variant<vector<float, allocator<float> >, vector<double, allocator<double> >, vector<int, allocator<int> >, vector<unsigned int, allocator<unsigned int> >, vector<long long int, allocator<long long int> >, vector<long long unsigned int, allocator<long long unsigned int> >, vector<unsigned char, allocator<unsigned char> > >}; __detail::__variant::__visit_result_t<_Visitor, _Variants ...> = sdb::lifecycle::ResultField]'
+ 1943 |           constexpr bool __visit_rettypes_match = __detail::__variant::
+      |                                                   ~~~~~~~~~~~~~~~~~~~~~
+ 1944 |             __check_visitor_results<_Visitor, _Vp>(
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+ 1945 |               make_index_sequence<variant_size_v<remove_reference_t<_Vp>>>());
+      |               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:395:34:   required from 'static void sdb::lifecycle::ResultPublisher::append_registered(sdb::lifecycle::ResultFrame&, const sdb::lifecycle::CompiledModel<T>&, const sdb::StateDB<T>&, std::vector<std::__cxx11::basic_string<char> >, uint64_t) [with T = double; uint64_t = long long unsigned int]'
+  395 |             auto field=std::visit([&](auto &&v) {
+      |                        ~~~~~~~~~~^~~~~~~~~~~~~~~~
+  396 |                 using V=typename std::decay_t<decltype(v)>::value_type;
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  397 |                 return make_typed_field<V>(d,std::move(addresses),std::move(v),std::move(validity),"",true);
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  398 |             },std::move(values));
+      |             ~~~~~~~~~~~~~~~~~~~~  
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf3_result_tests.cpp:78:43:   required from here
+   78 |         ResultPublisher::append_registered(frame,model,state);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:230:114: warning: missing initializer for member 'sdb::lifecycle::TypedFieldPayload::schema_id' [-Wmissing-field-initializers]
+  230 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |                                                                                                                  ^
+[19/53] Building CXX object CMakeFiles/sdb_hex8_tests.dir/tests/hex8_tests.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/hex8_tests.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+[20/53] Building CXX object CMakeFiles/sdb_indexed_results_tests.dir/tests/indexed_results_tests.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/indexed_results_tests.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+[21/53] Building CXX object CMakeFiles/sdb_async_results_tests.dir/tests/async_results_tests.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/async_results_tests.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+[22/53] Building CXX object CMakeFiles/sdb_lifecycle_stages.dir/benchmarks/lifecycle_stages.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/benchmarks/lifecycle_stages.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+[23/53] Building CXX object CMakeFiles/sdb_lifecycle_benchmark.dir/benchmarks/lifecycle_benchmark.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/benchmarks/lifecycle_benchmark.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+[24/53] Building CXX object CMakeFiles/sdb_tests.dir/tests/tests.cpp.obj
+[25/53] Building CXX object CMakeFiles/explicit_tet.dir/examples/explicit_tet.cpp.obj
+[26/53] Building CXX object CMakeFiles/sdb_benchmark.dir/benchmarks/benchmark.cpp.obj
+[27/53] Linking CXX executable sdb_general_contact_tests.exe
+[28/53] Linking CXX executable sdb_general_contact_demo.exe
+[29/53] Linking CXX executable sdb_contact_geometry_tests.exe
+[30/53] Linking CXX executable sdb_contact_domain_demo.exe
+[31/53] Linking CXX executable sdb_run.exe
+[32/53] Linking CXX executable sdb_lifecycle_tests.exe
+[33/53] Linking CXX executable sdb_foundation_tests.exe
+[34/53] Linking CXX executable sdb_storage_tests.exe
+[35/53] Linking CXX executable sdb_foundation_boundary_tests.exe
+[36/53] Linking CXX executable sdb_model_foundation_tests.exe
+[37/53] Linking CXX executable sdb_typed_results_tests.exe
+[38/53] Linking CXX executable sdb_foundation_integration_tests.exe
+[39/53] Linking CXX executable sdb_typed_budget_tests.exe
+[40/53] Linking CXX executable sdb_typed_results_scaling.exe
+[41/53] Linking CXX executable sdb_dbf3_contract_tests.exe
+[42/53] Linking CXX executable sdb_dbf3_model_tests.exe
+[43/53] Linking CXX executable sdb_dbf3_state_tests.exe
+[44/53] Linking CXX executable sdb_dbf3_result_tests.exe
+[45/53] Linking CXX executable sdb_hex8_tests.exe
+[46/53] Linking CXX executable sdb_indexed_results_tests.exe
+[47/53] Linking CXX executable sdb_async_results_tests.exe
+[48/53] Linking CXX executable sdb_lifecycle_stages.exe
+[49/53] Linking CXX executable sdb_lifecycle_benchmark.exe
+[50/53] Linking CXX executable sdb_tests.exe
+[51/53] Linking CXX executable explicit_tet.exe
+[52/53] Linking CXX executable sdb_benchmark.exe

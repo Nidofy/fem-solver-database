@@ -1,0 +1,571 @@
+Start testing: Oct 29 15:05 中国标准时间
+----------------------------------------------------------
+1/34 Testing: general_contact_contracts
+1/34 Test: general_contact_contracts
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_general_contact_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/general-contact-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"general_contact_contracts" start time: Oct 29 15:05 中国标准时间
+Output:
+----------------------------------------------------------
+general contact: 973 checks passed
+<end of output>
+Test time =   0.30 sec
+----------------------------------------------------------
+Test Passed.
+"general_contact_contracts" end time: Oct 29 15:05 中国标准时间
+"general_contact_contracts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/34 Testing: general_contact_demo
+2/34 Test: general_contact_demo
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_general_contact_demo.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/general-contact-demo"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"general_contact_demo" start time: Oct 29 15:05 中国标准时间
+Output:
+----------------------------------------------------------
+implicit: displacement=0.0508982, Newton evaluations=3, free equations=1
+explicit: rebound velocity=-1, peak penetration=0.0316228, accepted increments=1700
+<end of output>
+Test time =   0.39 sec
+----------------------------------------------------------
+Test Passed.
+"general_contact_demo" end time: Oct 29 15:05 中国标准时间
+"general_contact_demo" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/34 Testing: general_contact_geometry
+3/34 Test: general_contact_geometry
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_contact_geometry_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/geometry-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"general_contact_geometry" start time: Oct 29 15:05 中国标准时间
+Output:
+----------------------------------------------------------
+geometry contact: 4620 checks passed
+<end of output>
+Test time =   0.63 sec
+----------------------------------------------------------
+Test Passed.
+"general_contact_geometry" end time: Oct 29 15:05 中国标准时间
+"general_contact_geometry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/34 Testing: general_contact_domain_demo
+4/34 Test: general_contact_domain_demo
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_contact_domain_demo.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/general-contact-domain-demo"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"general_contact_domain_demo" start time: Oct 29 15:05 中国标准时间
+Output:
+----------------------------------------------------------
+whole-domain implicit: displacement=-0.15, Newton evaluations=2
+whole-domain explicit: rebound=1, peak penetration=0.0316229, increments=1700, restart=PASS
+<end of output>
+Test time =   1.01 sec
+----------------------------------------------------------
+Test Passed.
+"general_contact_domain_demo" end time: Oct 29 15:05 中国标准时间
+"general_contact_domain_demo" time elapsed: 00:00:01
+----------------------------------------------------------
+
+5/34 Testing: lifecycle_contracts
+5/34 Test: lifecycle_contracts
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_lifecycle_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/lifecycle-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"lifecycle_contracts" start time: Oct 29 15:05 中国标准时间
+Output:
+----------------------------------------------------------
+precision=4 response_error=3.72431e-08 frames=21 exact_restart=1
+precision=8 response_error=3.02721e-08 frames=21 exact_restart=1
+lifecycle checks=78323 PASS
+<end of output>
+Test time =  11.75 sec
+----------------------------------------------------------
+Test Passed.
+"lifecycle_contracts" end time: Oct 29 15:06 中国标准时间
+"lifecycle_contracts" time elapsed: 00:00:11
+----------------------------------------------------------
+
+6/34 Testing: foundation_contracts
+6/34 Test: foundation_contracts
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_foundation_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus/mixed_hex_tet.inp" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/foundation-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"foundation_contracts" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+171 foundation checks passed
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"foundation_contracts" end time: Oct 29 15:06 中国标准时间
+"foundation_contracts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/34 Testing: foundation_process_reader
+7/34 Test: foundation_process_reader
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_foundation_tests.exe" "--read" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/foundation-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"foundation_process_reader" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+3 foundation checks passed
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"foundation_process_reader" end time: Oct 29 15:06 中国标准时间
+"foundation_process_reader" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/34 Testing: storage_contracts
+8/34 Test: storage_contracts
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_storage_tests.exe"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"storage_contracts" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+storage n=0 field_host_live_delta=0 ragged_encoded_bytes=40 sparse_encoded_bytes=48
+storage n=16 field_host_live_delta=768 ragged_encoded_bytes=552 sparse_encoded_bytes=512
+storage n=1024 field_host_live_delta=49152 ragged_encoded_bytes=32808 sparse_encoded_bytes=29744
+storage n=16384 field_host_live_delta=786432 ragged_encoded_bytes=524328 sparse_encoded_bytes=475184
+storage checks=82
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"storage_contracts" end time: Oct 29 15:06 中国标准时间
+"storage_contracts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/34 Testing: dbf3_contracts
+9/34 Test: dbf3_contracts
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_dbf3_contract_tests.exe"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"dbf3_contracts" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+518 DBF3 contract checks passed
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"dbf3_contracts" end time: Oct 29 15:06 中国标准时间
+"dbf3_contracts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/34 Testing: dbf3_restore_faults
+10/34 Test: dbf3_restore_faults
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_dbf3_restore_fault_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus/forced_tet.inp" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/dbf3-fault-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"dbf3_restore_faults" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+float restore: 127 failure points atomic, success reached
+float import: 83 failure points atomic, success reached
+double restore: 127 failure points atomic, success reached
+double import: 83 failure points atomic, success reached
+<end of output>
+Test time =   0.25 sec
+----------------------------------------------------------
+Test Passed.
+"dbf3_restore_faults" end time: Oct 29 15:06 中国标准时间
+"dbf3_restore_faults" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/34 Testing: dbf3_model
+11/34 Test: dbf3_model
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_dbf3_model_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/dbf3" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/dbf3-model-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"dbf3_model" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+233 DBF3 model checks passed
+<end of output>
+Test time =   0.29 sec
+----------------------------------------------------------
+Test Passed.
+"dbf3_model" end time: Oct 29 15:06 中国标准时间
+"dbf3_model" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/34 Testing: dbf3_model_reader
+12/34 Test: dbf3_model_reader
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_dbf3_model_tests.exe" "--read" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/dbf3-model-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"dbf3_model_reader" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+48 DBF3 model checks passed
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"dbf3_model_reader" end time: Oct 29 15:06 中国标准时间
+"dbf3_model_reader" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/34 Testing: dbf3_state
+13/34 Test: dbf3_state
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_dbf3_state_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus/forced_tet.inp" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/dbf3-state-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"dbf3_state" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+130 DBF3 registered state checks passed
+<end of output>
+Test time =   0.21 sec
+----------------------------------------------------------
+Test Passed.
+"dbf3_state" end time: Oct 29 15:06 中国标准时间
+"dbf3_state" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/34 Testing: dbf3_state_reader
+14/34 Test: dbf3_state_reader
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_dbf3_state_tests.exe" "--read" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus/forced_tet.inp" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/dbf3-state-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"dbf3_state_reader" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+26 DBF3 fresh process state checks passed
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"dbf3_state_reader" end time: Oct 29 15:06 中国标准时间
+"dbf3_state_reader" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/34 Testing: dbf3_result
+15/34 Test: dbf3_result
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_dbf3_result_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/dbf3-result-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"dbf3_result" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+DBF3 result checks=71 PASS
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"dbf3_result" end time: Oct 29 15:06 中国标准时间
+"dbf3_result" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/34 Testing: dbf3_result_reader
+16/34 Test: dbf3_result_reader
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_dbf3_result_tests.exe" "read" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/dbf3-result-scratch/dbf3-results.sdbres"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"dbf3_result_reader" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+DBF3 independent reader 55 PASS
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"dbf3_result_reader" end time: Oct 29 15:06 中国标准时间
+"dbf3_result_reader" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/34 Testing: foundation_boundaries
+17/34 Test: foundation_boundaries
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_foundation_boundary_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/boundary-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"foundation_boundaries" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+64 boundary/matrix/layer checks passed
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"foundation_boundaries" end time: Oct 29 15:06 中国标准时间
+"foundation_boundaries" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/34 Testing: typed_admission_budget
+18/34 Test: typed_admission_budget
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_typed_budget_tests.exe"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"typed_admission_budget" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+allocation-free admission; tiny-budget rejection bytes=0; post-admission validation PASS
+<end of output>
+Test time =   0.56 sec
+----------------------------------------------------------
+Test Passed.
+"typed_admission_budget" end time: Oct 29 15:06 中国标准时间
+"typed_admission_budget" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/34 Testing: model_foundation_contracts
+19/34 Test: model_foundation_contracts
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_model_foundation_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/foundation3" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/model-foundation-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"model_foundation_contracts" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+211 model foundation checks passed
+<end of output>
+Test time =   0.27 sec
+----------------------------------------------------------
+Test Passed.
+"model_foundation_contracts" end time: Oct 29 15:06 中国标准时间
+"model_foundation_contracts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+20/34 Testing: model_foundation_process_reader
+20/34 Test: model_foundation_process_reader
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_model_foundation_tests.exe" "--read" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/model-foundation-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"model_foundation_process_reader" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+42 model foundation checks passed
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"model_foundation_process_reader" end time: Oct 29 15:06 中国标准时间
+"model_foundation_process_reader" time elapsed: 00:00:00
+----------------------------------------------------------
+
+21/34 Testing: typed_results_contracts
+21/34 Test: typed_results_contracts
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_typed_results_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus/forced_tet.inp" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/typed-results-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"typed_results_contracts" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+typed results checks=421 PASS
+<end of output>
+Test time =   0.44 sec
+----------------------------------------------------------
+Test Passed.
+"typed_results_contracts" end time: Oct 29 15:06 中国标准时间
+"typed_results_contracts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+22/34 Testing: foundation_integration
+22/34 Test: foundation_integration
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_foundation_integration_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/model-foundation-scratch" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/integration-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"foundation_integration" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+48 synthetic storage integration checks passed
+<end of output>
+Test time =   0.24 sec
+----------------------------------------------------------
+Test Passed.
+"foundation_integration" end time: Oct 29 15:06 中国标准时间
+"foundation_integration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+23/34 Testing: foundation_integration_process_reader
+23/34 Test: foundation_integration_process_reader
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_foundation_integration_tests.exe" "--read" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/integration-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"foundation_integration_process_reader" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+32 synthetic storage integration checks passed
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"foundation_integration_process_reader" end time: Oct 29 15:06 中国标准时间
+"foundation_integration_process_reader" time elapsed: 00:00:00
+----------------------------------------------------------
+
+24/34 Testing: hex8_contracts
+24/34 Test: hex8_contracts
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_hex8_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/hex8-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"hex8_contracts" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+HEX8 float/double mechanics mixed/IP/restart PASS time_errors=1.13032e-09,2.82571e-10,7.06421e-11 mesh_errors=4.00517e-06,1.00734e-06,2.52192e-07
+<end of output>
+Test time =   0.80 sec
+----------------------------------------------------------
+Test Passed.
+"hex8_contracts" end time: Oct 29 15:06 中国标准时间
+"hex8_contracts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+25/34 Testing: indexed_results_contracts
+25/34 Test: indexed_results_contracts
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_indexed_results_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus/forced_tet.inp" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/indexed-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"indexed_results_contracts" start time: Oct 29 15:06 中国标准时间
+Output:
+----------------------------------------------------------
+frames=100000 write_ms=47912 open_ms=6.801 query_read_bytes=25178 value_bytes=120
+indexed results PASS
+<end of output>
+Test time =  50.43 sec
+----------------------------------------------------------
+Test Passed.
+"indexed_results_contracts" end time: Oct 29 15:07 中国标准时间
+"indexed_results_contracts" time elapsed: 00:00:50
+----------------------------------------------------------
+
+26/34 Testing: async_results_contracts
+26/34 Test: async_results_contracts
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_async_results_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus/forced_tet.inp" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/async-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"async_results_contracts" start time: Oct 29 15:07 中国标准时间
+Output:
+----------------------------------------------------------
+async ownership/backpressure/cancel/failure/native equality PASS
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"async_results_contracts" end time: Oct 29 15:07 中国标准时间
+"async_results_contracts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+27/34 Testing: dbf3_wire_oracle
+27/34 Test: dbf3_wire_oracle
+Command: "C:/Program Files/Python314/python.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf3_wire_oracle.py" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/dbf3-state-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"dbf3_wire_oracle" start time: Oct 29 15:07 中国标准时间
+Output:
+----------------------------------------------------------
+Independent registered-state LE/CRC/manifest/exact integer/validity/policy oracle PASS (FP32/FP64)
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"dbf3_wire_oracle" end time: Oct 29 15:07 中国标准时间
+"dbf3_wire_oracle" time elapsed: 00:00:00
+----------------------------------------------------------
+
+28/34 Testing: dbf3_legacy_golden
+28/34 Test: dbf3_legacy_golden
+Command: "C:/Program Files/Python314/python.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf3_legacy.py" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_foundation_integration_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/dbf3/legacy" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/dbf3-legacy-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"dbf3_legacy_golden" start time: Oct 29 15:07 中国标准时间
+Output:
+----------------------------------------------------------
+32 synthetic storage integration checks passed
+DBF2 schema3 model / Restart4 exact bytes / TypedIndexed3 values PASS
+<end of output>
+Test time =   0.18 sec
+----------------------------------------------------------
+Test Passed.
+"dbf3_legacy_golden" end time: Oct 29 15:07 中国标准时间
+"dbf3_legacy_golden" time elapsed: 00:00:00
+----------------------------------------------------------
+
+29/34 Testing: typed_process_pipeline
+29/34 Test: typed_process_pipeline
+Command: "C:/Program Files/Python314/python.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_pipeline.py" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_run.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus/forced_tet.inp" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/integration-scratch" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/typed-pipeline-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"typed_process_pipeline" start time: Oct 29 15:07 中国标准时间
+Output:
+----------------------------------------------------------
+float: typed-container linked restart equals uninterrupted indexed2; typed CLI exact uint64/mask PASS
+double: typed-container linked restart equals uninterrupted indexed2; typed CLI exact uint64/mask PASS
+<end of output>
+Test time =   0.56 sec
+----------------------------------------------------------
+Test Passed.
+"typed_process_pipeline" end time: Oct 29 15:07 中国标准时间
+"typed_process_pipeline" time elapsed: 00:00:00
+----------------------------------------------------------
+
+30/34 Testing: foundation3_legacy_golden
+30/34 Test: foundation3_legacy_golden
+Command: "C:/Program Files/Python314/python.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/foundation3_legacy.py" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_foundation_integration_tests.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/foundation3" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/foundation3-legacy-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"foundation3_legacy_golden" start time: Oct 29 15:07 中国标准时间
+Output:
+----------------------------------------------------------
+35 synthetic storage integration checks passed
+pre-DBF2 schema2 exact bytes / native1 / indexed2 PASS
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"foundation3_legacy_golden" end time: Oct 29 15:07 中国标准时间
+"foundation3_legacy_golden" time elapsed: 00:00:00
+----------------------------------------------------------
+
+31/34 Testing: foundation_legacy_golden
+31/34 Test: foundation_legacy_golden
+Command: "C:/Program Files/Python314/python.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/foundation_legacy.py" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_run.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/foundation" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/foundation-legacy-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"foundation_legacy_golden" start time: Oct 29 15:07 中国标准时间
+Output:
+----------------------------------------------------------
+nodes=5 elements=2 increments=2 time=0.00020000000000000001 precision=8 completed=0
+time,value
+frozen schema1 model / schema3 restart: independent process PASS
+<end of output>
+Test time =   0.17 sec
+----------------------------------------------------------
+Test Passed.
+"foundation_legacy_golden" end time: Oct 29 15:07 中国标准时间
+"foundation_legacy_golden" time elapsed: 00:00:00
+----------------------------------------------------------
+
+32/34 Testing: lifecycle_process_pipeline
+32/34 Test: lifecycle_process_pipeline
+Command: "C:/Program Files/Python314/python.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/pipeline.py" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_run.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus/forced_tet.inp" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/pipeline-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"lifecycle_process_pipeline" start time: Oct 29 15:07 中国标准时间
+Output:
+----------------------------------------------------------
+nodes=5 elements=2 increments=2000 time=0.19999999494757503 precision=4 completed=1
+independent_reader precision=float frames=21 reference_and_XML=PASS exact_restart=PASS
+nodes=5 elements=2 increments=2000 time=0.20000000000000001 precision=8 completed=1
+independent_reader precision=double frames=21 reference_and_XML=PASS exact_restart=PASS
+indexed independent-process linked restart/async PASS
+C3D8 mixed/float/double/legacy/indexed/async/restart/export process matrix PASS
+pipeline PASS
+<end of output>
+Test time =   6.12 sec
+----------------------------------------------------------
+Test Passed.
+"lifecycle_process_pipeline" end time: Oct 29 15:07 中国标准时间
+"lifecycle_process_pipeline" time elapsed: 00:00:06
+----------------------------------------------------------
+
+33/34 Testing: database_contracts
+33/34 Test: database_contracts
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/sdb_tests.exe"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"database_contracts" start time: Oct 29 15:07 中国标准时间
+Output:
+----------------------------------------------------------
+PASS 191 contract checks
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"database_contracts" end time: Oct 29 15:07 中国标准时间
+"database_contracts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+34/34 Testing: explicit_numerics
+34/34 Test: explicit_numerics
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan/explicit_tet.exe"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+"explicit_numerics" start time: Oct 29 15:07 中国标准时间
+Output:
+----------------------------------------------------------
+precision=32 steps=1000 time=0.0999999974738 displacement=-0.00416147289798 analytic=-0.00416146731004 abs_error=5.58793544769e-09 restart_error=0 cuda=not_built
+precision=64 steps=1000 time=0.1 displacement=-0.00416147139646 analytic=-0.00416146836547 abs_error=3.03099220202e-09 restart_error=0 cuda=not_built
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"explicit_numerics" end time: Oct 29 15:07 中国标准时间
+"explicit_numerics" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 29 15:07 中国标准时间

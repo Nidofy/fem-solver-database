@@ -1,0 +1,20 @@
+[1/2] Building CXX object CMakeFiles/sdb_dbf3_state_tests.dir/tests/dbf3_state_tests.cpp.obj
+In file included from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:693,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf3_state_tests.cpp:1:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:146:41: warning: missing initializer for member 'sdb::lifecycle::ResultFrame::binding' [-Wmissing-field-initializers]
+  146 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function 'void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)':
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  437 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:437:63: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::first_address' [-Wmissing-field-initializers]
+  460 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  461 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:460:36: warning: missing initializer for member 'sdb::lifecycle::indexed_detail::Block::last_address' [-Wmissing-field-initializers]
+[2/2] Linking CXX executable sdb_dbf3_state_tests.exe

@@ -1,0 +1,3 @@
+Reexecuted upstream state checks: 114
+PROBE negative rotation inertia checkpoint rejected=1 restart rejected=1 published inertia=2
+Independent state checks total: 120 PASS (negative-inertia behavior separately reported)

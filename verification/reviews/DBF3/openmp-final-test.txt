@@ -1,0 +1,73 @@
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01
+      Start  1: general_contact_contracts
+ 1/34 Test  #1: general_contact_contracts ...............   Passed    0.04 sec
+      Start  2: general_contact_demo
+ 2/34 Test  #2: general_contact_demo ....................   Passed    0.08 sec
+      Start  3: general_contact_geometry
+ 3/34 Test  #3: general_contact_geometry ................   Passed    0.20 sec
+      Start  4: general_contact_domain_demo
+ 4/34 Test  #4: general_contact_domain_demo .............   Passed    0.08 sec
+      Start  5: lifecycle_contracts
+ 5/34 Test  #5: lifecycle_contracts .....................   Passed    0.68 sec
+      Start  6: foundation_contracts
+ 6/34 Test  #6: foundation_contracts ....................   Passed    0.04 sec
+      Start  7: foundation_process_reader
+ 7/34 Test  #7: foundation_process_reader ...............   Passed    0.01 sec
+      Start  8: storage_contracts
+ 8/34 Test  #8: storage_contracts .......................   Passed    0.03 sec
+      Start  9: dbf3_contracts
+ 9/34 Test  #9: dbf3_contracts ..........................   Passed    0.01 sec
+      Start 10: dbf3_restore_faults
+10/34 Test #10: dbf3_restore_faults .....................   Passed    0.05 sec
+      Start 11: dbf3_model
+11/34 Test #11: dbf3_model ..............................   Passed    0.06 sec
+      Start 12: dbf3_model_reader
+12/34 Test #12: dbf3_model_reader .......................   Passed    0.01 sec
+      Start 13: dbf3_state
+13/34 Test #13: dbf3_state ..............................   Passed    0.15 sec
+      Start 14: dbf3_state_reader
+14/34 Test #14: dbf3_state_reader .......................   Passed    0.01 sec
+      Start 15: dbf3_result
+15/34 Test #15: dbf3_result .............................   Passed    0.04 sec
+      Start 16: dbf3_result_reader
+16/34 Test #16: dbf3_result_reader ......................   Passed    0.01 sec
+      Start 17: foundation_boundaries
+17/34 Test #17: foundation_boundaries ...................   Passed    0.03 sec
+      Start 18: typed_admission_budget
+18/34 Test #18: typed_admission_budget ..................   Passed    0.04 sec
+      Start 19: model_foundation_contracts
+19/34 Test #19: model_foundation_contracts ..............   Passed    0.05 sec
+      Start 20: model_foundation_process_reader
+20/34 Test #20: model_foundation_process_reader .........   Passed    0.01 sec
+      Start 21: typed_results_contracts
+21/34 Test #21: typed_results_contracts .................   Passed    0.26 sec
+      Start 22: foundation_integration
+22/34 Test #22: foundation_integration ..................   Passed    0.20 sec
+      Start 23: foundation_integration_process_reader
+23/34 Test #23: foundation_integration_process_reader ...   Passed    0.02 sec
+      Start 24: hex8_contracts
+24/34 Test #24: hex8_contracts ..........................   Passed    0.21 sec
+      Start 25: indexed_results_contracts
+25/34 Test #25: indexed_results_contracts ...............   Passed   14.90 sec
+      Start 26: async_results_contracts
+26/34 Test #26: async_results_contracts .................   Passed    0.06 sec
+      Start 27: dbf3_wire_oracle
+27/34 Test #27: dbf3_wire_oracle ........................   Passed    0.06 sec
+      Start 28: dbf3_legacy_golden
+28/34 Test #28: dbf3_legacy_golden ......................   Passed    0.19 sec
+      Start 29: typed_process_pipeline
+29/34 Test #29: typed_process_pipeline ..................   Passed    0.27 sec
+      Start 30: foundation3_legacy_golden
+30/34 Test #30: foundation3_legacy_golden ...............   Passed    0.10 sec
+      Start 31: foundation_legacy_golden
+31/34 Test #31: foundation_legacy_golden ................   Passed    0.11 sec
+      Start 32: lifecycle_process_pipeline
+32/34 Test #32: lifecycle_process_pipeline ..............   Passed    2.17 sec
+      Start 33: database_contracts
+33/34 Test #33: database_contracts ......................   Passed    0.10 sec
+      Start 34: explicit_numerics
+34/34 Test #34: explicit_numerics .......................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 34
+
+Total Test time (real) =  20.36 sec

@@ -1,0 +1,11 @@
+**********************************************************************
+** Visual Studio 2026 Developer Command Prompt v18.9.2
+** Copyright (c) 2026 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+48 DBF3 model checks passed
+26 DBF3 fresh process state checks passed
+DBF3 independent reader 55 PASS
+48 DBF3 model checks passed
+26 DBF3 fresh process state checks passed
+DBF3 independent reader 55 PASS

@@ -14,8 +14,8 @@ are retained under `verification/reviews/DBF3/independent-astra/`.
 The first two fixes were independently recompiled and reproduced green against
 `926c6bd`: inertia rejects without publication; restore preserves views/cursor
 through183 scalar-new failure points before success. Aligned/platform allocations
-were not exhaustively injected. The final report records the final third-fix
-source and consolidated verdict; this table is not a replacement for that report.
+were not exhaustively injected. The final report accepts all four corrections
+at `c53ab3e` with explicit scope limits; this table is not a replacement for it.
 
 The amplitude correction deliberately invalidates old CpuRun configurations only
 when an inherited step-time load is affected. Existing unaffected single-step

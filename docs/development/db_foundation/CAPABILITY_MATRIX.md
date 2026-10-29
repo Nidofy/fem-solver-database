@@ -1,5 +1,29 @@
 # Actual capability matrix
 
+Current continuation: **DBF3 phase one**, source `c53ab3e`. Its table below
+supersedes the corresponding DBF2 limitations; historical tables retain their
+original scope. See DBF3_REQUIREMENTS, DBF3_CONTRACTS and DBF3_VERIFICATION for
+clause evidence and the exact final verification matrix. Independent Astra/high
+review is PASS WITH EXPLICIT SCOPE LIMITS; it is not blanket ALR1 certification.
+
+| DBF3 capability | Public/runtime boundary | Persistence/query | Evidence | Status |
+|---|---|---|---|---|
+| Typed identity/topology | MeshDB typed overloads, CompiledModel instance/step/material/surface, FrameInfo/Reader FrameId; TopologyLayout and face/edge permutation | old wire preserved; explicit numbering version in model4 | dbf3_contract/model/result | PRESENT_VERIFIED bounded typed boundaries; old APIs retained |
+| Time-axis extension contract | SampleAxisDescriptor v1, unknown kind/version rejects | model4 stores supplied units; current result formats reject nondefault axis metadata | dbf3_contract/model/result | PRESENT_VERIFIED Time only; no frequency/modal arithmetic |
+| Coupling/property/amplitude/events | ModelExtensions, resolved scoped queries, provenance and effective steps | ModelIR4 builder→validator→compiler→ModelStore→fresh reader | dbf3_model + independent model probes | PRESENT_VERIFIED storage-only new physics |
+| Controlled INP additions | explicit translational COUPLING/KINEMATIC, node-label initial VELOCITY, uniform DSLOAD OP=MOD | existing ModelIR/compiler only | dbf3 fixtures/negative imports | PRESENT_VERIFIED documented subset; not full grammar |
+| Registered typed persistent state | frozen dense Node/Element/Global and complete IP/SectionPoint Fields; seven exact scalar lanes and validity | checkpoint3/Restart5 manifests + required blocks + independent typed snapshots | dbf3_state/result/wire/fault tests | PRESENT_VERIFIED; separate from FP32/64 packed material HistorySchema |
+| Trial/restart policy and failure atomicity | deep trial/rollback, Required/Reconstruct/Omit, temporary core/rotation/extensions, staged CpuRun publication | exact schema/initialization/layout contract; old bytes preserved without extensions | malformed-wire, inertia, cursor and allocation failure probes | PRESENT_VERIFIED tested CPU cases; not exhaustive allocator/filesystem failures |
+| Local material history basis | part instance × resolved orientation × layer rotation; components unchanged | deterministic catalog + basis-group/address selectors in existing TypedIndexed3 | dbf3_result, independent noncommuting-matrix oracle | PRESENT_VERIFIED; requires explicit unambiguous orientation |
+| Executable inherited amplitude continuation | runtime Action origin, explicit redefinition and total-time distinction | selective CpuRun configuration version for affected runs | dbf3_model real transition/split restart + independent red/green | PRESENT_VERIFIED existing CPU subset |
+| D7 composite/legacy/process closure | existing mixed synthetic composite + DBF3 model/state/result supplements and real CPU paths | schema1/2/3 + schema4 models, old/new restart and typed results | final34-test matrix + independent probes | PRESENT_VERIFIED CPU serial/OpenMP/MSVC ASan;129 cross-reader checks each way |
+
+Registered fields do not imply arbitrary integer constitutive histories,
+registered Face/Contact fields or all scalar/layout/entity combinations. Existing
+ContactDB and explicit-address typed results retain their separate roles. CUDA
+and production integration remain BLOCKED_ENV/not locally compiled or verified.
+Durability enhancement, compression and production adapters are later phases.
+
 The first table is the retained DBF1 audit snapshot. The DBF2 table below
 supersedes its gap statuses; it does not retroactively change DBF1's scope.
 

@@ -10,6 +10,12 @@ Acceptance columns distinguish programmatic construction, parsing, storage,
 query, restoration and numerical execution. New physical definitions remain
 storage-only. No whole-program completion is inferred from a test count.
 
+Final outcome: phase-one contracts implemented and verified within the explicit
+boundaries below. Reviewed library c53ab3e; test followup4b124df. Independent
+Astra/high PASS with scope limits; three full CPU configurations34/34 each,
+plus bidirectional cross-compiler129-check readers. See DBF3_HANDOFF and
+DBF3_VERIFICATION for source/commit/evidence binding.
+
 ## Clause ownership and evidence targets
 
 `Existing` means a baseline implementation with retained evidence that must pass

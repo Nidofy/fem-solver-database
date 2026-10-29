@@ -1,0 +1,1 @@
+Independent registered-state LE/CRC/manifest/exact integer/validity/policy oracle PASS (FP32/FP64)

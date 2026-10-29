@@ -1,0 +1,1 @@
+PROBE bad_alloc AFTER PUBLICATION: failure allocation=178 old view invalidated=1 cursor before=0 after=1

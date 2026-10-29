@@ -1,0 +1,2 @@
+PROBE inherited executable step-time amplitude end=2 propagated next step start=0 expected=2 executable=1
+Independent model checks=196 PASS (legacy propagation separately reported)

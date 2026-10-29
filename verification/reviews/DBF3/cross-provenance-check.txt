@@ -1,0 +1,1 @@
+Independent input reimport: first model-definition difference at byte 101; GCC byte=47 (/), MSVC byte=92 (backslash). Persisted ModelStore cross-load succeeds without relaxing identity.
