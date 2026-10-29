@@ -162,6 +162,8 @@ foreach(target IN ITEMS sdb_foundation_tests sdb_storage_tests sdb_lifecycle_sta
 endforeach()
 find_package(Python3 COMPONENTS Interpreter QUIET)
 if(Python3_Interpreter_FOUND)
+  add_test(NAME dbf4_cli_durability COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/dbf4_cli.py $<TARGET_FILE:sdb_run> ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus/forced_tet.inp ${CMAKE_CURRENT_BINARY_DIR}/dbf4-cli-scratch)
+  set_tests_properties(dbf4_cli_durability PROPERTIES TIMEOUT 120 ENVIRONMENT "OMP_NUM_THREADS=4")
   add_test(NAME dbf4_fault_campaign COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/dbf4_fault_campaign.py $<TARGET_FILE:sdb_dbf4_fault_driver> ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus/forced_tet.inp ${CMAKE_CURRENT_BINARY_DIR}/dbf4-fault-campaign)
   set_tests_properties(dbf4_fault_campaign PROPERTIES TIMEOUT 300 ENVIRONMENT "OMP_NUM_THREADS=4")
   add_test(NAME dbf3_wire_oracle COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/dbf3_wire_oracle.py ${CMAKE_CURRENT_BINARY_DIR}/dbf3-state-scratch)

@@ -47,6 +47,7 @@ int main() {
                         else checkpoint_detail::atomic_stream_write(path, [](auto &out) { out << "new"; });
                     } catch (const durability::PublicationError &error) {
                         caught = true;
+                        check(std::string(error.what()) == "injected publication failure", "original diagnostic not preserved");
                         check(error.published() == after, "wrong published flag");
                         check(error.replacement_may_have_happened() == after, "wrong uncertain flag");
                         bool cause = false;
