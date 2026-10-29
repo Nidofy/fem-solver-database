@@ -1,0 +1,2 @@
+exception destructors before what=1 after what=2; returned address=000000F2DEAFF918
+CONFIRMED: rethrow copy destroyed before diagnostic pointer is consumed

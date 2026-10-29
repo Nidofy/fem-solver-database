@@ -1,0 +1,12 @@
++ g++ -std=c++20 -O1 -g -pthread -fsanitize=thread -fno-omit-frame-pointer -Iinclude tests/async_results_tests.cpp -o build-dbf4-tsan/async-results
++ setarch x86_64 -R env TSAN_OPTIONS=halt_on_error=1 build-dbf4-tsan/async-results tests/fixtures/abaqus/forced_tet.inp build-dbf4-tsan/async-scratch
++ g++ -std=c++20 -O1 -g -pthread -fsanitize=thread -fno-omit-frame-pointer -Iinclude tests/dbf4_result_durability_tests.cpp -o build-dbf4-tsan/result-durability
++ setarch x86_64 -R env TSAN_OPTIONS=halt_on_error=1 build-dbf4-tsan/result-durability build-dbf4-tsan/durability-scratch
++ g++ -std=c++20 -O0 -pthread -Iinclude tests/dbf4_atomic.cpp -o build-dbf4-tsan/atomic
++ TMPDIR=/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf4-tsan build-dbf4-tsan/atomic
++ g++ -std=c++20 -O0 -pthread -Iinclude tests/dbf4_link_tests.cpp -o build-dbf4-tsan/link
++ build-dbf4-tsan/link tests/fixtures/abaqus/forced_tet.inp build-dbf4-tsan/link-scratch
++ g++ -std=c++20 -O0 -pthread -Iinclude tests/dbf4_fault_driver.cpp -o build-dbf4-tsan/fault-driver
++ python3 tests/dbf4_fault_campaign.py build-dbf4-tsan/fault-driver tests/fixtures/abaqus/forced_tet.inp build-dbf4-tsan/fault-scratch
++ printf %s\n Linux focused + TSan complete PASS
+Linux focused + TSan complete PASS

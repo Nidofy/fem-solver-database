@@ -1,0 +1,89 @@
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-serial
+      Start  1: general_contact_contracts
+ 1/38 Test  #1: general_contact_contracts ...............   Passed    0.06 sec
+      Start  2: general_contact_demo
+ 2/38 Test  #2: general_contact_demo ....................   Passed    0.06 sec
+      Start  3: general_contact_geometry
+ 3/38 Test  #3: general_contact_geometry ................   Passed    0.19 sec
+      Start  4: general_contact_domain_demo
+ 4/38 Test  #4: general_contact_domain_demo .............   Passed    0.09 sec
+      Start  5: lifecycle_contracts
+ 5/38 Test  #5: lifecycle_contracts .....................***Failed    0.63 sec
+precision=4 response_error=3.72431e-08 frames=21 exact_restart=1
+precision=8 response_error=3.02721e-08 frames=21 exact_restart=1
+wrong diagnostic: atomic publication failed; inspect publication outcome and cause
+
+      Start  6: foundation_contracts
+ 6/38 Test  #6: foundation_contracts ....................   Passed    0.11 sec
+      Start  7: foundation_process_reader
+ 7/38 Test  #7: foundation_process_reader ...............   Passed    0.01 sec
+      Start  8: storage_contracts
+ 8/38 Test  #8: storage_contracts .......................   Passed    0.05 sec
+      Start  9: dbf3_contracts
+ 9/38 Test  #9: dbf3_contracts ..........................   Passed    0.04 sec
+      Start 10: dbf4_atomic
+10/38 Test #10: dbf4_atomic .............................   Passed    0.06 sec
+      Start 11: dbf4_result_durability
+11/38 Test #11: dbf4_result_durability ..................   Passed    0.19 sec
+      Start 12: dbf4_link_publication
+12/38 Test #12: dbf4_link_publication ...................   Passed    0.14 sec
+      Start 13: dbf3_restore_faults
+13/38 Test #13: dbf3_restore_faults .....................   Passed    0.11 sec
+      Start 14: dbf3_model
+14/38 Test #14: dbf3_model ..............................   Passed    0.17 sec
+      Start 15: dbf3_model_reader
+15/38 Test #15: dbf3_model_reader .......................   Passed    0.02 sec
+      Start 16: dbf3_state
+16/38 Test #16: dbf3_state ..............................   Passed    0.20 sec
+      Start 17: dbf3_state_reader
+17/38 Test #17: dbf3_state_reader .......................   Passed    0.01 sec
+      Start 18: dbf3_result
+18/38 Test #18: dbf3_result .............................   Passed    0.11 sec
+      Start 19: dbf3_result_reader
+19/38 Test #19: dbf3_result_reader ......................   Passed    0.01 sec
+      Start 20: foundation_boundaries
+20/38 Test #20: foundation_boundaries ...................   Passed    0.07 sec
+      Start 21: typed_admission_budget
+21/38 Test #21: typed_admission_budget ..................   Passed    0.07 sec
+      Start 22: model_foundation_contracts
+22/38 Test #22: model_foundation_contracts ..............   Passed    0.13 sec
+      Start 23: model_foundation_process_reader
+23/38 Test #23: model_foundation_process_reader .........   Passed    0.01 sec
+      Start 24: typed_results_contracts
+24/38 Test #24: typed_results_contracts .................   Passed    0.35 sec
+      Start 25: foundation_integration
+25/38 Test #25: foundation_integration ..................   Passed    0.23 sec
+      Start 26: foundation_integration_process_reader
+26/38 Test #26: foundation_integration_process_reader ...   Passed    0.01 sec
+      Start 27: hex8_contracts
+27/38 Test #27: hex8_contracts ..........................   Passed    0.21 sec
+      Start 28: indexed_results_contracts
+28/38 Test #28: indexed_results_contracts ...............   Passed   13.23 sec
+      Start 29: async_results_contracts
+29/38 Test #29: async_results_contracts .................   Passed    0.10 sec
+      Start 30: dbf4_fault_campaign
+30/38 Test #30: dbf4_fault_campaign .....................   Passed    2.77 sec
+      Start 31: dbf3_wire_oracle
+31/38 Test #31: dbf3_wire_oracle ........................   Passed    0.05 sec
+      Start 32: dbf3_legacy_golden
+32/38 Test #32: dbf3_legacy_golden ......................   Passed    0.16 sec
+      Start 33: typed_process_pipeline
+33/38 Test #33: typed_process_pipeline ..................   Passed    0.28 sec
+      Start 34: foundation3_legacy_golden
+34/38 Test #34: foundation3_legacy_golden ...............   Passed    0.09 sec
+      Start 35: foundation_legacy_golden
+35/38 Test #35: foundation_legacy_golden ................   Passed    0.09 sec
+      Start 36: lifecycle_process_pipeline
+36/38 Test #36: lifecycle_process_pipeline ..............   Passed    1.95 sec
+      Start 37: database_contracts
+37/38 Test #37: database_contracts ......................   Passed    0.07 sec
+      Start 38: explicit_numerics
+38/38 Test #38: explicit_numerics .......................   Passed    0.05 sec
+
+97% tests passed, 1 tests failed out of 38
+
+Total Test time (real) =  22.22 sec
+
+The following tests FAILED:
+	  5 - lifecycle_contracts (Failed)
+Errors while running CTest

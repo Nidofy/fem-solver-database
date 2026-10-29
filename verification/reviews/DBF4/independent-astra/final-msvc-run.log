@@ -1,0 +1,18 @@
+C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe
+Compiler Passes:
+ C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\cl.exe:        Version 19.44.35228.0
+ C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\c1.dll:        Version 19.44.35228.0
+ C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\c1xx.dll:      Version 19.44.35228.0
+ C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\c2.dll:        Version 19.44.35228.0
+ C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\c1xx.dll:      Version 19.44.35228.0
+ C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\link.exe:      Version 14.44.35228.0
+ C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\mspdb140.dll:  Version 14.44.35228.0
+ C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64\1033\clui.dll: Version 19.44.35228.0
+
+final_diagnostic_probe.cpp
+PASS owned diagnostic: destructor count before what=1 after what=1; independent copied buffer; 1023-byte truncation
+allocation_probe.cpp
+independent allocation-denial probe PASS: both atomic helpers and restart/link post-replace failure classifications
+rethrow_lifetime_probe.cpp
+exception destructors before what=1 after what=2; returned address=000000F3FDBFF758
+CONFIRMED: rethrow copy destroyed before diagnostic pointer is consumed

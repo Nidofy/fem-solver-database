@@ -1,0 +1,93 @@
+**********************************************************************
+** Visual Studio 2026 Developer Command Prompt v18.9.2
+** Copyright (c) 2026 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+[0/1] Re-running CMake...
+-- Configuring done (0.5s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+ninja: no work to do.
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01-asan
+      Start  1: general_contact_contracts
+ 1/39 Test  #1: general_contact_contracts ...............   Passed    0.26 sec
+      Start  2: general_contact_demo
+ 2/39 Test  #2: general_contact_demo ....................   Passed    0.32 sec
+      Start  3: general_contact_geometry
+ 3/39 Test  #3: general_contact_geometry ................   Passed    0.56 sec
+      Start  4: general_contact_domain_demo
+ 4/39 Test  #4: general_contact_domain_demo .............   Passed    0.90 sec
+      Start  5: lifecycle_contracts
+ 5/39 Test  #5: lifecycle_contracts .....................   Passed   10.82 sec
+      Start  6: foundation_contracts
+ 6/39 Test  #6: foundation_contracts ....................   Passed    0.12 sec
+      Start  7: foundation_process_reader
+ 7/39 Test  #7: foundation_process_reader ...............   Passed    0.04 sec
+      Start  8: storage_contracts
+ 8/39 Test  #8: storage_contracts .......................   Passed    0.08 sec
+      Start  9: dbf3_contracts
+ 9/39 Test  #9: dbf3_contracts ..........................   Passed    0.04 sec
+      Start 10: dbf4_atomic
+10/39 Test #10: dbf4_atomic .............................   Passed    0.06 sec
+      Start 11: dbf4_result_durability
+11/39 Test #11: dbf4_result_durability ..................   Passed    0.24 sec
+      Start 12: dbf4_link_publication
+12/39 Test #12: dbf4_link_publication ...................   Passed    0.21 sec
+      Start 13: dbf3_restore_faults
+13/39 Test #13: dbf3_restore_faults .....................   Passed    0.24 sec
+      Start 14: dbf3_model
+14/39 Test #14: dbf3_model ..............................   Passed    0.28 sec
+      Start 15: dbf3_model_reader
+15/39 Test #15: dbf3_model_reader .......................   Passed    0.04 sec
+      Start 16: dbf3_state
+16/39 Test #16: dbf3_state ..............................   Passed    0.21 sec
+      Start 17: dbf3_state_reader
+17/39 Test #17: dbf3_state_reader .......................   Passed    0.05 sec
+      Start 18: dbf3_result
+18/39 Test #18: dbf3_result .............................   Passed    0.11 sec
+      Start 19: dbf3_result_reader
+19/39 Test #19: dbf3_result_reader ......................   Passed    0.06 sec
+      Start 20: foundation_boundaries
+20/39 Test #20: foundation_boundaries ...................   Passed    0.06 sec
+      Start 21: typed_admission_budget
+21/39 Test #21: typed_admission_budget ..................   Passed    0.49 sec
+      Start 22: model_foundation_contracts
+22/39 Test #22: model_foundation_contracts ..............   Passed    0.27 sec
+      Start 23: model_foundation_process_reader
+23/39 Test #23: model_foundation_process_reader .........   Passed    0.04 sec
+      Start 24: typed_results_contracts
+24/39 Test #24: typed_results_contracts .................   Passed    0.45 sec
+      Start 25: foundation_integration
+25/39 Test #25: foundation_integration ..................   Passed    0.20 sec
+      Start 26: foundation_integration_process_reader
+26/39 Test #26: foundation_integration_process_reader ...   Passed    0.06 sec
+      Start 27: hex8_contracts
+27/39 Test #27: hex8_contracts ..........................   Passed    0.70 sec
+      Start 28: indexed_results_contracts
+28/39 Test #28: indexed_results_contracts ...............   Passed   51.15 sec
+      Start 29: async_results_contracts
+29/39 Test #29: async_results_contracts .................   Passed    0.10 sec
+      Start 30: dbf4_cli_durability
+30/39 Test #30: dbf4_cli_durability .....................   Passed    0.54 sec
+      Start 31: dbf4_fault_campaign
+31/39 Test #31: dbf4_fault_campaign .....................   Passed    8.91 sec
+      Start 32: dbf3_wire_oracle
+32/39 Test #32: dbf3_wire_oracle ........................   Passed    0.05 sec
+      Start 33: dbf3_legacy_golden
+33/39 Test #33: dbf3_legacy_golden ......................   Passed    0.23 sec
+      Start 34: typed_process_pipeline
+34/39 Test #34: typed_process_pipeline ..................   Passed    0.67 sec
+      Start 35: foundation3_legacy_golden
+35/39 Test #35: foundation3_legacy_golden ...............   Passed    0.11 sec
+      Start 36: foundation_legacy_golden
+36/39 Test #36: foundation_legacy_golden ................   Passed    0.15 sec
+      Start 37: lifecycle_process_pipeline
+37/39 Test #37: lifecycle_process_pipeline ..............   Passed    6.78 sec
+      Start 38: database_contracts
+38/39 Test #38: database_contracts ......................   Passed    0.08 sec
+      Start 39: explicit_numerics
+39/39 Test #39: explicit_numerics .......................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 39
+
+Total Test time (real) =  85.79 sec
