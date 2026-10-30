@@ -46,5 +46,7 @@ general-domain-output/
 /verification/reviews/DBF5/independent-astra/scratch/
 /verification/reviews/DBF5/*-scratch/
 /verification/reviews/DBF5/compression-benchmark/
+/verification/reviews/DBF6/independent-current/runtime/
+/verification/reviews/DBF6/independent-current/probe-runtime/
 # Batch identity validator is a portable tool, same as the reproduce scripts.
 !/verification/validate_batch_identity.py
