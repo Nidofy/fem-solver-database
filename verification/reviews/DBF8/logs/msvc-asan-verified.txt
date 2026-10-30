@@ -1,0 +1,40 @@
+**********************************************************************
+** Visual Studio 2026 Developer Command Prompt v18.9.2
+** Copyright (c) 2026 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+-- Configuring done (0.4s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan
+[1/7] Linking CXX executable sdb_dbf7_query_tests.exe
+[2/7] Linking CXX executable sdb_dbf7_contract_tests.exe
+[3/7] Building CXX object CMakeFiles\process_memory.dir\src\process_memory.cpp.obj
+[4/7] Linking CXX static library process_memory.lib
+[5/7] Linking CXX executable sdb_dbf8_contract_tests.exe
+[6/7] Linking CXX executable sdb_dbf6_contract_tests.exe
+[7/7] Linking CXX executable sdb_typed_results_tests.exe
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan
+      Start  1: dbf8_contracts
+ 1/10 Test  #1: dbf8_contracts ...................   Passed    0.72 sec
+      Start  2: dbf7_queries
+ 2/10 Test  #2: dbf7_queries .....................   Passed    1.27 sec
+      Start  3: dbf7_contracts
+ 3/10 Test  #3: dbf7_contracts ...................   Passed    0.07 sec
+      Start  4: dbf7_process_reader
+ 4/10 Test  #4: dbf7_process_reader ..............   Passed    0.04 sec
+      Start  5: dbf6_contracts
+ 5/10 Test  #5: dbf6_contracts ...................   Passed    0.10 sec
+      Start  6: dbf6_process_reader
+ 6/10 Test  #6: dbf6_process_reader ..............   Passed    0.04 sec
+      Start 34: typed_results_contracts
+ 7/10 Test #34: typed_results_contracts ..........   Passed    0.38 sec
+      Start 40: dbf8_inp_document
+ 8/10 Test #40: dbf8_inp_document ................   Passed    1.30 sec
+      Start 42: dbf7_tools
+ 9/10 Test #42: dbf7_tools .......................   Passed    0.14 sec
+      Start 43: dbf6_wire_oracle
+10/10 Test #43: dbf6_wire_oracle .................   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Total Test time (real) =   4.21 sec

@@ -1,0 +1,2 @@
+[1/2] Building CXX object CMakeFiles/installed_dbf8.dir/main.cpp.obj
+[2/2] Linking CXX executable installed_dbf8.exe

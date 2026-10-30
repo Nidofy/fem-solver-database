@@ -77,8 +77,10 @@ std::vector<Index> private_dof_scratch(const BorrowedField<Index, N> &nodes, std
     std::vector<Index> scratch(product(N, components));
     for (std::size_t a = 0; a < N; ++a)
         for (std::uint32_t c = 0; c < components; ++c) {
-            auto value = std::uint64_t(nodes.at(element, a)) * components + c + 1;
-            if (value > std::numeric_limits<Index>::max()) throw std::overflow_error("DOF scratch overflow");
+            auto node=nodes.at(element,a);
+            if (node > (std::numeric_limits<Index>::max()-c-1)/components)
+                throw std::overflow_error("DOF scratch overflow");
+            auto value = node * components + c + 1;
             scratch[a * components + c] = static_cast<Index>(value);
         }
     return scratch;

@@ -1,0 +1,3 @@
+#include <sdb/io/native.hpp>
+#include <iostream>
+int main(int argc,char**argv){if(argc!=3)return 2;namespace n=sdb::lifecycle::native;try{if(std::string(argv[1])=="write"){std::ofstream out(argv[2],std::ios::binary);n::prefix(out,123);n::record(out,1,n::pack(std::vector<sdb::Index>{7,9}));std::cout<<"wrote bits="<<sdb::index_bits<<'\n';return 0;}std::ifstream in(argv[2],std::ios::binary);n::prefix(in,123);auto x=n::unpack<std::vector<sdb::Index>>(n::record(in,1));if(std::string(argv[1])=="reject")return 1;std::cout<<"accepted bits="<<sdb::index_bits<<" count="<<x.size()<<'\n';return x==std::vector<sdb::Index>{7,9}?0:1;}catch(const std::exception&e){std::cout<<"rejected bits="<<sdb::index_bits<<" reason="<<e.what()<<'\n';return std::string(argv[1])=="reject"?0:1;}}

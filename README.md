@@ -1,6 +1,11 @@
 # Solver Database V2
 
-Current SDK **2.3.0** adds [DBF7 local foundation extensions](docs/development/db_foundation/DBF7_HANDOFF.md):
+Current SDK **2.4.0** adds [DBF8 extensions](docs/development/db_foundation/DBF8_HANDOFF.md):
+lossless INP documents, selectable global MeshDB Index32/Index64, opt-in COW trials,
+C++ allocation admission and OS-limited workers. See the handoff for exact file, ABI,
+semantic and memory-metric boundaries.
+
+SDK **2.3.0** added [DBF7 local foundation extensions](docs/development/db_foundation/DBF7_HANDOFF.md):
 streaming indexed queries, owned state leases, atomic metadata/state bundles,
 equation-bound Index64 CSR, units/analysis/spectral contracts and optional read-only
 C/Python bindings. See the handoff for measured performance, independent reviews,

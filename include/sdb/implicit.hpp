@@ -36,7 +36,7 @@ class DofMap {
         DofSpaceData d; d.model=mesh.fingerprint(); d.nodes=mesh.nodes(); d.elements=mesh.elements();
         d.variables={{0,3,DofQuantity::Translation,"displacement","UNSPECIFIED","GLOBAL"},
                      {1,3,DofQuantity::Rotation,"rotation","UNSPECIFIED","GLOBAL"}};
-        d.external_equations.resize(free_); std::iota(d.external_equations.begin(),d.external_equations.end(),0);
+        d.external_equations.resize(free_); std::iota(d.external_equations.begin(),d.external_equations.end(),std::uint64_t{0});
         d.solver_to_canonical=d.external_equations;
         if(offsets_.size()!=sum(mesh.nodes(),1)) throw std::invalid_argument("mechanical DOF mesh shape mismatch");
         std::map<std::pair<Index,unsigned>,double> prescribed;
@@ -54,7 +54,7 @@ class DofMap {
 // B=1 is CSR, B>1 stores dense row-major blocks. Input columns sorted and unique.
 enum class MatrixSymmetry : std::uint8_t { General, Symmetric };
 template <class T> struct MatrixData {
-    std::uint32_t schema = 1, index_bits = 32, block_size = 1;
+    std::uint32_t schema = 1, index_bits = sizeof(Index)*8, block_size = 1;
     ScalarType scalar = scalar_type<T>();
     std::uint64_t block_rows = 0;
     MatrixSymmetry symmetry = MatrixSymmetry::General;
@@ -124,7 +124,7 @@ template <class T, std::size_t B = 1> class SparseMatrix {
     }
     static SparseMatrix from_data(const MatrixData<T> &d,
                                   std::uint64_t budget = std::numeric_limits<std::uint64_t>::max()) {
-        if (d.schema != 1 || d.index_bits != 32 || d.block_size != B || d.scalar != scalar_type<T>() ||
+        if (d.schema != 1 || d.index_bits != sizeof(Index)*8 || d.block_size != B || d.scalar != scalar_type<T>() ||
             d.block_rows >= invalid_index || d.block_rows > std::numeric_limits<std::size_t>::max())
             throw std::invalid_argument("matrix schema/dimension mismatch");
         // Reject malformed value counts before the constructor allocates B*B

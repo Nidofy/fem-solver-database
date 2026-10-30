@@ -1,6 +1,18 @@
 # Actual capability matrix
 
-## DBF7 current additions
+## DBF8 current additions
+
+| Capability | Implemented boundary |
+| --- | --- |
+| Complete INP file layer | Raw bytes and references, 600-name catalog, unknown cards, per-card mapping status; no execution authorization |
+| Global MeshDB Index64 | Build-wide entity/connectivity/DOF/matrix/result width; native epoch2, cross-width refusal; physical giant model not tested |
+| COW trials | Value/mask sharing, field detach, atomic failed staging, owned leases; metadata copied, full-detach payload reserved |
+| Process memory | Opt-in C++ new admission plus Windows Job committed-memory / Linux per-process RLIMIT_AS launcher; no exact RSS claim |
+
+DBF8_HANDOFF is the current scope and verification record. Historical limitations
+below describe their original batches and are superseded only by this table.
+
+## Historical DBF7 additions
 
 | Capability | Implemented and tested boundary |
 | --- | --- |

@@ -1,0 +1,138 @@
+[ 25%] Building CXX object CMakeFiles/process_memory.dir/src/process_memory.cpp.o
+[ 50%] Linking CXX static library libprocess_memory.a
+[ 50%] Built target process_memory
+[ 75%] Building CXX object CMakeFiles/sdb_dbf8_contract_tests.dir/tests/dbf8_contract_tests.cpp.o
+[100%] Linking CXX executable sdb_dbf8_contract_tests
+[100%] Built target sdb_dbf8_contract_tests
+[ 50%] Building CXX object CMakeFiles/sdb_dbf8_malloc_worker.dir/tests/dbf8_malloc_worker.cpp.o
+[100%] Linking CXX executable sdb_dbf8_malloc_worker
+[100%] Built target sdb_dbf8_malloc_worker
+[ 50%] Building CXX object CMakeFiles/sdb_dbf6_contract_tests.dir/tests/dbf6_contract_tests.cpp.o
+[100%] Linking CXX executable sdb_dbf6_contract_tests
+[100%] Built target sdb_dbf6_contract_tests
+[ 50%] Building CXX object CMakeFiles/sdb_dbf7_contract_tests.dir/tests/dbf7_contract_tests.cpp.o
+[100%] Linking CXX executable sdb_dbf7_contract_tests
+[100%] Built target sdb_dbf7_contract_tests
+[ 50%] Building CXX object CMakeFiles/sdb_dbf7_query_tests.dir/tests/dbf7_query_tests.cpp.o
+[100%] Linking CXX executable sdb_dbf7_query_tests
+[100%] Built target sdb_dbf7_query_tests
+[ 50%] Building CXX object CMakeFiles/sdb_typed_results_tests.dir/tests/typed_results_tests.cpp.o
+In file included from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:697,
+                 from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/lifecycle.hpp:2,
+                 from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:1:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function ‘sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:175:41: warning: missing initializer for member ‘sdb::lifecycle::ResultFrame::binding’ [-Wmissing-field-initializers]
+  175 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function ‘void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:511:63: warning: missing initializer for member ‘sdb::lifecycle::indexed_detail::Block::first_address’ [-Wmissing-field-initializers]
+  511 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:511:63: warning: missing initializer for member ‘sdb::lifecycle::indexed_detail::Block::last_address’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:535:36: warning: missing initializer for member ‘sdb::lifecycle::indexed_detail::Block::first_address’ [-Wmissing-field-initializers]
+  535 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  536 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:535:36: warning: missing initializer for member ‘sdb::lifecycle::indexed_detail::Block::last_address’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = double; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:52:76:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+  231 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |     ~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = long unsigned int; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:139:50:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = float; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:19:43:   required from ‘void scalar_field(sdb::lifecycle::ResultFrame&, std::string, sdb::lifecycle::ResultAddress, T) [with T = float; std::string = std::__cxx11::basic_string<char>]’
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:131:28:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = int; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:19:43:   required from ‘void scalar_field(sdb::lifecycle::ResultFrame&, std::string, sdb::lifecycle::ResultAddress, T) [with T = int; std::string = std::__cxx11::basic_string<char>]’
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:133:35:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = unsigned int; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:19:43:   required from ‘void scalar_field(sdb::lifecycle::ResultFrame&, std::string, sdb::lifecycle::ResultAddress, T) [with T = unsigned int; std::string = std::__cxx11::basic_string<char>]’
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:134:36:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = long int; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:19:43:   required from ‘void scalar_field(sdb::lifecycle::ResultFrame&, std::string, sdb::lifecycle::ResultAddress, T) [with T = long int; std::string = std::__cxx11::basic_string<char>]’
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:135:35:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = unsigned char; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:19:43:   required from ‘void scalar_field(sdb::lifecycle::ResultFrame&, std::string, sdb::lifecycle::ResultAddress, T) [with T = unsigned char; std::string = std::__cxx11::basic_string<char>]’
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:137:35:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+In file included from /usr/include/c++/13/string:54,
+                 from /usr/include/c++/13/bits/locale_classes.h:40,
+                 from /usr/include/c++/13/bits/ios_base.h:41,
+                 from /usr/include/c++/13/ios:44,
+                 from /usr/include/c++/13/ostream:40,
+                 from /usr/include/c++/13/bits/unique_ptr.h:42,
+                 from /usr/include/c++/13/memory:78,
+                 from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/../io/../memory.hpp:7,
+                 from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/../io/../field.hpp:2,
+                 from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/../io/../model.hpp:2,
+                 from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/../io/../contact.hpp:2,
+                 from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/../io/../checkpoint.hpp:2,
+                 from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/../io/native.hpp:2,
+                 from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/../io/model_store.hpp:2,
+                 from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:2:
+In member function ‘constexpr std::__cxx11::basic_string<_CharT, _Traits, _Alloc>::pointer std::__cxx11::basic_string<_CharT, _Traits, _Alloc>::_M_data() const [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]’,
+    inlined from ‘constexpr std::__cxx11::basic_string<_CharT, _Traits, _Alloc>::basic_string(const std::__cxx11::basic_string<_CharT, _Traits, _Alloc>&) [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]’ at /usr/include/c++/13/bits/basic_string.h:551:45,
+    inlined from ‘constexpr void std::_Construct(_Tp*, _Args&& ...) [with _Tp = __cxx11::basic_string<char>; _Args = {const __cxx11::basic_string<char, char_traits<char>, allocator<char> >&}]’ at /usr/include/c++/13/bits/stl_construct.h:119:7,
+    inlined from ‘constexpr void std::_Optional_payload_base<_Tp>::_M_construct(_Args&& ...) [with _Args = {const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&}; _Tp = std::__cxx11::basic_string<char>]’ at /usr/include/c++/13/optional:278:19,
+    inlined from ‘constexpr std::_Optional_payload_base<_Tp>::_Optional_payload_base(bool, const std::_Optional_payload_base<_Tp>&) [with _Tp = std::__cxx11::basic_string<char>]’ at /usr/include/c++/13/optional:145:22,
+    inlined from ‘constexpr std::_Optional_payload_base<_Tp>::_Optional_payload_base(bool, const std::_Optional_payload_base<_Tp>&) [with _Tp = std::__cxx11::basic_string<char>]’ at /usr/include/c++/13/optional:141:7,
+    inlined from ‘constexpr std::_Optional_payload<std::__cxx11::basic_string<char>, true, false, false>::_Optional_payload(bool, const std::_Optional_payload_base<std::__cxx11::basic_string<char> >&) [inherited from std::_Optional_payload_base<std::__cxx11::basic_string<char> >]’ at /usr/include/c++/13/optional:399:42,
+    inlined from ‘constexpr std::_Optional_payload<std::__cxx11::basic_string<char>, false, false, false>::_Optional_payload(bool, const std::_Optional_payload_base<std::__cxx11::basic_string<char> >&) [inherited from std::_Optional_payload_base<std::__cxx11::basic_string<char> >]’ at /usr/include/c++/13/optional:433:57,
+    inlined from ‘constexpr std::_Optional_base<_Tp, <anonymous>, <anonymous> >::_Optional_base(const std::_Optional_base<_Tp, <anonymous>, <anonymous> >&) [with _Tp = std::__cxx11::basic_string<char>; bool <anonymous> = false; bool <anonymous> = false]’ at /usr/include/c++/13/optional:540:9,
+    inlined from ‘constexpr std::optional<std::__cxx11::basic_string<char> >::optional(const std::optional<std::__cxx11::basic_string<char> >&)’ at /usr/include/c++/13/optional:707:11,
+    inlined from ‘static std::size_t sdb::lifecycle::ResultQuery::visit_typed_history(const sdb::lifecycle::ResultReader&, const std::string&, sdb::lifecycle::ResultAddress, Sink&&, unsigned int, double, double, const std::string&, std::optional<std::__cxx11::basic_string<char> >) [with T = double; Sink = sdb::lifecycle::ResultQuery::typed_history<double>(const sdb::lifecycle::ResultReader&, const std::string&, sdb::lifecycle::ResultAddress, unsigned int, double, double, const std::string&, std::optional<std::__cxx11::basic_string<char> >, std::size_t)::<lambda(double, std::optional<double>)>]’ at /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:962:43,
+    inlined from ‘static std::vector<std::pair<double, std::optional<_Tp> > > sdb::lifecycle::ResultQuery::typed_history(const sdb::lifecycle::ResultReader&, const std::string&, sdb::lifecycle::ResultAddress, unsigned int, double, double, const std::string&, std::optional<std::__cxx11::basic_string<char> >, std::size_t) [with T = double]’ at /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:987:31,
+    inlined from ‘history_contract_drift(const sdb::lifecycle::ResultModel&, const std::filesystem::__cxx11::path&)::<lambda()>’ at /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:72:55,
+    inlined from ‘void rejects(F) [with F = history_contract_drift(const sdb::lifecycle::ResultModel&, const std::filesystem::__cxx11::path&)::<lambda()>]’ at /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:10:22,
+    inlined from ‘void history_contract_drift(const sdb::lifecycle::ResultModel&, const std::filesystem::__cxx11::path&)’ at /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:72:16:
+/usr/include/c++/13/bits/basic_string.h:223:28: warning: ‘*(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*)((char*)&<unnamed> + offsetof(std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >,std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >::<unnamed>.std::_Optional_base<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, false, false>::<unnamed>)).std::__cxx11::basic_string<char>::_M_dataplus.std::__cxx11::basic_string<char>::_Alloc_hider::_M_p’ may be used uninitialized [-Wmaybe-uninitialized]
+  223 |       { return _M_dataplus._M_p; }
+      |                            ^~~~
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In function ‘void history_contract_drift(const sdb::lifecycle::ResultModel&, const std::filesystem::__cxx11::path&)’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:987:31: note: ‘<anonymous>’ declared here
+  987 |         visit_typed_history<T>(reader,name,address,[&](double t,std::optional<T> v) {
+      |         ~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  988 |             if(values.size()==max_samples) throw std::length_error("history sample budget");
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  989 |             values.emplace_back(t,v); return true;
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  990 |         },component,time_begin,time_end,schema_id,stored_region);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In member function ‘constexpr std::__cxx11::basic_string<_CharT, _Traits, _Alloc>::size_type std::__cxx11::basic_string<_CharT, _Traits, _Alloc>::length() const [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]’,
+    inlined from ‘constexpr std::__cxx11::basic_string<_CharT, _Traits, _Alloc>::basic_string(const std::__cxx11::basic_string<_CharT, _Traits, _Alloc>&) [with _CharT = char; _Traits = std::char_traits<char>; _Alloc = std::allocator<char>]’ at /usr/include/c++/13/bits/basic_string.h:551:62,
+    inlined from ‘constexpr void std::_Construct(_Tp*, _Args&& ...) [with _Tp = __cxx11::basic_string<char>; _Args = {const __cxx11::basic_string<char, char_traits<char>, allocator<char> >&}]’ at /usr/include/c++/13/bits/stl_construct.h:119:7,
+    inlined from ‘constexpr void std::_Optional_payload_base<_Tp>::_M_construct(_Args&& ...) [with _Args = {const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&}; _Tp = std::__cxx11::basic_string<char>]’ at /usr/include/c++/13/optional:278:19,
+    inlined from ‘constexpr std::_Optional_payload_base<_Tp>::_Optional_payload_base(bool, const std::_Optional_payload_base<_Tp>&) [with _Tp = std::__cxx11::basic_string<char>]’ at /usr/include/c++/13/optional:145:22,
+    inlined from ‘constexpr std::_Optional_payload_base<_Tp>::_Optional_payload_base(bool, const std::_Optional_payload_base<_Tp>&) [with _Tp = std::__cxx11::basic_string<char>]’ at /usr/include/c++/13/optional:141:7,
+    inlined from ‘constexpr std::_Optional_payload<std::__cxx11::basic_string<char>, true, false, false>::_Optional_payload(bool, const std::_Optional_payload_base<std::__cxx11::basic_string<char> >&) [inherited from std::_Optional_payload_base<std::__cxx11::basic_string<char> >]’ at /usr/include/c++/13/optional:399:42,
+    inlined from ‘constexpr std::_Optional_payload<std::__cxx11::basic_string<char>, false, false, false>::_Optional_payload(bool, const std::_Optional_payload_base<std::__cxx11::basic_string<char> >&) [inherited from std::_Optional_payload_base<std::__cxx11::basic_string<char> >]’ at /usr/include/c++/13/optional:433:57,
+    inlined from ‘constexpr std::_Optional_base<_Tp, <anonymous>, <anonymous> >::_Optional_base(const std::_Optional_base<_Tp, <anonymous>, <anonymous> >&) [with _Tp = std::__cxx11::basic_string<char>; bool <anonymous> = false; bool <anonymous> = false]’ at /usr/include/c++/13/optional:540:9,
+    inlined from ‘constexpr std::optional<std::__cxx11::basic_string<char> >::optional(const std::optional<std::__cxx11::basic_string<char> >&)’ at /usr/include/c++/13/optional:707:11,
+    inlined from ‘static std::size_t sdb::lifecycle::ResultQuery::visit_typed_history(const sdb::lifecycle::ResultReader&, const std::string&, sdb::lifecycle::ResultAddress, Sink&&, unsigned int, double, double, const std::string&, std::optional<std::__cxx11::basic_string<char> >) [with T = double; Sink = sdb::lifecycle::ResultQuery::typed_history<double>(const sdb::lifecycle::ResultReader&, const std::string&, sdb::lifecycle::ResultAddress, unsigned int, double, double, const std::string&, std::optional<std::__cxx11::basic_string<char> >, std::size_t)::<lambda(double, std::optional<double>)>]’ at /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:962:43,
+    inlined from ‘static std::vector<std::pair<double, std::optional<_Tp> > > sdb::lifecycle::ResultQuery::typed_history(const sdb::lifecycle::ResultReader&, const std::string&, sdb::lifecycle::ResultAddress, unsigned int, double, double, const std::string&, std::optional<std::__cxx11::basic_string<char> >, std::size_t) [with T = double]’ at /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:987:31,
+    inlined from ‘history_contract_drift(const sdb::lifecycle::ResultModel&, const std::filesystem::__cxx11::path&)::<lambda()>’ at /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:72:55,
+    inlined from ‘void rejects(F) [with F = history_contract_drift(const sdb::lifecycle::ResultModel&, const std::filesystem::__cxx11::path&)::<lambda()>]’ at /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:10:22,
+    inlined from ‘void history_contract_drift(const sdb::lifecycle::ResultModel&, const std::filesystem::__cxx11::path&)’ at /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/typed_results_tests.cpp:72:16:
+/usr/include/c++/13/bits/basic_string.h:1079:16: warning: ‘*(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*)((char*)&<unnamed> + offsetof(std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >,std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >::<unnamed>.std::_Optional_base<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, false, false>::<unnamed>)).std::__cxx11::basic_string<char>::_M_string_length’ may be used uninitialized [-Wmaybe-uninitialized]
+ 1079 |       { return _M_string_length; }
+      |                ^~~~~~~~~~~~~~~~
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In function ‘void history_contract_drift(const sdb::lifecycle::ResultModel&, const std::filesystem::__cxx11::path&)’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:987:31: note: ‘<anonymous>’ declared here
+  987 |         visit_typed_history<T>(reader,name,address,[&](double t,std::optional<T> v) {
+      |         ~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  988 |             if(values.size()==max_samples) throw std::length_error("history sample budget");
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  989 |             values.emplace_back(t,v); return true;
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  990 |         },component,time_begin,time_end,schema_id,stored_region);
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[100%] Linking CXX executable sdb_typed_results_tests
+[100%] Built target sdb_typed_results_tests

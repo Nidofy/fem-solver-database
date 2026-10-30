@@ -1,0 +1,22 @@
+[
+  {
+    "old": "f4395b37b2bb4fcaac5672ec4de1683efeadaf459203b526454d2545cfd97bcf",
+    "current": "52bc0e2fc8692979107ca181d0f6a2e27273f965b7d503b6bea3102bbad6356a",
+    "path": "include/sdb/field.hpp"
+  },
+  {
+    "old": "713f413108baa83e6ea91d8bc11daab146cc3a64f55402f46b8dcec2062fc5b3",
+    "current": "29759ca2c9028c05c55161d98b1186f29825cfac48c053f35b3bd59000f7d649",
+    "path": "include/sdb/implicit.hpp"
+  },
+  {
+    "old": "08bc23ddad1696ee1f6914d9ee94ca8364e2e9cab05145fe3a73102688b02d6d",
+    "current": "e4a0ced0c72c921e458197772032661cd8b0c56d2f3c17390afa597b19316855",
+    "path": "include/sdb/state_session.hpp"
+  },
+  {
+    "old": "edd9a6e9ed2a9139ba9f7604e8e98169637daeb7875797a7e567b21ecbf8042c",
+    "current": "e7f45fb989104b290c850e0465abd2eb827b27d4f3ce8523baea76a4013f5e53",
+    "path": "include/sdb/results/indexed_format.hpp"
+  }
+]

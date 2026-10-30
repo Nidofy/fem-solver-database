@@ -1,6 +1,14 @@
 # Resume DB foundation work
 
-## Current DBF7 continuation (2026-10-30)
+## Current DBF8 continuation (2026-10-30)
+
+Read DBF8_HANDOFF and verification/reviews/DBF8/manifest.json first. SDK 2.4 adds
+the user-confirmed complete INP file layer, global selectable MeshDB Index64, COW
+and C++/OS memory envelopes. No full-keyword physics, exact RSS, cross-width native
+conversion or production adapter claim. Preserve the historical DBF6/7 evidence
+and user kit. Native mirror/kernel integration remains a production gate.
+
+## Historical DBF7 continuation (2026-10-30)
 
 Read DBF7_HANDOFF, DBF7_CONTRACTS and the DBF7 manifest first. SDK 2.3 includes
 reviewed DBF6 plus local P0-P2 contracts/tooling. Independent DBF6/DBF7 scoped

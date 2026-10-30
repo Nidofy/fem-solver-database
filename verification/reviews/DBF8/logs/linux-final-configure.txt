@@ -1,0 +1,3 @@
+-- Configuring done (1.3s)
+-- Generating done (7.1s)
+-- Build files have been written to: /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-linux

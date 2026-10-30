@@ -54,10 +54,10 @@ class RegisteredFieldBase {
   public:
     RegisteredFieldBase(FieldDescriptor d, std::size_t n, std::string schema,
                         std::uint32_t version, std::uint32_t layout, std::uint32_t width,
-                        std::uint64_t basis)
+                        std::uint64_t basis, bool allocate_validity=true)
         : descriptor_(std::move(d)), count_(n), schema_id_(std::move(schema)),
           schema_version_(version), layout_(layout), width_(width), basis_id_(basis) {
-        if (descriptor_.missing == MissingPolicy::ValidityMask) {
+        if (allocate_validity && descriptor_.missing == MissingPolicy::ValidityMask) {
             validity_.emplace(product(n, descriptor_.component_count())); validity_->fill(1);
         }
     }
@@ -84,6 +84,11 @@ class RegisteredFieldBase {
         return out;
     }
     virtual std::unique_ptr<RegisteredFieldBase> clone(bool initialized) const = 0;
+  private:
+    friend class RegisteredState;
+    virtual std::unique_ptr<RegisteredFieldBase> stage_shared() const = 0;
+    virtual void invalidate_borrows() const noexcept = 0;
+  public:
     virtual registered_detail::Bytes initialization() const = 0;
     // Accounted payload (including padding), not allocator overhead or peak RSS.
     virtual std::size_t payload_bytes(std::size_t rows) const = 0;
@@ -102,6 +107,13 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
     using V = typename F::value_type;
     F field_;
     std::vector<V> initial_;
+    struct SharedTag {};
+    RegisteredField(const RegisteredField &other,SharedTag)
+        : RegisteredFieldBase(other.descriptor_,other.count_,other.schema_id_,other.schema_version_,other.layout_,other.width_,other.basis_id_,false),
+          field_(other.field_.stage_shared()), initial_(other.initial_) {
+        addressing_=other.addressing_;
+        if(other.validity_) validity_.emplace(other.validity_->stage_shared());
+    }
   public:
     RegisteredField(FieldDescriptor d, std::size_t n, std::string schema,
                     std::uint32_t version, std::vector<V> initial, std::uint64_t basis,
@@ -120,6 +132,15 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
         if (initialized) return std::make_unique<RegisteredField>(descriptor_, count_, schema_id_, schema_version_, initial_, basis_id_, addressing_);
         return std::make_unique<RegisteredField>(*this);
     }
+  private:
+    std::unique_ptr<RegisteredFieldBase> stage_shared() const override {
+        return std::unique_ptr<RegisteredFieldBase>(new RegisteredField(*this,SharedTag{}));
+    }
+    void invalidate_borrows() const noexcept override {
+        field_.invalidate_borrows();
+        if(validity_) validity_->invalidate_borrows();
+    }
+  public:
     registered_detail::Bytes initialization() const override {
         registered_detail::Bytes out;
         for(auto v:initial_) registered_detail::encode(out,v);
@@ -250,6 +271,15 @@ class RegisteredState {
         if(in_trial()) throw std::logic_error("registered trial already active");
         validate(); std::vector<std::unique_ptr<RegisteredFieldBase>> copy;
         for(const auto &e:entries_) copy.push_back(e->clone(false));
+        trial_.emplace(std::move(copy));
+    }
+    // Explicit COW phase boundary; caller must have joined every raw consumer.
+    void begin_trial_cow() {
+        if(in_trial()) throw std::logic_error("registered trial already active");
+        validate(); std::vector<std::unique_ptr<RegisteredFieldBase>> copy;
+        for(const auto &e:entries_) copy.push_back(e->stage_shared());
+        // No throwing operations after invalidation: failed staging leaves all borrows intact.
+        for(const auto &e:entries_) e->invalidate_borrows();
         trial_.emplace(std::move(copy));
     }
     void commit() {

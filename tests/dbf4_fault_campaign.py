@@ -35,7 +35,7 @@ def unlock_dead_child(folder):
 def assert_link_bytes(folder, expected_step, result_prefix):
     """Independent schema-1 decoder: do not use C++ verify to choose expected outcomes."""
     wire=(folder/"state.sdbrst.result-link").read_bytes()
-    assert struct.unpack_from("<QI",wire)==(0x314B4E494C424453,1)
+    assert struct.unpack_from("<QI",wire)==(0x314B4E494C424453,2 if len(sys.argv)>4 and sys.argv[4]=="64" else 1)
     kind,size,crc=struct.unpack_from("<IQI",wire,12)
     body=wire[28:]
     assert kind==0 and size==60 and len(body)==60 and zlib.crc32(body)==crc

@@ -5,11 +5,15 @@
 #           REPAIRED_PENDING_GATE / ACCEPTED / DEFERRED
 schema_version: 2
 program: fem-solver-database-v2
-current_batch: DBF7
-batch_state: ACCEPTED # bounded standalone scope; see DBF7_HANDOFF and independent reviews
-batch_base_sha: b489414df6f1c45fdcb7b7b54b9f725e4c12ac4a
-batch_content_manifest: verification/reviews/DBF7/manifest.json
+current_batch: DBF8
+batch_state: ACCEPTED # bounded standalone scope; see DBF8_HANDOFF and independent reviews
+batch_base_sha: 30bedf6
+batch_content_manifest: verification/reviews/DBF8/manifest.json
 tasks:
+  - id: DBF8
+    title: Complete INP file layer global MeshDB Index64 COW and process memory
+    status: ACCEPTED
+    evidence: docs/development/db_foundation/DBF8_HANDOFF.md
   - id: DBF6
     title: Independent standalone data DOF state consumer foundation
     status: ACCEPTED

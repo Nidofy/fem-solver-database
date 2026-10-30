@@ -78,7 +78,8 @@ struct ResultBasis {
     template<class F> void visit(F f) { f(id,rotation); }
 };
 struct ResultSample {
-    std::uint32_t integration_point = 0, layer = 0, section_point = 0, material = 0;
+    std::uint32_t integration_point = 0, layer = 0, section_point = 0;
+    Index material = 0;
     auto operator<=>(const ResultSample &) const = default;
     template<class F> void visit(F f) { f(integration_point, layer, section_point, material); }
 };

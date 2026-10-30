@@ -3,7 +3,17 @@
 A fresh session MUST re-verify against real Git state before trusting this
 file: `git status --porcelain=v1 -b`, `git log --oneline -12`, task pool.
 
-## Current position (2026-10-29, DBF1)
+## Current position (2026-10-30, DBF8)
+
+SDK2.4 completes the user-confirmed INP file layer, global selectable MeshDB
+Index64, explicit COW and C++/OS memory envelopes. Read
+[DBF8 handoff](db_foundation/DBF8_HANDOFF.md), current task pool and DBF8 manifest.
+Independent scoped review closed five P2 findings; platform and installed-consumer
+evidence is bound in the new packet. Historical ALR1/B02c decisions remain unchanged.
+No production adapter, kernel physics, CUDA, physical power-loss, cross-width
+native conversion or exact-RSS claim. Preserve the original user kit. No push/merge.
+
+## Historical position (2026-10-29, DBF1)
 
 The current user explicitly requested implementation of SDB_DB_FOUNDATION_COMPLETION_KIT.
 DBF1 continues from `9a3d754` on `codex/astra-db-foundation-completion`; it does not

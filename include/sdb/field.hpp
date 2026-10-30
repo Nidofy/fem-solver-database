@@ -64,7 +64,7 @@ template <class T, std::size_t C, class Layout> class CheckedView {
 };
 template <class T, std::size_t C = 1, class Layout = SoA> class Field {
     static_assert(C > 0 && std::is_arithmetic_v<T>);
-    AlignedVector<T> data_;
+    std::shared_ptr<AlignedVector<T>> data_=std::make_shared<AlignedVector<T>>();
     std::size_t count_ = 0;
     std::uint64_t version_ = 0;
     mutable std::shared_ptr<ViewLifetime> life_ = std::make_shared<ViewLifetime>();
@@ -79,11 +79,11 @@ template <class T, std::size_t C = 1, class Layout = SoA> class Field {
     using layout_type = Layout;
     static constexpr std::size_t components = C;
     Field() = default;
-    explicit Field(std::size_t n) : data_(Layout::size(n, C), T{}), count_(n) {}
-    Field(const Field &f) : data_(f.data_), count_(f.count_), version_(f.version_) {}
+    explicit Field(std::size_t n) : data_(std::make_shared<AlignedVector<T>>(Layout::size(n, C), T{})), count_(n) {}
+    Field(const Field &f) : data_(f.data_?std::make_shared<AlignedVector<T>>(*f.data_):std::make_shared<AlignedVector<T>>()), count_(f.count_), version_(f.version_) {}
     Field &operator=(const Field &f) {
         if (this != &f) {
-            auto copy = f.data_;
+            auto copy = f.data_?std::make_shared<AlignedVector<T>>(*f.data_):std::make_shared<AlignedVector<T>>();
             if (life_)
                 ++life_->generation;
             data_ = std::move(copy);
@@ -113,6 +113,30 @@ template <class T, std::size_t C = 1, class Layout = SoA> class Field {
         std::swap(count_, f.count_);
         std::swap(version_, f.version_);
     }
+    // Explicit phase-boundary sharing. No outstanding raw borrows may exist.
+    // Ordinary Field copies remain deep; checked borrows are invalidated here.
+    Field fork_shared() const {
+        auto out=stage_shared();
+        invalidate_borrows();
+        return out;
+    }
+    bool storage_shared() const noexcept {return data_ && data_.use_count()>1;}
+  private:
+    template<class> friend class RegisteredField;
+    void invalidate_borrows() const noexcept {if(life_) ++life_->generation;}
+    Field stage_shared() const {
+        Field out;
+        out.data_=data_; out.count_=count_; out.version_=version_;
+        return out;
+    }
+    void detach() {
+        if(!data_) {data_=std::make_shared<AlignedVector<T>>();return;}
+        if(data_.use_count()!=1) {
+            auto next=std::make_shared<AlignedVector<T>>(*data_);
+            data_=std::move(next); if(life_) ++life_->generation;
+        }
+    }
+  public:
     void resize(std::size_t n) {
         Field next(n);
         auto a = read();
@@ -124,21 +148,23 @@ template <class T, std::size_t C = 1, class Layout = SoA> class Field {
         swap(next);
     }
     std::size_t size() const noexcept { return count_; }
-    std::size_t bytes() const noexcept { return data_.size() * sizeof(T); }
-    std::size_t storage_size() const noexcept { return data_.size(); }
-    std::size_t capacity() const noexcept { return data_.capacity(); }
+    std::size_t bytes() const noexcept { return (data_?data_->size():0) * sizeof(T); }
+    std::size_t storage_size() const noexcept { return data_?data_->size():0; }
+    std::size_t capacity() const noexcept { return data_?data_->capacity():0; }
     std::uint64_t version() const noexcept { return version_; }
     std::uint64_t generation() const noexcept { return life_ ? life_->generation : 0; }
-    View<const T, C, Layout> read() const noexcept { return {data_.data(), count_}; }
-    View<T, C, Layout> write() noexcept {
+    View<const T, C, Layout> read() const noexcept { return {data_?data_->data():nullptr, count_}; }
+    View<T, C, Layout> write() {
+        detach();
         ++version_;
-        return {data_.data(), count_};
+        return {data_?data_->data():nullptr, count_};
     }
     CheckedView<const T, C, Layout> checked_read() const { return {read(), lifetime()}; }
     CheckedView<T, C, Layout> checked_write() { return {write(), lifetime()}; }
     void fill(T v) {
+        detach();
         ++version_;
-        std::fill(data_.begin(), data_.end(), v);
+        std::fill(data_->begin(), data_->end(), v);
     }
 };
 

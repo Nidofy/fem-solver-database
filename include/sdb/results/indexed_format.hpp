@@ -494,7 +494,7 @@ class File {
                 if (product(p.addresses.size(), sizeof(std::size_t)) > limit_)
                     throw std::length_error("typed sort budget");
                 std::vector<std::size_t> order(p.addresses.size());
-                std::iota(order.begin(), order.end(), 0);
+                std::iota(order.begin(), order.end(), std::size_t{0});
                 std::sort(order.begin(), order.end(), [&](auto a, auto b) { return p.addresses[a] < p.addresses[b]; });
                 for (std::size_t start = 0; start < order.size();) {
                     auto count = std::min<std::size_t>(256, order.size()-start);
@@ -517,7 +517,7 @@ class File {
                 continue;
             }
             std::vector<std::size_t> order(field.ids.size());
-            std::iota(order.begin(), order.end(), 0);
+            std::iota(order.begin(), order.end(), std::size_t{0});
             std::sort(order.begin(), order.end(),
                       [&](auto a, auto b) { return field.ids[a] < field.ids[b]; });
             for (std::size_t start = 0; start < order.size(); start += 256) {

@@ -1,0 +1,7 @@
+[ 50%] Built target process_memory
+[100%] Built target sdb_dbf8_contract_tests
+[100%] Built target sdb_dbf8_malloc_worker
+[100%] Built target sdb_dbf6_contract_tests
+[100%] Built target sdb_dbf7_contract_tests
+[100%] Built target sdb_dbf7_query_tests
+[100%] Built target sdb_typed_results_tests

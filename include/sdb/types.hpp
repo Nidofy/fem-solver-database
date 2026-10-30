@@ -1,5 +1,6 @@
 #pragma once
 #include "memory.hpp"
+#include "index.hpp"
 #include <compare>
 #include <bit>
 #include <string>
@@ -22,21 +23,21 @@ template <class Tag, class U> class StrongId {
 };
 #define SDB_ID(name, width) struct name##Tag {}; using name = StrongId<name##Tag, width>
 SDB_ID(ExternalLabel, std::uint64_t);
-SDB_ID(NodeId, std::uint32_t);
-SDB_ID(ElementId, std::uint32_t);
-SDB_ID(InstanceId, std::uint32_t);
-SDB_ID(MaterialId, std::uint32_t);
-SDB_ID(SectionId, std::uint32_t);
-SDB_ID(SurfaceId, std::uint32_t);
-SDB_ID(FieldId, std::uint32_t);
-SDB_ID(StepId, std::uint32_t);
+SDB_ID(NodeId, Index);
+SDB_ID(ElementId, Index);
+SDB_ID(InstanceId, Index);
+SDB_ID(MaterialId, Index);
+SDB_ID(SectionId, Index);
+SDB_ID(SurfaceId, Index);
+SDB_ID(FieldId, Index);
+SDB_ID(StepId, Index);
 SDB_ID(FrameId, std::uint64_t);
-SDB_ID(CoordinateId, std::uint32_t);
-SDB_ID(OrientationId, std::uint32_t);
-SDB_ID(ConstraintId, std::uint32_t);
-SDB_ID(LoadId, std::uint32_t);
+SDB_ID(CoordinateId, Index);
+SDB_ID(OrientationId, Index);
+SDB_ID(ConstraintId, Index);
+SDB_ID(LoadId, Index);
 #undef SDB_ID
-static_assert(sizeof(NodeId) == 4 && sizeof(ExternalLabel) == 8);
+static_assert(sizeof(NodeId) == sizeof(Index) && sizeof(ExternalLabel) == 8);
 static_assert(std::is_trivially_copyable_v<NodeId> && !std::is_convertible_v<NodeId, ElementId>);
 enum class Dof : std::uint8_t { X, Y, Z, RX, RY, RZ };
 

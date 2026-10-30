@@ -1,0 +1,1 @@
+PASS: actual installed compilation dependencies include foundation/process_memory; no dynamics/hex8/model_compiler/gpdbase/caefem.

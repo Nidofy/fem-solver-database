@@ -31,7 +31,7 @@ class Reader:
 
 
 raw = Reader((Path(sys.argv[1]) / "foundation.sdbf").read_bytes())
-assert raw.get("Q") == 0x31444E554F464453 and raw.get("I") == 1
+assert raw.get("Q") == 0x31444E554F464453 and raw.get("I") == (2 if len(sys.argv)>2 and sys.argv[2]=="64" else 1)
 records = []
 while raw.pos < len(raw.data):
     kind, length, crc = raw.get("I"), raw.get("Q"), raw.get("I")

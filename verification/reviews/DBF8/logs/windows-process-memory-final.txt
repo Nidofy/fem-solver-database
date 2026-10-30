@@ -1,0 +1,4 @@
+{"mode": "windows_job_committed_memory", "limit_bytes": 67108864, "peak_job_committed_bytes": 67321856, "returncode": 0, "timed_out": false, "elapsed_seconds": 0.08205600001383573}
+malloc worker admitted_mib=61 denied=1
+aggregate Job parent 20MiB + child admitted_mib=34
+OS envelope malloc refusal / timeout / overflow guards PASS

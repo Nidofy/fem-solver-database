@@ -1,0 +1,28 @@
+Internal ctest changing into directory: /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-linux
+Test project /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-linux
+      Start  1: dbf8_contracts
+ 1/11 Test  #1: dbf8_contracts ...................   Passed    0.04 sec
+      Start  2: dbf7_queries
+ 2/11 Test  #2: dbf7_queries .....................   Passed   12.50 sec
+      Start  3: dbf7_contracts
+ 3/11 Test  #3: dbf7_contracts ...................   Passed    0.11 sec
+      Start  4: dbf7_process_reader
+ 4/11 Test  #4: dbf7_process_reader ..............   Passed    0.01 sec
+      Start  5: dbf6_contracts
+ 5/11 Test  #5: dbf6_contracts ...................   Passed    0.19 sec
+      Start  6: dbf6_process_reader
+ 6/11 Test  #6: dbf6_process_reader ..............   Passed    0.02 sec
+      Start 34: typed_results_contracts
+ 7/11 Test #34: typed_results_contracts ..........   Passed    0.77 sec
+      Start 40: dbf8_inp_document
+ 8/11 Test #40: dbf8_inp_document ................   Passed    0.33 sec
+      Start 41: dbf8_process_envelope
+ 9/11 Test #41: dbf8_process_envelope ............   Passed    0.47 sec
+      Start 43: dbf7_tools
+10/11 Test #43: dbf7_tools .......................   Passed    0.15 sec
+      Start 45: dbf6_wire_oracle
+11/11 Test #45: dbf6_wire_oracle .................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 11
+
+Total Test time (real) =  14.79 sec

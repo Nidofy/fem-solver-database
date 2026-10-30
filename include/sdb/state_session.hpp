@@ -12,9 +12,15 @@ inline std::size_t state_payload_bytes(const RegisteredState &state) {
     for(auto e:state.entries()) n=sum(n,sum(e->payload_bytes(e->count()),e->addressing()?state_layout_bytes(*e->addressing()):0));
     return n;
 }
+// Cumulative telemetry saturates; it must never throw after publishing a mutation.
+inline std::size_t state_counter_add(std::size_t a,std::size_t b) noexcept {
+    return b>std::numeric_limits<std::size_t>::max()-a?std::numeric_limits<std::size_t>::max():a+b;
+}
 struct StateMemoryStats {
     std::size_t resident_payload=0,trial_payload=0,high_water_payload=0,copied_payload=0;
+    std::size_t detached_value_bytes=0;
 };
+enum class TrialPolicy { DeepCopy, CopyOnWrite };
 // Opt-in owner. Copies the supplied registry, so old Field references cannot
 // mutate owned storage. Views are valid only within their lease; legacy APIs
 // outside this owner retain their original joined-phase contract.
@@ -68,7 +74,12 @@ class StateSession {
         }
         template<class F> auto field(const std::string &name) const {
             if(!core_) throw std::logic_error("moved state lease");
-            if constexpr(Write) return LeaseView(core_->state.template get<F>(name).checked_write(),token_);
+            if constexpr(Write) {
+                auto &f=core_->state.template get<F>(name); const auto copied=f.storage_shared()?f.bytes():0;
+                auto view=f.checked_write();
+                core_->stats.detached_value_bytes=state_counter_add(core_->stats.detached_value_bytes,copied);
+                return LeaseView(view,token_);
+            }
             else return LeaseView(std::as_const(core_->state).template get<F>(name).checked_read(),token_);
         }
     };
@@ -80,11 +91,13 @@ class StateSession {
     auto read() const { return Lease<false>(core_); }
     auto write() { return Lease<true>(core_); }
     StateMemoryStats memory() const { auto lease=read(); return core_->stats; }
-    void begin_trial() {
+    void begin_trial(TrialPolicy policy=TrialPolicy::DeepCopy) {
         auto lease=write(); auto &c=*core_;
-        c.admit(c.stats.resident_payload); c.state.begin_trial();
+        if(policy!=TrialPolicy::DeepCopy && policy!=TrialPolicy::CopyOnWrite) throw std::invalid_argument("trial policy");
+        c.admit(c.stats.resident_payload);
+        if(policy==TrialPolicy::CopyOnWrite) c.state.begin_trial_cow(); else c.state.begin_trial();
         c.stats.trial_payload=c.stats.resident_payload;
-        c.stats.copied_payload=sum(c.stats.copied_payload,c.stats.resident_payload);
+        if(policy==TrialPolicy::DeepCopy) c.stats.copied_payload=state_counter_add(c.stats.copied_payload,c.stats.resident_payload);
     }
     void commit() { auto lease=write(); core_->state.commit(); core_->stats.trial_payload=0; }
     void rollback() {
@@ -97,7 +110,7 @@ class StateSession {
         auto after=sum(e.payload_bytes(layout.addresses.size()),state_layout_bytes(layout));
         c.admit(after); c.state.remap(name,std::move(layout));
         c.stats.resident_payload=sum(c.stats.resident_payload-before,after);
-        c.stats.copied_payload=sum(c.stats.copied_payload,after);
+        c.stats.copied_payload=state_counter_add(c.stats.copied_payload,after);
     }
     void save(const std::filesystem::path &path,const DofSpace &space,std::uint64_t file_budget=lifecycle::native::default_limit) const {
         auto lease=read(); FoundationStore::save(path,space,core_->state,file_budget);
@@ -105,7 +118,7 @@ class StateSession {
     void restore(const std::filesystem::path &path,const DofSpace &space,std::uint64_t file_budget=lifecycle::native::default_limit) {
         auto lease=write(); auto &c=*core_;
         c.admit(c.stats.resident_payload); FoundationStore::restore(path,space,c.state,file_budget);
-        c.stats.copied_payload=sum(c.stats.copied_payload,c.stats.resident_payload);
+        c.stats.copied_payload=state_counter_add(c.stats.copied_payload,c.stats.resident_payload);
     }
 };
 } // namespace sdb

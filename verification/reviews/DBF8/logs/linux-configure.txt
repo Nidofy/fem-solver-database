@@ -1,0 +1,5 @@
+-- Found OpenMP_CXX: -fopenmp (found version "4.5") 
+-- Found OpenMP: TRUE (found version "4.5")  
+-- Configuring done (1.7s)
+-- Generating done (2.5s)
+-- Build files have been written to: /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-linux

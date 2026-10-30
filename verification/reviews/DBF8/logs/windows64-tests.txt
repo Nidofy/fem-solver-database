@@ -1,0 +1,109 @@
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-64
+      Start 32: model_foundation_contracts
+      Start 26: dbf3_state
+      Start 24: dbf3_model
+ 1/52 Test #32: model_foundation_contracts ..............   Passed    0.17 sec
+      Start 35: foundation_integration
+ 2/52 Test #24: dbf3_model ..............................   Passed    0.14 sec
+      Start 12: foundation_contracts
+ 3/52 Test #26: dbf3_state ..............................   Passed    0.25 sec
+      Start  5: dbf6_contracts
+ 4/52 Test #35: foundation_integration ..................   Passed    0.19 sec
+      Start 28: dbf3_result
+ 5/52 Test #12: foundation_contracts ....................   Passed    0.18 sec
+      Start  3: dbf7_contracts
+ 6/52 Test  #5: dbf6_contracts ..........................   Passed    0.16 sec
+      Start 38: indexed_results_contracts
+ 7/52 Test #28: dbf3_result .............................   Passed    0.16 sec
+      Start 47: dbf4_fault_campaign
+ 8/52 Test  #3: dbf7_contracts ..........................   Passed    0.11 sec
+      Start 50: lifecycle_process_pipeline
+ 9/52 Test #50: lifecycle_process_pipeline ..............   Passed    3.14 sec
+      Start 40: dbf8_inp_document
+10/52 Test #40: dbf8_inp_document .......................   Passed    1.92 sec
+      Start 20: dbf5_compressed
+11/52 Test #47: dbf4_fault_campaign .....................   Passed    5.14 sec
+      Start 11: lifecycle_contracts
+12/52 Test #11: lifecycle_contracts .....................   Passed    0.93 sec
+      Start  2: dbf7_queries
+13/52 Test #20: dbf5_compressed .........................   Passed    1.48 sec
+      Start 49: typed_process_pipeline
+14/52 Test  #2: dbf7_queries ............................   Passed    0.67 sec
+      Start 34: typed_results_contracts
+15/52 Test #49: typed_process_pipeline ..................   Passed    0.43 sec
+      Start 46: dbf4_cli_durability
+16/52 Test #34: typed_results_contracts .................   Passed    0.42 sec
+      Start 17: dbf4_result_durability
+17/52 Test #46: dbf4_cli_durability .....................   Passed    0.43 sec
+      Start 37: hex8_contracts
+18/52 Test #17: dbf4_result_durability ..................   Passed    0.36 sec
+      Start  9: general_contact_geometry
+19/52 Test #37: hex8_contracts ..........................   Passed    0.33 sec
+      Start 45: dbf5_cli
+20/52 Test  #9: general_contact_geometry ................   Passed    0.32 sec
+      Start 43: dbf7_tools
+21/52 Test #45: dbf5_cli ................................   Passed    0.19 sec
+      Start 18: dbf4_link_publication
+22/52 Test #43: dbf7_tools ..............................   Passed    0.25 sec
+      Start 39: async_results_contracts
+23/52 Test #18: dbf4_link_publication ...................   Passed    0.23 sec
+      Start 15: dbf3_contracts
+24/52 Test #15: dbf3_contracts ..........................   Passed    0.05 sec
+      Start 30: foundation_boundaries
+25/52 Test #39: async_results_contracts .................   Passed    0.17 sec
+      Start 42: dbf8_reject_index32
+26/52 Test #30: foundation_boundaries ...................   Passed    0.08 sec
+      Start 23: dbf3_restore_faults
+27/52 Test #42: dbf8_reject_index32 .....................   Passed    0.16 sec
+      Start 51: database_contracts
+28/52 Test #23: dbf3_restore_faults .....................   Passed    0.17 sec
+      Start 21: dbf5_consumer
+29/52 Test #51: database_contracts ......................   Passed    0.13 sec
+      Start 48: dbf3_wire_oracle
+30/52 Test #21: dbf5_consumer ...........................   Passed    0.13 sec
+      Start 10: general_contact_domain_demo
+31/52 Test #48: dbf3_wire_oracle ........................   Passed    0.10 sec
+      Start  7: general_contact_contracts
+32/52 Test #10: general_contact_domain_demo .............   Passed    0.12 sec
+      Start 31: typed_admission_budget
+33/52 Test  #7: general_contact_contracts ...............   Passed    0.11 sec
+      Start 22: dbf5_migration
+34/52 Test #31: typed_admission_budget ..................   Passed    0.08 sec
+      Start 44: dbf6_wire_oracle
+35/52 Test #22: dbf5_migration ..........................   Passed    0.07 sec
+      Start  8: general_contact_demo
+36/52 Test #44: dbf6_wire_oracle ........................   Passed    0.08 sec
+      Start  1: dbf8_contracts
+37/52 Test  #8: general_contact_demo ....................   Passed    0.09 sec
+      Start 52: explicit_numerics
+38/52 Test  #1: dbf8_contracts ..........................   Passed    0.07 sec
+      Start 16: dbf4_atomic
+39/52 Test #52: explicit_numerics .......................   Passed    0.08 sec
+      Start 14: storage_contracts
+40/52 Test #16: dbf4_atomic .............................   Passed    0.08 sec
+      Start 19: dbf5_codec
+41/52 Test #14: storage_contracts .......................   Passed    0.07 sec
+      Start 13: foundation_process_reader
+42/52 Test #19: dbf5_codec ..............................   Passed    0.02 sec
+      Start 33: model_foundation_process_reader
+43/52 Test #13: foundation_process_reader ...............   Passed    0.02 sec
+      Start 36: foundation_integration_process_reader
+44/52 Test #33: model_foundation_process_reader .........   Passed    0.03 sec
+      Start 29: dbf3_result_reader
+45/52 Test #36: foundation_integration_process_reader ...   Passed    0.03 sec
+      Start 27: dbf3_state_reader
+46/52 Test #29: dbf3_result_reader ......................   Passed    0.03 sec
+      Start  4: dbf7_process_reader
+47/52 Test #27: dbf3_state_reader .......................   Passed    0.02 sec
+      Start 25: dbf3_model_reader
+48/52 Test  #4: dbf7_process_reader .....................   Passed    0.02 sec
+      Start  6: dbf6_process_reader
+49/52 Test #25: dbf3_model_reader .......................   Passed    0.02 sec
+      Start 41: dbf8_process_envelope
+50/52 Test  #6: dbf6_process_reader .....................   Passed    0.02 sec
+51/52 Test #41: dbf8_process_envelope ...................   Passed    0.97 sec
+52/52 Test #38: indexed_results_contracts ...............   Passed   17.02 sec
+
+100% tests passed, 0 tests failed out of 52
+
+Total Test time (real) =  17.50 sec

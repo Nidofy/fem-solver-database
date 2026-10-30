@@ -1,0 +1,8 @@
+{
+  "mode": "linux_per_process_address_space",
+  "limit_bytes": 67108864,
+  "returncode": 0,
+  "timed_out": false,
+  "peak_child_rss_kib": 63840,
+  "elapsed_seconds": 0.069196558999991
+}

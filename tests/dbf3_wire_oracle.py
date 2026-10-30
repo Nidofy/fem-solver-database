@@ -77,7 +77,7 @@ def verify(path, precision, checkpoint=False):
         assert struct.unpack_from("<I", rec[0][1])[0] == 3
         fingerprint = struct.unpack_from("<Q", rec[0][1], 42)[0]
     else:
-        assert struct.unpack_from("<QI", raw) == (0x33545352424453, 1)
+        assert struct.unpack_from("<QI", raw) == (0x33545352424453, 2 if len(sys.argv)>2 and sys.argv[2]=="64" else 1)
         rec = records(raw, 12)
         assert struct.unpack_from("<I", rec[0][1])[0] == 5
         binding = dict(rec)[199]

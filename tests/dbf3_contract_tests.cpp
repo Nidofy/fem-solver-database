@@ -81,7 +81,7 @@ int main() {
         axis.version=2; rejects([&]{axis.validate();}); axis.version=1;
         axis.kind=static_cast<SampleAxisKind>(1); rejects([&]{axis.validate();}); axis.kind=SampleAxisKind::Time;
         rejects([&]{axis.validate_coordinate(-1);}); rejects([&]{axis.validate_coordinate(std::numeric_limits<double>::infinity());});
-        rejects([]{NodeId::checked(std::numeric_limits<std::uint32_t>::max());});
+        rejects([]{NodeId::checked(invalid_index);});
         topology_model<float>(Topology::Tet4); topology_model<double>(Topology::Tet4);
         topology_model<float>(Topology::Hex8); topology_model<double>(Topology::Hex8);
         std::cout<<checks<<" DBF3 contract checks passed\n";

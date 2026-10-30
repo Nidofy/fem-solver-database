@@ -14,13 +14,6 @@
 
 namespace sdb {
 using Id = std::uint64_t;
-using Index = std::uint32_t;
-inline constexpr Index invalid_index = std::numeric_limits<Index>::max();
-inline Index index_of(std::size_t n) {
-    if (n >= invalid_index)
-        throw std::length_error("32-bit index exhausted");
-    return static_cast<Index>(n);
-}
 struct FaceId {
     Id element = 0;
     std::uint16_t local = 0;

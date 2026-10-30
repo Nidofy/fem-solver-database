@@ -1,0 +1,168 @@
+**********************************************************************
+** Visual Studio 2026 Developer Command Prompt v18.9.2
+** Copyright (c) 2026 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+-- Configuring done (0.5s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan
+[1/10] Building CXX object CMakeFiles\sdb_dbf8_contract_tests.dir\tests\dbf8_contract_tests.cpp.obj
+[2/10] Building CXX object CMakeFiles\sdb_dbf7_contract_tests.dir\tests\dbf7_contract_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[3/10] Building CXX object CMakeFiles\sdb_dbf7_query_tests.dir\tests\dbf7_query_tests.cpp.obj
+[4/10] Building CXX object CMakeFiles\sdb_dbf6_contract_tests.dir\tests\dbf6_contract_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[5/10] Linking CXX executable sdb_dbf8_contract_tests.exe
+FAILED: [code=4294967295] sdb_dbf8_contract_tests.exe 
+C:\Windows\system32\cmd.exe /C "cd . && "C:\Program Files\Microsoft Visual Studio\18\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\sdb_dbf8_contract_tests.dir --rc=C:\PROGRA~2\WI3CF2~1\10\bin\100261~1.0\x64\rc.exe --mt=C:\PROGRA~2\WI3CF2~1\10\bin\100261~1.0\x64\mt.exe --manifests  -- C:\PROGRA~1\MIB055~1\18\PROFES~1\VC\Tools\MSVC\1444~1.352\bin\Hostx64\x64\link.exe /nologo CMakeFiles\sdb_dbf8_contract_tests.dir\tests\dbf8_contract_tests.cpp.obj  /out:sdb_dbf8_contract_tests.exe /implib:sdb_dbf8_contract_tests.lib /pdb:sdb_dbf8_contract_tests.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console /INCREMENTAL:NO  process_memory.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK: command "C:\PROGRA~1\MIB055~1\18\PROFES~1\VC\Tools\MSVC\1444~1.352\bin\Hostx64\x64\link.exe /nologo CMakeFiles\sdb_dbf8_contract_tests.dir\tests\dbf8_contract_tests.cpp.obj /out:sdb_dbf8_contract_tests.exe /implib:sdb_dbf8_contract_tests.lib /pdb:sdb_dbf8_contract_tests.pdb /version:0.0 /machine:x64 /debug /INCREMENTAL /subsystem:console /INCREMENTAL:NO process_memory.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST:EMBED,ID=1" failed (exit code 1319) with the following output:
+process_memory.lib(process_memory.cpp.obj) : error LNK2038: mismatch detected for 'annotate_string': value '0' doesn't match value '1' in dbf8_contract_tests.cpp.obj
+
+process_memory.lib(process_memory.cpp.obj) : error LNK2038: mismatch detected for 'annotate_vector': value '0' doesn't match value '1' in dbf8_contract_tests.cpp.obj
+
+sdb_dbf8_contract_tests.exe : fatal error LNK1319: 2 mismatches detected
+
+[6/10] Building CXX object CMakeFiles\sdb_typed_results_tests.dir\tests\typed_results_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(273): warning C4456: declaration of 'found' hides previous local declaration
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(260): note: see declaration of 'found'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(273): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\typed_results_tests.cpp(239): note: see reference to function template instantiation 'void history_snapshot<float>(const std::filesystem::path &)' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\typed_results_tests.cpp(35): note: see reference to function template instantiation 'void sdb::lifecycle::ResultPublisher::append_history<float>(sdb::lifecycle::ResultFrame &,const sdb::lifecycle::CompiledModel<float> &,const sdb::StateDB<float> &,std::vector<std::string,std::allocator<std::string>>,uint64_t)' being compiled
+ninja: build stopped: subcommand failed.
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan
+      Start  1: dbf8_contracts
+Could not find executable D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf8_contract_tests.exe
+Looked in the following places:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf8_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf8_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Release/sdb_dbf8_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Release/sdb_dbf8_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Debug/sdb_dbf8_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Debug/sdb_dbf8_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/MinSizeRel/sdb_dbf8_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/MinSizeRel/sdb_dbf8_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/RelWithDebInfo/sdb_dbf8_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/RelWithDebInfo/sdb_dbf8_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Deployment/sdb_dbf8_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Deployment/sdb_dbf8_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Development/sdb_dbf8_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Development/sdb_dbf8_contract_tests.exe.exe
+Unable to find executable: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf8_contract_tests.exe
+ 1/10 Test  #1: dbf8_contracts ...................***Not Run   0.00 sec
+      Start  2: dbf7_queries
+Could not find executable D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf7_query_tests.exe
+Looked in the following places:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf7_query_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf7_query_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Release/sdb_dbf7_query_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Release/sdb_dbf7_query_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Debug/sdb_dbf7_query_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Debug/sdb_dbf7_query_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/MinSizeRel/sdb_dbf7_query_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/MinSizeRel/sdb_dbf7_query_tests.exe.exe
+Unable to find executable: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf7_query_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/RelWithDebInfo/sdb_dbf7_query_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/RelWithDebInfo/sdb_dbf7_query_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Deployment/sdb_dbf7_query_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Deployment/sdb_dbf7_query_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Development/sdb_dbf7_query_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Development/sdb_dbf7_query_tests.exe.exe
+ 2/10 Test  #2: dbf7_queries .....................***Not Run   0.00 sec
+      Start  3: dbf7_contracts
+Could not find executable D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf7_contract_tests.exe
+Looked in the following places:
+Unable to find executable: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf7_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf7_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf7_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Release/sdb_dbf7_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Release/sdb_dbf7_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Debug/sdb_dbf7_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Debug/sdb_dbf7_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/MinSizeRel/sdb_dbf7_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/MinSizeRel/sdb_dbf7_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/RelWithDebInfo/sdb_dbf7_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/RelWithDebInfo/sdb_dbf7_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Deployment/sdb_dbf7_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Deployment/sdb_dbf7_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Development/sdb_dbf7_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Development/sdb_dbf7_contract_tests.exe.exe
+ 3/10 Test  #3: dbf7_contracts ...................***Not Run   0.00 sec
+      Start  4: dbf7_process_reader
+Failed test dependencies: dbf7_contracts
+ 4/10 Test  #4: dbf7_process_reader ..............***Not Run   0.00 sec
+      Start  5: dbf6_contracts
+Unable to find executable: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf6_contract_tests.exe
+Could not find executable D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf6_contract_tests.exe
+Looked in the following places:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf6_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_dbf6_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Release/sdb_dbf6_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Release/sdb_dbf6_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Debug/sdb_dbf6_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Debug/sdb_dbf6_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/MinSizeRel/sdb_dbf6_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/MinSizeRel/sdb_dbf6_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/RelWithDebInfo/sdb_dbf6_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/RelWithDebInfo/sdb_dbf6_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Deployment/sdb_dbf6_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Deployment/sdb_dbf6_contract_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Development/sdb_dbf6_contract_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Development/sdb_dbf6_contract_tests.exe.exe
+ 5/10 Test  #5: dbf6_contracts ...................***Not Run   0.00 sec
+      Start  6: dbf6_process_reader
+Failed test dependencies: dbf6_contracts
+ 6/10 Test  #6: dbf6_process_reader ..............***Not Run   0.00 sec
+      Start 34: typed_results_contracts
+Unable to find executable: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_typed_results_tests.exe
+Could not find executable D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_typed_results_tests.exe
+Looked in the following places:
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_typed_results_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/sdb_typed_results_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Release/sdb_typed_results_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Release/sdb_typed_results_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Debug/sdb_typed_results_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Debug/sdb_typed_results_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/MinSizeRel/sdb_typed_results_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/MinSizeRel/sdb_typed_results_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/RelWithDebInfo/sdb_typed_results_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/RelWithDebInfo/sdb_typed_results_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Deployment/sdb_typed_results_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Deployment/sdb_typed_results_tests.exe.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Development/sdb_typed_results_tests.exe
+D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan/Development/sdb_typed_results_tests.exe.exe
+ 7/10 Test #34: typed_results_contracts ..........***Not Run   0.00 sec
+      Start 40: dbf8_inp_document
+ 8/10 Test #40: dbf8_inp_document ................   Passed    1.39 sec
+      Start 42: dbf7_tools
+ 9/10 Test #42: dbf7_tools .......................   Passed    0.18 sec
+      Start 43: dbf6_wire_oracle
+Failed test dependencies: dbf6_contracts
+10/10 Test #43: dbf6_wire_oracle .................***Not Run   0.00 sec
+
+20% tests passed, 8 tests failed out of 10
+
+Total Test time (real) =   1.58 sec
+
+The following tests FAILED:
+	  1 - dbf8_contracts (Not Run)
+	  2 - dbf7_queries (Not Run)
+	  3 - dbf7_contracts (Not Run)
+	  4 - dbf7_process_reader (Not Run)
+	  5 - dbf6_contracts (Not Run)
+	  6 - dbf6_process_reader (Not Run)
+	 34 - typed_results_contracts (Not Run)
+	 43 - dbf6_wire_oracle (Not Run)
+Errors while running CTest

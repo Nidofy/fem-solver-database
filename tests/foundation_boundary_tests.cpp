@@ -65,7 +65,7 @@ template <class T> void matrix() {
     check(y==z && y[0]==T(13) && y[1]==T(31) && y[2]==T(22) && y[3]==T(34));
     check(restored.symmetry()==MatrixSymmetry::Symmetric);
     rejects([&] { m.encode(0); });
-    auto d=m.data();d.index_bits=64;rejects([&] { SparseMatrix<T,2>::from_data(d); });
+    auto d=m.data();d.index_bits=sizeof(Index)==4?64:32;rejects([&] { SparseMatrix<T,2>::from_data(d); });
     d=m.data();d.block_size=1;rejects([&] { SparseMatrix<T,2>::from_data(d); });
     d=m.data();d.offsets[1]=999;rejects([&] { SparseMatrix<T,2>::from_data(d); });
     d=m.data();d.columns[1]=0;rejects([&] { SparseMatrix<T,2>::from_data(d); });
@@ -78,9 +78,10 @@ int main(int argc,char**argv) {
         if(argc!=2) return 2;
         std::filesystem::create_directories(argv[1]);
         check(!NodeId{}.valid());check(NodeId::checked(0).valid());
-        rejects([] {NodeId::checked(UINT32_MAX);});
+        rejects([] {NodeId::checked(invalid_index);});
         auto wire=lifecycle::native::pack(NodeId(0x12345678));
-        check(wire==lifecycle::native::Bytes({0x78,0x56,0x34,0x12}));
+        lifecycle::native::Bytes expected{0x78,0x56,0x34,0x12};expected.resize(sizeof(Index));
+        check(wire==expected);
         check(lifecycle::native::unpack<NodeId>(wire)==NodeId(0x12345678));
         ModelBuilder<double> legacy_labels;legacy_labels.add_node(UINT64_MAX,{0,0,0});
         auto legacy=legacy_labels.finalize();check(legacy.node_id(0)==UINT64_MAX);

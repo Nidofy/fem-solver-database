@@ -1,0 +1,3 @@
+policy,rows,fields,begin_ms,trial_aligned_bytes,write_aligned_bytes,detached_value_bytes
+deep,1000000,4,13.525,32000000,32000000,0
+cow,1000000,4,2.92,0,8000000,8000000

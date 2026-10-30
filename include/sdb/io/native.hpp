@@ -146,14 +146,14 @@ inline void read(std::istream &in, std::span<std::uint8_t> b) {
 inline void prefix(std::ostream &out, std::uint64_t magic) {
     Writer w;
     w.integer(magic);
-    w.integer<std::uint32_t>(1);
+    w.integer<std::uint32_t>(native_index_epoch);
     write(out, w.bytes);
 }
 inline void prefix(std::istream &in, std::uint64_t magic) {
     std::array<std::uint8_t, 12> b;
     read(in, b);
     Reader r{b};
-    if (r.integer<std::uint64_t>() != magic || r.integer<std::uint32_t>() != 1)
+    if (r.integer<std::uint64_t>() != magic || r.integer<std::uint32_t>() != native_index_epoch)
         throw std::runtime_error("native magic/version mismatch");
 }
 inline void record(std::ostream &out, std::uint32_t kind, std::span<const std::uint8_t> bytes) {

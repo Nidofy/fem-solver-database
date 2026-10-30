@@ -1,0 +1,72 @@
+**********************************************************************
+** Visual Studio 2026 Developer Command Prompt v18.9.2
+** Copyright (c) 2026 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+-- The CXX compiler identification is MSVC 19.44.35228.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Professional/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - not found
+-- Found Threads: TRUE
+-- Configuring done (3.4s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf8-asan
+[1/12] Building CXX object CMakeFiles\process_memory.dir\src\process_memory.cpp.obj
+[2/12] Linking CXX static library process_memory.lib
+[3/12] Building CXX object CMakeFiles\sdb_dbf8_contract_tests.dir\tests\dbf8_contract_tests.cpp.obj
+FAILED: [code=2] CMakeFiles/sdb_dbf8_contract_tests.dir/tests/dbf8_contract_tests.cpp.obj 
+C:\PROGRA~1\MIB055~1\18\PROFES~1\VC\Tools\MSVC\1444~1.352\bin\Hostx64\x64\cl.exe  /nologo /TP -DSDB_INDEX_BITS=64 -ID:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include /DWIN32 /D_WINDOWS /EHsc /Zi /O2 /Ob1 /DNDEBUG -std:c++20 -MD /bigobj /fsanitize=address /Zi /showIncludes /FoCMakeFiles\sdb_dbf8_contract_tests.dir\tests\dbf8_contract_tests.cpp.obj /FdCMakeFiles\sdb_dbf8_contract_tests.dir\ /FS -c D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf8_contract_tests.cpp
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\field.hpp(134): error C2039: 'unique': is not a member of 'std::shared_ptr<std::vector<T,sdb::AlignedAllocator<T,64>>>'
+        with
+        [
+            T=double
+        ]
+C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\include\memory(1565): note: see declaration of 'std::shared_ptr<std::vector<T,sdb::AlignedAllocator<T,64>>>'
+        with
+        [
+            T=double
+        ]
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\field.hpp(134): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf8_contract_tests.cpp(14): note: see reference to class template instantiation 'sdb::Field<double,1,sdb::SoA>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\field.hpp(132): note: while compiling class template member function 'void sdb::Field<double,1,sdb::SoA>::detach(void)'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\field.hpp(165): note: see the first reference to 'sdb::Field<double,1,sdb::SoA>::detach' in 'sdb::Field<double,1,sdb::SoA>::fill'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf8_contract_tests.cpp(60): note: see the first reference to 'sdb::Field<double,1,sdb::SoA>::fill' in 'main::<lambda_5>::operator ()'
+[4/12] Building CXX object CMakeFiles\sdb_dbf7_query_tests.dir\tests\dbf7_query_tests.cpp.obj
+FAILED: [code=2] CMakeFiles/sdb_dbf7_query_tests.dir/tests/dbf7_query_tests.cpp.obj 
+C:\PROGRA~1\MIB055~1\18\PROFES~1\VC\Tools\MSVC\1444~1.352\bin\Hostx64\x64\cl.exe  /nologo /TP -DSDB_INDEX_BITS=64 -ID:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include /DWIN32 /D_WINDOWS /EHsc /Zi /O2 /Ob1 /DNDEBUG -std:c++20 -MD /bigobj /fsanitize=address /Zi /showIncludes /FoCMakeFiles\sdb_dbf7_query_tests.dir\tests\dbf7_query_tests.cpp.obj /FdCMakeFiles\sdb_dbf7_query_tests.dir\ /FS -c D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\dbf7_query_tests.cpp
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\field.hpp(134): error C2039: 'unique': is not a member of 'std::shared_ptr<std::vector<T,sdb::AlignedAllocator<T,64>>>'
+        with
+        [
+            T=uint8_t
+        ]
+C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\include\memory(1565): note: see declaration of 'std::shared_ptr<std::vector<T,sdb::AlignedAllocator<T,64>>>'
+        with
+        [
+            T=uint8_t
+        ]
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\field.hpp(134): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\registered_state.hpp(52): note: see reference to class template instantiation 'std::optional<sdb::Field<uint8_t,1,sdb::SoA>>' being compiled
+C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\include\optional(227): note: see reference to alias template instantiation 'std::_SMF_control<std::_Optional_construct_base<_Ty>,_Ty>' being compiled
+        with
+        [
+            _Ty=sdb::Field<uint8_t,1,sdb::SoA>
+        ]
+C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\include\xsmf_control.h(159): note: see reference to alias template instantiation 'std::_SMF_control_move_assign<std::_Optional_construct_base<_Ty>,_Ty>' being compiled
+        with
+        [
+            _Ty=sdb::Field<uint8_t,1,sdb::SoA>
+        ]
+C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\include\xsmf_control.h(152): note: see reference to variable template 'const bool conjunction_v<std::is_trivially_destructible<sdb::Field<unsigned char,1,sdb::SoA> >,std::is_trivially_move_constructible<sdb::Field<unsigned char,1,sdb::SoA> >,std::is_trivially_move_assignable<sdb::Field<unsigned char,1,sdb::SoA> > >' being compiled
+C:\Program Files\Microsoft Visual Studio\18\Professional\VC\Tools\MSVC\14.44.35207\include\xsmf_control.h(152): note: see reference to class template instantiation 'sdb::Field<uint8_t,1,sdb::SoA>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\field.hpp(132): note: while compiling class template member function 'void sdb::Field<uint8_t,1,sdb::SoA>::detach(void)'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\field.hpp(165): note: see the first reference to 'sdb::Field<uint8_t,1,sdb::SoA>::detach' in 'sdb::Field<uint8_t,1,sdb::SoA>::fill'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\registered_state.hpp(61): note: see the first reference to 'sdb::Field<uint8_t,1,sdb::SoA>::fill' in 'sdb::RegisteredFieldBase::RegisteredFieldBase'
+ninja: build stopped: subcommand failed.
