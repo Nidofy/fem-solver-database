@@ -2,5 +2,6 @@
 * text=auto eol=lf
 # Preserve independently recorded evidence byte hashes, including Windows logs.
 verification/reviews/DBF2/independent-astra/* -text
-verification/reviews/DBF6/** -text
-verification/reviews/DBF7/** -text
+# Frozen raw evidence preserves CRLF and compiler diagnostic whitespace verbatim.
+verification/reviews/DBF6/** -text -whitespace
+verification/reviews/DBF7/** -text -whitespace
