@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "source_sha256": "synthetic-schema",
+  "capture_id": "fixture-1",
+  "synthetic": true,
+  "populated_keys": [
+    "capture.node.labels"
+  ],
+  "fields": {
+    "capture.node.labels": {
+      "shape": [
+        2
+      ],
+      "units": "1",
+      "basis": "identity",
+      "index_base": 1,
+      "values": [
+        9007199254740993,
+        18446744073709551615
+      ]
+    }
+  }
+}

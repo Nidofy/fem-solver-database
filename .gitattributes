@@ -2,3 +2,5 @@
 * text=auto eol=lf
 # Preserve independently recorded evidence byte hashes, including Windows logs.
 verification/reviews/DBF2/independent-astra/* -text
+verification/reviews/DBF6/** -text
+verification/reviews/DBF7/** -text

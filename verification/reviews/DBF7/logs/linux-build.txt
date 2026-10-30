@@ -1,0 +1,16 @@
+[0/1] Re-running CMake...
+-- Performing Test SDB_ZSTD_ADVANCED_API
+-- Performing Test SDB_ZSTD_ADVANCED_API - Success
+-- Configuring done (1.0s)
+-- Generating done (0.2s)
+-- Build files have been written to: /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf7-linux
+[1/10] Building CXX object CMakeFiles/sdb_dbf7_state_benchmark.dir/benchmarks/dbf7_state.cpp.o
+[2/10] Linking CXX executable sdb_dbf7_state_benchmark
+[3/10] Building CXX object CMakeFiles/sdb_reader.dir/src/c_api.cpp.o
+[4/10] Linking CXX shared library libsdb_reader.so
+[5/10] Building CXX object CMakeFiles/sdb_dbf7_contract_tests.dir/tests/dbf7_contract_tests.cpp.o
+[6/10] Linking CXX executable sdb_dbf7_contract_tests
+[7/10] Building CXX object CMakeFiles/sdb_dbf7_query_tests.dir/tests/dbf7_query_tests.cpp.o
+[8/10] Linking CXX executable sdb_dbf7_query_tests
+[9/10] Building CXX object CMakeFiles/sdb_dbf6_contract_tests.dir/tests/dbf6_contract_tests.cpp.o
+[10/10] Linking CXX executable sdb_dbf6_contract_tests

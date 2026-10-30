@@ -1,0 +1,11 @@
+{
+  "kind": "execution_summary",
+  "gcc_reads_msvc": {
+    "checks": 4,
+    "exit_code": 0
+  },
+  "msvc_reads_gcc": {
+    "checks": 4,
+    "exit_code": 0
+  }
+}

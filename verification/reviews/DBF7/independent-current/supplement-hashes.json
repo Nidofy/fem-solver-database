@@ -1,0 +1,14 @@
+[
+  {
+    "sha256": "44c6d27f2d49177f78d41d20f61e3879227b290991d9b4efe0c722be063612fe",
+    "path": "supplement/matrix_contract.hpp"
+  },
+  {
+    "sha256": "ccc15f11078407fcbc34cb7e885d5da75529799ab5f5a07a0daa4d7def1b9bbd",
+    "path": "supplement/migration_audit.py"
+  },
+  {
+    "sha256": "2dc67054569376d3cbc5caef1e9df2318c89d6b9ad8a77e9fde04a4a59bd8f8f",
+    "path": "supplement/sdb_reader.py"
+  }
+]

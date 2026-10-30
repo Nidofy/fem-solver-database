@@ -354,6 +354,7 @@ class ResultPublisher {
         const auto *registry=state.registered_fields();
         if(!registry) { if(!names.empty()) throw std::out_of_range("no registered state fields"); return; }
         if(!registry->frozen()) throw std::invalid_argument("registered result layout must be frozen");
+        if(registry->in_trial()) throw std::invalid_argument("cannot publish registered trial");
         auto material_bases=material_result_bases(model,budget);
         std::vector<ResultField> fields;
         std::set<std::string> found;
@@ -377,7 +378,9 @@ class ResultPublisher {
             if(charge>budget-used) throw std::length_error("registered result snapshot budget");
             used+=charge; // charge ownership and validation scratch before copying source values
             std::vector<ResultAddress> addresses; addresses.reserve(entry.count());
-            if(d.location==FieldLocation::Entity) {
+            if(entry.addressing()) {
+                entry.addressing()->validate(d); addresses=entry.addressing()->addresses;
+            } else if(d.location==FieldLocation::Entity) {
                 if(d.association!=Association::Node && d.association!=Association::Element && d.association!=Association::Global)
                     throw std::invalid_argument("registered result needs explicit face/contact address adapter");
                 for(std::size_t i=0;i<entry.count();++i) {ResultAddress a; a.entity=d.association==Association::Global?0:i+1; addresses.push_back(a);}
@@ -817,6 +820,13 @@ class ResultReader {
         }
         return lo;
     }
+    // Closed physical-time interval, returned as half-open frame indices.
+    // Uses the validated monotonic time index; no time interpolation.
+    std::pair<std::size_t,std::size_t> time_interval(double begin, double end) const {
+        if (!std::isfinite(begin) || !std::isfinite(end) || begin > end)
+            throw std::invalid_argument("invalid history time interval");
+        return {index.time_bound(begin,false),index.time_bound(end,true)};
+    }
     std::set<Id> region(bool node, const std::string &name) const {
         auto normalized = upper(name);
         if (normalized.starts_with("@INSTANCE:") || normalized.starts_with("@PART:")) {
@@ -937,71 +947,80 @@ class ResultReader {
 };
 class ResultQuery {
   public:
-    template<class T> static std::vector<std::pair<double,std::optional<T>>> typed_history(
-        const ResultReader &reader, const std::string &name, ResultAddress address, unsigned component = 0,
-        double time_begin = 0, double time_end = std::numeric_limits<double>::max(), const std::string &schema_id = "",
-        std::optional<std::string> stored_region = {}) {
-        if (!std::isfinite(time_begin) || !std::isfinite(time_end) || time_begin > time_end)
-            throw std::invalid_argument("invalid typed history interval");
-        std::vector<std::pair<double,std::optional<T>>> values;
+    // Callbacks return false to stop. Earlier callbacks are not rolled back if a
+    // later sample fails validation. No interpolation or missing-frame synthesis.
+    template<class T, class Sink> static std::size_t visit_typed_history(
+        const ResultReader &reader, const std::string &name, ResultAddress address, Sink &&sink,
+        unsigned component=0, double time_begin=0,
+        double time_end=std::numeric_limits<double>::max(), const std::string &schema_id="",
+        std::optional<std::string> stored_region={}) {
+        auto [first,last]=reader.time_interval(time_begin,time_end);
         std::optional<native::Bytes> contract;
-        for (std::size_t i=0; i<reader.index.size(); ++i) {
-            auto time = reader.index[i].time;
-            if (time < time_begin) continue;
-            if (time > time_end) break;
+        std::size_t emitted=0;
+        for(auto i=first;i<last;++i) {
             ResultField field;
-            try { field=reader.typed_field(i,name,address,{},schema_id,stored_region); } catch(const std::out_of_range&) { continue; }
+            try { field=reader.typed_field(i,name,address,{},schema_id,stored_region); }
+            catch(const std::out_of_range&) { continue; }
             auto &p=*field.typed;
-            if (p.addresses.empty()) continue;
+            if(p.addresses.empty()) continue;
             native::Writer signature;
-            native::encode(signature,p.schema);
-            native::encode(signature,p.schema_id);
-            native::encode(signature,p.schema_version);
-            native::encode(signature,p.basis_id);
-            native::encode(signature,field.descriptor.region);
-            native::encode(signature,field.descriptor.history);
-            if (contract && *contract != signature.bytes)
+            native::encode(signature,p.schema); native::encode(signature,p.schema_id);
+            native::encode(signature,p.schema_version); native::encode(signature,p.basis_id);
+            native::encode(signature,field.descriptor.region); native::encode(signature,field.descriptor.history);
+            if(contract && *contract!=signature.bytes)
                 throw std::invalid_argument("typed history schema/basis/region changed between samples");
-            if (!contract) contract=std::move(signature.bytes);
-            if (component >= p.schema.component_count()) throw std::out_of_range("typed history component");
-            auto &v=typed_values<T>(field);
-            if (!p.addresses.empty()) values.emplace_back(time,
-                p.validity.empty() || p.validity[component] ? std::optional<T>(v[component]) : std::nullopt);
+            if(!contract) contract=std::move(signature.bytes);
+            if(component>=p.schema.component_count()) throw std::out_of_range("typed history component");
+            const auto &v=typed_values<T>(field);
+            std::optional<T> value;
+            if(p.validity.empty() || p.validity[component]) value=v[component];
+            ++emitted;
+            if(!sink(reader.index[i].time,value)) break;
         }
+        return emitted;
+    }
+    template<class T> static std::vector<std::pair<double,std::optional<T>>> typed_history(
+        const ResultReader &reader, const std::string &name, ResultAddress address, unsigned component=0,
+        double time_begin=0, double time_end=std::numeric_limits<double>::max(), const std::string &schema_id="",
+        std::optional<std::string> stored_region={}, std::size_t max_samples=std::numeric_limits<std::size_t>::max()) {
+        std::vector<std::pair<double,std::optional<T>>> values;
+        visit_typed_history<T>(reader,name,address,[&](double t,std::optional<T> v) {
+            if(values.size()==max_samples) throw std::length_error("history sample budget");
+            values.emplace_back(t,v); return true;
+        },component,time_begin,time_end,schema_id,stored_region);
         return values;
     }
-    static std::vector<std::pair<double, double>>
-    history(const ResultReader &reader, const std::string &field, Id entity, unsigned component = 0,
-            const std::string &region = "", bool history_request = false, double time_begin = 0,
-            double time_end = std::numeric_limits<double>::max(), unsigned point = 1) {
-        if (!region.empty())
-            (void)reader.region(upper(field) == "U" || upper(field) == "V" || upper(field) == "A" ||
-                                    upper(field) == "RF",
-                                region);
-        if (!std::isfinite(time_begin) || !std::isfinite(time_end) || time_begin > time_end)
-            throw std::invalid_argument("invalid history time interval");
-        std::vector<std::pair<double, double>> values;
-        for (std::size_t i = 0; i < reader.index.size(); ++i) {
-            auto time = reader.index[i].time;
-            if (time < time_begin)
-                continue;
-            if (time > time_end)
-                break;
+    template<class Sink> static std::size_t visit_history(
+        const ResultReader &reader,const std::string &field,Id entity,Sink &&sink,unsigned component=0,
+        const std::string &region="",bool history_request=false,double time_begin=0,
+        double time_end=std::numeric_limits<double>::max(),unsigned point=1) {
+        if(!region.empty())
+            (void)reader.region(upper(field)=="U" || upper(field)=="V" || upper(field)=="A" || upper(field)=="RF",region);
+        auto [first,last]=reader.time_interval(time_begin,time_end);
+        std::size_t emitted=0;
+        for(auto i=first;i<last;++i) {
             ResultField f;
-            try {
-                f = reader.entity_field(i, field, entity, region, history_request, point);
-            } catch (const std::out_of_range &) {
-                continue;
+            try { f=reader.entity_field(i,field,entity,region,history_request,point); }
+            catch(const std::out_of_range&) { continue; }
+            if(component>=f.descriptor.components.size()) throw std::out_of_range("component");
+            auto at=std::find(f.ids.begin(),f.ids.end(),entity);
+            if(at!=f.ids.end()) {
+                auto value=f.values[static_cast<std::size_t>(at-f.ids.begin())*f.descriptor.components.size()+component];
+                ++emitted; if(!sink(reader.index[i].time,value)) break;
             }
-            if (component >= f.descriptor.components.size())
-                throw std::out_of_range("component");
-            auto at = std::find(f.ids.begin(), f.ids.end(), entity);
-            if (at != f.ids.end())
-                values.emplace_back(
-                    reader.index[i].time,
-                    f.values[static_cast<std::size_t>(at - f.ids.begin()) * f.descriptor.components.size() +
-                             component]);
         }
+        return emitted;
+    }
+    static std::vector<std::pair<double,double>> history(
+        const ResultReader &reader,const std::string &field,Id entity,unsigned component=0,
+        const std::string &region="",bool history_request=false,double time_begin=0,
+        double time_end=std::numeric_limits<double>::max(),unsigned point=1,
+        std::size_t max_samples=std::numeric_limits<std::size_t>::max()) {
+        std::vector<std::pair<double,double>> values;
+        visit_history(reader,field,entity,[&](double t,double v) {
+            if(values.size()==max_samples) throw std::length_error("history sample budget");
+            values.emplace_back(t,v); return true;
+        },component,region,history_request,time_begin,time_end,point);
         return values;
     }
 };

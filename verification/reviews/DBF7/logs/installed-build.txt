@@ -1,0 +1,4 @@
+[1/4] Building C object CMakeFiles/installed_c.dir/main.c.obj
+[2/4] Linking C executable installed_c.exe
+[3/4] Building CXX object CMakeFiles/installed_cpp.dir/main.cpp.obj
+[4/4] Linking CXX executable installed_cpp.exe

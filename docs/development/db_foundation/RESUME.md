@@ -1,6 +1,18 @@
 # Resume DB foundation work
 
-## Current DBF5 continuation
+## Current DBF7 continuation (2026-10-30)
+
+Read DBF7_HANDOFF, DBF7_CONTRACTS and the DBF7 manifest first. SDK 2.3 includes
+reviewed DBF6 plus local P0-P2 contracts/tooling. Independent DBF6/DBF7 scoped
+reviews are closed; current platform results and limits are in the handoff.
+Do not re-add existing time interval queries or use old DBF1/DBF5 status as current.
+DBF6 original manifest remains historical and is not expected to match modified
+DBF7 files. Use the new content manifest for this delivery.
+Native capture/mirror work is the next production gate. Full INP, global MeshDB
+Index64, global RSS/COW and unexposed FFI/spectral extensions are not claimed.
+Preserve the original kit and the ALR1/B02c acceptance boundaries. No merge/push.
+
+## Historical DBF5 continuation
 
 User authorization extended to phase three and remaining standalone work.
 Implementation base: `a9a203c67d78ed8649e12e05c15214ae2b95ea63`.

@@ -1,5 +1,6 @@
 #pragma once
 #include "field.hpp"
+#include "state_layout.hpp"
 #include <bit>
 #include <array>
 #include <span>
@@ -49,6 +50,7 @@ class RegisteredFieldBase {
     std::uint32_t schema_version_, layout_, width_;
     std::uint64_t basis_id_;
     std::optional<Field<std::uint8_t>> validity_;
+    std::optional<StateLayout> addressing_;
   public:
     RegisteredFieldBase(FieldDescriptor d, std::size_t n, std::string schema,
                         std::uint32_t version, std::uint32_t layout, std::uint32_t width,
@@ -65,6 +67,9 @@ class RegisteredFieldBase {
     const std::string &schema_id() const noexcept { return schema_id_; }
     std::uint32_t schema_version() const noexcept { return schema_version_; }
     std::uint64_t basis_id() const noexcept { return basis_id_; }
+    std::uint32_t layout_kind() const noexcept { return layout_; }
+    std::uint32_t layout_width() const noexcept { return width_; }
+    const std::optional<StateLayout> &addressing() const noexcept { return addressing_; }
     std::size_t scalar_count() const { return product(count_, descriptor_.component_count()); }
     Field<std::uint8_t> &validity_field() {
         if (!validity_) throw std::logic_error("registered field forbids missing values");
@@ -79,6 +84,10 @@ class RegisteredFieldBase {
         return out;
     }
     virtual std::unique_ptr<RegisteredFieldBase> clone(bool initialized) const = 0;
+    virtual registered_detail::Bytes initialization() const = 0;
+    // Accounted payload (including padding), not allocator overhead or peak RSS.
+    virtual std::size_t payload_bytes(std::size_t rows) const = 0;
+    virtual std::unique_ptr<RegisteredFieldBase> remap(StateLayout) const = 0;
     virtual RegisteredValues values() const = 0; // entity-major, component-minor
     virtual std::type_index type() const noexcept = 0;
     virtual const void *field_pointer() const noexcept = 0;
@@ -95,10 +104,12 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
     std::vector<V> initial_;
   public:
     RegisteredField(FieldDescriptor d, std::size_t n, std::string schema,
-                    std::uint32_t version, std::vector<V> initial, std::uint64_t basis)
+                    std::uint32_t version, std::vector<V> initial, std::uint64_t basis,
+                    std::optional<StateLayout> addressing = {})
         : RegisteredFieldBase(std::move(d), n, std::move(schema), version,
               registered_detail::Traits<F>::layout::kind, registered_detail::Traits<F>::layout::width, basis),
           field_(n), initial_(std::move(initial)) {
+        addressing_ = std::move(addressing);
         if (initial_.empty()) initial_.resize(F::components, V{});
         if (initial_.size() != F::components) throw std::invalid_argument("registered initialization shape");
         auto view = field_.write();
@@ -106,8 +117,35 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
         validate();
     }
     std::unique_ptr<RegisteredFieldBase> clone(bool initialized) const override {
-        if (initialized) return std::make_unique<RegisteredField>(descriptor_, count_, schema_id_, schema_version_, initial_, basis_id_);
+        if (initialized) return std::make_unique<RegisteredField>(descriptor_, count_, schema_id_, schema_version_, initial_, basis_id_, addressing_);
         return std::make_unique<RegisteredField>(*this);
+    }
+    registered_detail::Bytes initialization() const override {
+        registered_detail::Bytes out;
+        for(auto v:initial_) registered_detail::encode(out,v);
+        return out;
+    }
+    std::size_t payload_bytes(std::size_t rows) const override {
+        return sum(product(F::layout_type::size(rows,F::components),sizeof(V)),
+                   sum(product(rows,validity_?F::components:0),product(initial_.size(),sizeof(V))));
+    }
+    std::unique_ptr<RegisteredFieldBase> remap(StateLayout next) const override {
+        if(!addressing_) throw std::logic_error("implicit state layout cannot be remapped");
+        next.validate(descriptor_); validate();
+        const auto count=next.addresses.size();
+        auto out=std::make_unique<RegisteredField>(descriptor_,count,schema_id_,schema_version_,initial_,basis_id_,std::move(next));
+        std::map<lifecycle::ResultAddress,std::size_t> old;
+        for(std::size_t i=0;i<count_;++i) old.emplace(addressing_->addresses[i],i);
+        auto source=field_.read(); auto destination=out->field_.write();
+        for(std::size_t i=0;i<count;++i) {
+            auto it=old.find(out->addressing_->addresses[i]); if(it==old.end()) continue;
+            // Retain exact typed scalars directly; no per-row encode/allocation/decode.
+            for(std::size_t c=0;c<F::components;++c) {
+                destination(i,c)=source(it->second,c);
+                if(validity_) out->validity_->write()(i*F::components+c)=validity_->read()(it->second*F::components+c);
+            }
+        }
+        out->validate(); return out;
     }
     std::type_index type() const noexcept override { return typeid(F); }
     const void *field_pointer() const noexcept override { return &field_; }
@@ -120,9 +158,11 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
     void validate_shape() const override {
         if (field_.size() != count_ || (validity_ && validity_->size() != scalar_count()))
             throw std::logic_error("registered field shape changed");
+        if(addressing_ && addressing_->addresses.size()!=count_) throw std::logic_error("registered address count changed");
     }
     void validate() const override {
         validate_shape();
+        if(addressing_) addressing_->validate(descriptor_);
         for (auto value : initial_) if constexpr (std::is_floating_point_v<V>)
             if (!std::isfinite(value)) throw std::invalid_argument("registered nonfinite initialization");
         auto view = field_.read();
@@ -165,10 +205,14 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
 };
 class RegisteredState {
     std::vector<std::unique_ptr<RegisteredFieldBase>> entries_;
+    std::optional<std::vector<std::unique_ptr<RegisteredFieldBase>>> trial_;
     bool frozen_ = false;
+    std::uint64_t model_context_ = 0, equation_context_ = 0, consumer_context_ = 0;
   public:
     RegisteredState() = default;
-    RegisteredState(const RegisteredState &other) : frozen_(other.frozen_) {
+    RegisteredState(const RegisteredState &other) : frozen_(other.frozen_),
+        model_context_(other.model_context_), equation_context_(other.equation_context_), consumer_context_(other.consumer_context_) {
+        if(other.in_trial()) throw std::logic_error("cannot copy active registered trial");
         for (const auto &entry : other.entries_) entries_.push_back(entry->clone(false));
     }
     RegisteredState &operator=(const RegisteredState &other) {
@@ -194,6 +238,34 @@ class RegisteredState {
     ConstEntries entries() const noexcept { return ConstEntries(entries_); }
     bool empty() const noexcept { return entries_.empty(); }
     bool frozen() const noexcept { return frozen_; }
+    void bind_context(std::uint64_t model, std::uint64_t equations, std::uint64_t consumer=0) {
+        if(frozen_ || !model || !equations) throw std::invalid_argument("registered context must bind before freeze");
+        model_context_=model; equation_context_=equations; consumer_context_=consumer;
+    }
+    std::uint64_t model_context() const noexcept { return model_context_; }
+    std::uint64_t equation_context() const noexcept { return equation_context_; }
+    std::uint64_t consumer_context() const noexcept { return consumer_context_; }
+    bool in_trial() const noexcept { return trial_.has_value(); }
+    void begin_trial() {
+        if(in_trial()) throw std::logic_error("registered trial already active");
+        validate(); std::vector<std::unique_ptr<RegisteredFieldBase>> copy;
+        for(const auto &e:entries_) copy.push_back(e->clone(false));
+        trial_.emplace(std::move(copy));
+    }
+    void commit() {
+        if(!in_trial()) throw std::logic_error("no registered trial");
+        validate(); trial_.reset();
+    }
+    void rollback() {
+        if(!in_trial()) throw std::logic_error("no registered trial");
+        entries_=std::move(*trial_); trial_.reset();
+    }
+    // Call only at a joined phase boundary. Retain rows by their full identity, including generation.
+    void remap(const std::string &name, StateLayout next) {
+        if(!frozen_) throw std::logic_error("remap requires frozen registered schema");
+        for(auto &e:entries_) if(e->descriptor().name==name) { auto staged=e->remap(std::move(next)); e=std::move(staged); return; }
+        throw std::out_of_range("unknown registered field");
+    }
     void freeze() { validate(false); frozen_ = true; }
     RegisteredFieldBase &find(const std::string &name) {
         for (auto &e : entries_) if (e->descriptor().name == name) return *e;
@@ -209,14 +281,19 @@ class RegisteredState {
         return *static_cast<const F*>(e.field_pointer());
     }
     template<class F> F &add(FieldDescriptor d, std::size_t n, std::string schema,
-                            std::uint32_t version, std::vector<typename F::value_type> initial, std::uint64_t basis) {
+                            std::uint32_t version, std::vector<typename F::value_type> initial, std::uint64_t basis,
+                            std::optional<StateLayout> addressing = {}) {
         if (frozen_) throw std::logic_error("registered state layout frozen");
         d.validate();
         if (schema.empty() || !version || d.scalar != scalar_type<typename F::value_type>() ||
-            d.component_count() != F::components || d.storage != StorageKind::Dense)
+            d.component_count() != F::components || (!addressing && d.storage != StorageKind::Dense))
             throw std::invalid_argument("registered field descriptor/type/schema mismatch");
+        if(addressing) {
+            addressing->validate(d);
+            if(addressing->addresses.size()!=n) throw std::invalid_argument("registered address/field shape");
+        }
         for (const auto &e : entries_) if (e->descriptor().name == d.name) throw std::invalid_argument("duplicate registered field");
-        auto entry = std::make_unique<RegisteredField<F>>(std::move(d),n,std::move(schema),version,std::move(initial),basis);
+        auto entry = std::make_unique<RegisteredField<F>>(std::move(d),n,std::move(schema),version,std::move(initial),basis,std::move(addressing));
         auto *field = static_cast<F*>(entry->field_pointer()); entries_.push_back(std::move(entry)); return *field;
     }
     void validate(bool require_frozen = true) const {
@@ -233,13 +310,26 @@ class RegisteredState {
     }
     RegisteredState initialized_copy() const {
         validate_shape(); RegisteredState out; out.frozen_ = true;
+        out.model_context_=model_context_; out.equation_context_=equation_context_; out.consumer_context_=consumer_context_;
         for (const auto &e : entries_) out.entries_.push_back(e->clone(true));
         return out;
     }
     registered_detail::Bytes manifest() const {
         validate_shape(); registered_detail::Bytes out;
-        registered_detail::encode(out,std::uint32_t(1)); registered_detail::encode(out,std::uint64_t(entries_.size()));
-        for (const auto &e : entries_) e->manifest(out);
+        bool explicit_layout=model_context_!=0;
+        for(const auto &e:entries_) explicit_layout |= e->addressing().has_value();
+        registered_detail::encode(out,std::uint32_t(explicit_layout ? 2 : 1)); registered_detail::encode(out,std::uint64_t(entries_.size()));
+        if(explicit_layout) {
+            registered_detail::encode(out,model_context_); registered_detail::encode(out,equation_context_);
+            registered_detail::encode(out,consumer_context_);
+        }
+        for (const auto &e : entries_) {
+            e->manifest(out);
+            if(explicit_layout) {
+                registered_detail::encode(out,std::uint8_t(e->addressing().has_value()));
+                if(e->addressing()) registered_detail::encode(out,*e->addressing());
+            }
+        }
         return out;
     }
     std::uint64_t fingerprint() const {

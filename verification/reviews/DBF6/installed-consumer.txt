@@ -1,0 +1,25 @@
+-- The CXX compiler identification is GNU 15.2.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: D:/Software/MinGw-w64/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/bin/g++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - found
+-- Found Threads: TRUE
+-- Configuring done (1.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf6-installed
+[1/2] Building CXX object CMakeFiles/foundation_consumer.dir/main.cpp.obj
+[2/2] Linking CXX executable foundation_consumer.exe
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf6-installed
+    Start 1: installed_foundation_consumer
+1/1 Test #1: installed_foundation_consumer ....   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.05 sec

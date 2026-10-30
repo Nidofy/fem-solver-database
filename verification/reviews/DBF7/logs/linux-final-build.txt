@@ -1,0 +1,57 @@
+[0/1] Re-running CMake...
+-- Performing Test SDB_ZSTD_ADVANCED_API
+-- Performing Test SDB_ZSTD_ADVANCED_API - Success
+-- Configuring done (2.0s)
+-- Generating done (0.3s)
+-- Build files have been written to: /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf7-linux
+[1/4] Building CXX object CMakeFiles/sdb_dbf5_compressed_tests.dir/tests/dbf5_compressed_tests.cpp.o
+In file included from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:697,
+                 from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/async_writer.hpp:2,
+                 from /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:1:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function ‘sdb::lifecycle::indexed_detail::Footer sdb::lifecycle::indexed_detail::File::footer(uint64_t) const’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:175:41: warning: missing initializer for member ‘sdb::lifecycle::ResultFrame::binding’ [-Wmissing-field-initializers]
+  175 |             ResultFrame frame{f.info, {}};
+      |                                         ^
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp: In member function ‘void sdb::lifecycle::indexed_detail::File::append(std::ostream&, const sdb::lifecycle::ResultFrame&)’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:511:63: warning: missing initializer for member ‘sdb::lifecycle::indexed_detail::Block::first_address’ [-Wmissing-field-initializers]
+  511 |                         static_cast<std::uint32_t>(count), ref};
+      |                                                               ^
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:511:63: warning: missing initializer for member ‘sdb::lifecycle::indexed_detail::Block::last_address’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:535:36: warning: missing initializer for member ‘sdb::lifecycle::indexed_detail::Block::first_address’ [-Wmissing-field-initializers]
+  535 |                 fd.blocks.push_back(
+      |                 ~~~~~~~~~~~~~~~~~~~^
+  536 |                     {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+      |                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/indexed_format.hpp:535:36: warning: missing initializer for member ‘sdb::lifecycle::indexed_detail::Block::last_address’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = double; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:119:85:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+  231 |     out.typed = TypedFieldPayload{std::move(schema), std::move(addresses), std::move(values), std::move(validity)};
+      |     ~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = float; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:27:31:   required from ‘sdb::lifecycle::ResultField field(const std::string&) [with T = float; std::string = std::__cxx11::basic_string<char>]’
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:31:27:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = unsigned char; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:27:31:   required from ‘sdb::lifecycle::ResultField field(const std::string&) [with T = unsigned char; std::string = std::__cxx11::basic_string<char>]’
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:31:75:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = int; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:27:31:   required from ‘sdb::lifecycle::ResultField field(const std::string&) [with T = int; std::string = std::__cxx11::basic_string<char>]’
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:31:101:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = unsigned int; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:27:31:   required from ‘sdb::lifecycle::ResultField field(const std::string&) [with T = unsigned int; std::string = std::__cxx11::basic_string<char>]’
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:32:35:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = long int; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:27:31:   required from ‘sdb::lifecycle::ResultField field(const std::string&) [with T = long int; std::string = std::__cxx11::basic_string<char>]’
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:32:62:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp: In instantiation of ‘sdb::lifecycle::ResultField sdb::lifecycle::make_typed_field(sdb::FieldDescriptor, std::vector<ResultAddress>, std::vector<T>, std::vector<unsigned char>, const std::string&, bool) [with T = long unsigned int; std::string = std::__cxx11::basic_string<char>]’:
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:27:31:   required from ‘sdb::lifecycle::ResultField field(const std::string&) [with T = long unsigned int; std::string = std::__cxx11::basic_string<char>]’
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf5_compressed_tests.cpp:32:90:   required from here
+/mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/include/sdb/results/results.hpp:231:15: warning: missing initializer for member ‘sdb::lifecycle::TypedFieldPayload::schema_id’ [-Wmissing-field-initializers]
+[2/4] Building CXX object CMakeFiles/sdb_dbf7_contract_tests.dir/tests/dbf7_contract_tests.cpp.o
+[3/4] Linking CXX executable sdb_dbf5_compressed_tests
+[4/4] Linking CXX executable sdb_dbf7_contract_tests

@@ -1,5 +1,34 @@
 # Actual capability matrix
 
+## DBF7 current additions
+
+| Capability | Implemented and tested boundary |
+| --- | --- |
+| Time interval/streaming | Indexed skip-link positioning; cancellable sinks; vector sample budget; million Indexed2 frames |
+| State ownership/memory | StateSession leases and payload admission; direct exact typed remap; no global RSS/COW claim |
+| Inspectable restore | Single-file Batch/DOF/catalog/cursor/state bundle; expected registry still required |
+| Equation matrices / Index64 | New typed CSR envelope with role, stage, explicit ordering and identities; MeshDB stays Index32 |
+| Units / analysis / input | Integer dimension algebra, explicit conversion, slot assignment tables, bounded constant thermal fragments |
+| Spectral / complex | Separate frequency/modal real-imaginary storage contract; no numerical kernel or time-file reinterpretation |
+| C / Python SDK | Installed read-only ABI1 and ctypes, exact UInt64 entity selector, external C/C++ tests |
+| Migration tooling | 2047-key unqualified template; populated-key and exact snapshot comparison; no native certification |
+| Final evidence | DBF7_HANDOFF + manifest + independent-current reviews; scoped platform matrix |
+
+## DBF6 current additions
+
+| Capability | API / evidence | Boundary |
+| --- | --- | --- |
+| Capture completeness | DataCoverage; 25-subfile/2,047-field offline inventory | declaration completeness, not native mapping certification |
+| General DOFs and equations | DofSpace; permutation, flattened relations, mechanical export, wire oracle | consumer supplies numbering/elimination; no new constraint algorithm |
+| Addressed registered state | StateLayout + existing RegisteredState; dense/ragged/sparse, remap/trial | caller qualifies model membership; raw borrows require joined mutation |
+| Independent persistence | FoundationStore; existing checkpoint/RestartDB/results extensions | expected registration required; file budget is not peak RSS |
+| Kernel-independent consumer | consumer::v1 Batch/catalogs/bindings/AccessSet/snapshot | arbitrary metadata is storage-only until exact consumer capability checks |
+| Local verification | GCC 47/47, MSVC ASan 3/3, external installed consumer | CPU standalone; native/CUDA/TSan/production speedup not claimed |
+
+DBF6_HANDOFF records final evidence and source state. Existing mechanical routes
+and consumer v0 remain available. Earlier statements below about missing general
+DOF/addressed-state/consumer interfaces retain only their historical scope.
+
 ## DBF5 current additions
 
 | Capability | API / evidence | Boundary |

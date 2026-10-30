@@ -199,6 +199,49 @@ template <class T> class StateDB {
         if (in_trial()) throw std::logic_error("cannot freeze state during trial");
         if (data_.registered) data_.registered->freeze();
     }
+    // Explicit addresses allow partial samples, element-node, face and contact fields.
+    // Topology is checked once here; kernels use the existing flat Field views.
+    template<class F> F &register_addressed_field(const MeshDB<T> &mesh, FieldDescriptor descriptor,
+            StateLayout layout, std::string schema_id, std::uint32_t schema_version=1,
+            std::vector<typename F::value_type> initial={}, std::uint64_t basis_id=0) {
+        if(in_trial() || mesh.fingerprint()!=model_id_) throw std::invalid_argument("addressed state model/phase");
+        layout.validate(descriptor);
+        auto endpoint=[&](const lifecycle::ResultEndpoint &p) {
+            if(p.kind==0) { if(p.entity>mesh.nodes()) throw std::out_of_range("state endpoint node"); }
+            else {
+                if(p.entity>mesh.elements()) throw std::out_of_range("state endpoint element");
+                const auto e=static_cast<Index>(p.entity-1);
+                if(p.kind==1 && p.local>mesh.connectivity(e).size()) throw std::out_of_range("state local node");
+                if(p.kind==2 && p.local>65536) throw std::out_of_range("state local face width");
+                if(p.kind==2) mesh.validate_face({mesh.element(e).id,static_cast<std::uint16_t>(p.local-1),static_cast<std::int8_t>(p.side)});
+            }
+        };
+        for(const auto &a:layout.addresses) {
+            if(descriptor.association==Association::Node) endpoint({0,a.entity,0,0});
+            if(descriptor.association==Association::Element || descriptor.association==Association::Face) {
+                if(a.entity>mesh.elements()) throw std::out_of_range("state address element");
+                const auto e=static_cast<Index>(a.entity-1);
+                if(a.element_node) endpoint({1,a.entity,a.element_node,0});
+                if(a.face) endpoint({2,a.entity,a.face,a.side});
+                if(a.integration_point) {
+                    bool found=false;
+                    for(std::size_t q=0;q<mesh.sample_point_count(e);++q) {
+                        const auto p=mesh.sample_point(e,q);
+                        found |= p.integration_point==a.integration_point && p.layer==a.layer && p.section_point==a.section_point;
+                    }
+                    if(!found) throw std::out_of_range("state sample not in mesh layout");
+                }
+            }
+            if(descriptor.association==Association::Contact) { endpoint(a.endpoint_a); endpoint(a.endpoint_b); }
+        }
+        const auto n=layout.addresses.size();
+        if(!data_.registered) {
+            RegisteredState next;
+            auto &field=next.template add<F>(std::move(descriptor),n,std::move(schema_id),schema_version,std::move(initial),basis_id,std::move(layout));
+            data_.registered.emplace(std::move(next)); return field;
+        }
+        return data_.registered->template add<F>(std::move(descriptor),n,std::move(schema_id),schema_version,std::move(initial),basis_id,std::move(layout));
+    }
     const RegisteredState *registered_fields() const noexcept {
         return data_.registered ? &*data_.registered : nullptr;
     }

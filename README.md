@@ -1,5 +1,18 @@
 # Solver Database V2
 
+Current SDK **2.3.0** adds [DBF7 local foundation extensions](docs/development/db_foundation/DBF7_HANDOFF.md):
+streaming indexed queries, owned state leases, atomic metadata/state bundles,
+equation-bound Index64 CSR, units/analysis/spectral contracts and optional read-only
+C/Python bindings. See the handoff for measured performance, independent reviews,
+exact platform checks and explicitly unsupported extensions.
+
+The [DBF6 standalone contracts](docs/development/db_foundation/DBF6_HANDOFF.md)
+add general DOF/equation spaces, explicitly addressed registered state,
+kernel-independent consumer v1 and a standalone foundation store. Start with
+`#include <sdb/foundation.hpp>`; the original DBF6 package version was 2.2.0. Existing mechanical
+interfaces and legacy encodings remain available. See the handoff for tested
+scope and the distinction between data contracts and native solver integration.
+
 The [DBF1 foundation batch](docs/development/db_foundation/README.md) adds validated
 field/history metadata, schema-2 model history bindings, named mixed-IP state
 queries, and ragged/sparse host storage. Histories with explicit schemas are

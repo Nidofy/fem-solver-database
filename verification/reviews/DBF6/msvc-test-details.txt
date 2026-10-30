@@ -1,0 +1,51 @@
+Start testing: Oct 30 01:00 中国标准时间
+----------------------------------------------------------
+1/47 Testing: dbf6_contracts
+1/47 Test: dbf6_contracts
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf6-asan/sdb_dbf6_contract_tests.exe" "write" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf6-asan/dbf6-scratch" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/fixtures/abaqus/forced_tet.inp"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf6-asan
+"dbf6_contracts" start time: Oct 30 01:00 中国标准时间
+Output:
+----------------------------------------------------------
+DBF6 67 checks PASS
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"dbf6_contracts" end time: Oct 30 01:00 中国标准时间
+"dbf6_contracts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/47 Testing: dbf6_process_reader
+2/47 Test: dbf6_process_reader
+Command: "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf6-asan/sdb_dbf6_contract_tests.exe" "read" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf6-asan/dbf6-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf6-asan
+"dbf6_process_reader" start time: Oct 30 01:00 中国标准时间
+Output:
+----------------------------------------------------------
+DBF6 4 checks PASS
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"dbf6_process_reader" end time: Oct 30 01:00 中国标准时间
+"dbf6_process_reader" time elapsed: 00:00:00
+----------------------------------------------------------
+
+36/47 Testing: dbf6_wire_oracle
+36/47 Test: dbf6_wire_oracle
+Command: "C:/Program Files/Python314/python.exe" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/tests/dbf6_wire_oracle.py" "D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf6-asan/dbf6-scratch"
+Directory: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf6-asan
+"dbf6_wire_oracle" start time: Oct 30 01:00 中国标准时间
+Output:
+----------------------------------------------------------
+DBF6 independent DOF/state wire oracle PASS
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"dbf6_wire_oracle" end time: Oct 30 01:00 中国标准时间
+"dbf6_wire_oracle" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 30 01:00 中国标准时间

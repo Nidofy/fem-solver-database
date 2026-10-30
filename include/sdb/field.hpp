@@ -76,6 +76,7 @@ template <class T, std::size_t C = 1, class Layout = SoA> class Field {
 
   public:
     using value_type = T;
+    using layout_type = Layout;
     static constexpr std::size_t components = C;
     Field() = default;
     explicit Field(std::size_t n) : data_(Layout::size(n, C), T{}), count_(n) {}

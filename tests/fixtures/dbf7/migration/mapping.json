@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "source_sha256": "synthetic-schema",
+  "rules": [
+    {
+      "source": "capture.node.labels",
+      "target": "mesh.node.labels",
+      "disposition": "stored",
+      "dtype": "u64",
+      "shape": [
+        2
+      ],
+      "units": "1",
+      "target_units": "1",
+      "basis": "identity",
+      "index_base": 1,
+      "lifecycle": "model",
+      "missing": "reject",
+      "evidence": "synthetic fixture"
+    }
+  ]
+}

@@ -1,6 +1,18 @@
 # Database foundation implementation
 
-## Current continuation: DBF5
+## Current continuation: DBF7
+
+Start with [DBF7_HANDOFF](DBF7_HANDOFF.md), [DBF7_CONTRACTS](DBF7_CONTRACTS.md) and
+the DBF7 content manifest for current implementation, independent review and tests.
+The SDK is 2.3.0; native mapping/production speedup remain separate gates.
+
+## Previous continuation: DBF6
+
+Start with [DBF6_HANDOFF](DBF6_HANDOFF.md) and [DBF6_CONTRACTS](DBF6_CONTRACTS.md)
+for standalone general DOFs, addressed state, consumer v1 and capture coverage.
+The DBF5 and earlier records below retain their original verified boundaries.
+
+## Previous continuation: DBF5
 
 The authorized standalone roadmap now includes DBF3 D1–D7 closure, DBF4
 durability and DBF5 compression, consumer contracts/reference parity and migration

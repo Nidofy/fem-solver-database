@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "capture_id": "fixture-1",
+  "populated": 1,
+  "passed": true,
+  "findings": [],
+  "qualification": "SYNTHETIC_ONLY",
+  "native_mapping_certified": false,
+  "input_sha256": {
+    "mapping": "c42098c72cf2f0ee48dd99274e8fa12350442919389d4293127dacabbf1f198e",
+    "source": "d8457ca8f12963fd3a7887ac387159bb35ee92e00ed9b3be5f94eddad37b9c06",
+    "target": "05d5e984bdcab4e80f3e9f9cc19e34412c546cb3ffd69e5ef5da33207f0260ec"
+  }
+}

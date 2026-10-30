@@ -422,6 +422,22 @@ class File {
     bool compressed() const { return compressed_; }
     const CompressionSettings &compression_settings() const { return compression_; }
     ResultReadStats stats() const { return stats_; }
+    // Search the existing footer skip links directly, avoiding O(log^2 N)
+    // footer reads from binary search over random frame access.
+    std::size_t time_bound(double time,bool upper) const {
+        auto before=[&](const auto &f){return f.info.time<time || (upper && f.info.time==time);};
+        if(!latest.count) return 0;
+        if(before(latest)) return static_cast<std::size_t>(latest.count);
+        auto f=latest;
+        for(int k=63;k>=0;--k) {
+            auto distance=std::uint64_t(1)<<k;
+            if(f.count<=distance) continue;
+            auto next=footer(f.ancestors[k]);
+            if(next.count!=f.count-distance) throw std::runtime_error("indexed ancestor count mismatch");
+            if(!before(next)) f=next;
+        }
+        return static_cast<std::size_t>(f.count-1);
+    }
     Footer frame_footer(std::size_t index) const {
         if (index >= latest.count)
             throw std::out_of_range("frame index");
@@ -556,6 +572,12 @@ class FrameIndex {
     FrameInfo operator[](std::size_t i) const { return at(i); }
     FrameInfo front() const { return at(0); }
     FrameInfo back() const { return at(size() - 1); }
+    std::size_t time_bound(double time,bool upper) const {
+        if(file_) return file_->time_bound(time,upper);
+        auto it=upper?std::upper_bound(legacy_.begin(),legacy_.end(),time,[](double t,const FrameInfo &f){return t<f.time;}):
+            std::lower_bound(legacy_.begin(),legacy_.end(),time,[](const FrameInfo &f,double t){return f.time<t;});
+        return static_cast<std::size_t>(it-legacy_.begin());
+    }
     class const_iterator {
         const FrameIndex *owner_ = nullptr;
         std::size_t index_ = 0;

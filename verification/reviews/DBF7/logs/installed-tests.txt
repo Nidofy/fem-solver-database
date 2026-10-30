@@ -1,0 +1,9 @@
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf7-consumer
+    Start 1: installed_cpp_contracts
+1/2 Test #1: installed_cpp_contracts ..........   Passed    0.06 sec
+    Start 2: installed_c_reader
+2/2 Test #2: installed_c_reader ...............   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   0.12 sec

@@ -1,0 +1,21 @@
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-b01
+    Start  1: dbf7_queries
+1/8 Test  #1: dbf7_queries .....................   Passed    0.60 sec
+    Start  2: dbf7_contracts
+2/8 Test  #2: dbf7_contracts ...................   Passed    0.06 sec
+    Start  3: dbf7_process_reader
+3/8 Test  #3: dbf7_process_reader ..............   Passed    0.01 sec
+    Start  4: dbf6_contracts
+4/8 Test  #4: dbf6_contracts ...................   Passed    0.11 sec
+    Start  5: dbf6_process_reader
+5/8 Test  #5: dbf6_process_reader ..............   Passed    0.02 sec
+    Start 19: dbf5_compressed
+6/8 Test #19: dbf5_compressed ..................   Passed    0.80 sec
+    Start 39: dbf7_tools
+7/8 Test #39: dbf7_tools .......................   Passed    0.21 sec
+    Start 40: dbf6_wire_oracle
+8/8 Test #40: dbf6_wire_oracle .................   Passed    0.07 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Total Test time (real) =   1.90 sec

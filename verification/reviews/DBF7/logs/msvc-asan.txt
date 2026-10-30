@@ -1,0 +1,68 @@
+**********************************************************************
+** Visual Studio 2026 Developer Command Prompt v18.9.2
+** Copyright (c) 2026 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+-- The CXX compiler identification is MSVC 19.44.35228.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files/Microsoft Visual Studio/18/Professional/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - not found
+-- Found Threads: TRUE
+-- Configuring done (3.4s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf7-asan
+[1/8] Building CXX object CMakeFiles\sdb_dbf7_contract_tests.dir\tests\dbf7_contract_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[2/8] Building CXX object CMakeFiles\sdb_dbf7_query_tests.dir\tests\dbf7_query_tests.cpp.obj
+[3/8] Building CXX object CMakeFiles\sdb_dbf6_contract_tests.dir\tests\dbf6_contract_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[4/8] Linking CXX executable sdb_dbf7_query_tests.exe
+[5/8] Linking CXX executable sdb_dbf7_contract_tests.exe
+[6/8] Linking CXX executable sdb_dbf6_contract_tests.exe
+[7/8] Building CXX object CMakeFiles\sdb_typed_results_tests.dir\tests\typed_results_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(273): warning C4456: declaration of 'found' hides previous local declaration
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(260): note: see declaration of 'found'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\results/results.hpp(273): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\typed_results_tests.cpp(239): note: see reference to function template instantiation 'void history_snapshot<float>(const std::filesystem::path &)' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\tests\typed_results_tests.cpp(35): note: see reference to function template instantiation 'void sdb::lifecycle::ResultPublisher::append_history<float>(sdb::lifecycle::ResultFrame &,const sdb::lifecycle::CompiledModel<float> &,const sdb::StateDB<float> &,std::vector<std::string,std::allocator<std::string>>,uint64_t)' being compiled
+[8/8] Linking CXX executable sdb_typed_results_tests.exe
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf7-asan
+    Start  1: dbf7_queries
+1/7 Test  #1: dbf7_queries .....................   Passed    1.33 sec
+    Start  2: dbf7_contracts
+2/7 Test  #2: dbf7_contracts ...................   Passed    0.07 sec
+    Start  3: dbf6_contracts
+3/7 Test  #3: dbf6_contracts ...................   Passed    0.10 sec
+    Start  4: dbf6_process_reader
+4/7 Test  #4: dbf6_process_reader ..............   Passed    0.04 sec
+    Start 32: typed_results_contracts
+5/7 Test #32: typed_results_contracts ..........   Passed    0.42 sec
+    Start 38: dbf7_tools
+6/7 Test #38: dbf7_tools .......................   Passed    0.16 sec
+    Start 39: dbf6_wire_oracle
+7/7 Test #39: dbf6_wire_oracle .................   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Total Test time (real) =   2.25 sec

@@ -5,11 +5,22 @@
 #           REPAIRED_PENDING_GATE / ACCEPTED / DEFERRED
 schema_version: 2
 program: fem-solver-database-v2
-current_batch: DBF1
-batch_state: READY_FOR_REVIEW # self-tested, not independent acceptance
-batch_base_sha: 9a3d754dbbc5c0b1720a93ecf29ee3278f705f73
-batch_content_head_sha: c5cd0622d7a52fb7c15db0e98dc33b5833d206a7
+current_batch: DBF7
+batch_state: ACCEPTED # bounded standalone scope; see DBF7_HANDOFF and independent reviews
+batch_base_sha: b489414df6f1c45fdcb7b7b54b9f725e4c12ac4a
+batch_content_manifest: verification/reviews/DBF7/manifest.json
 tasks:
+  - id: DBF6
+    title: Independent standalone data DOF state consumer foundation
+    status: ACCEPTED
+    evidence: verification/reviews/DBF6/independent-current/REVIEW.md
+  - id: DBF7
+    title: Local P0-P2 contracts tooling performance and SDK consumers
+    status: ACCEPTED
+    evidence: docs/development/db_foundation/DBF7_HANDOFF.md
+
+# Retained historical statuses; not the live queue. ALR1/B02c are not implicitly accepted.
+historical_tasks:
   - id: DBF1-D0
     title: Actual branch audit and reproduced rotation/enum P1 repairs
     status: IMPLEMENTED_SELF_TESTED
@@ -101,7 +112,7 @@ tasks:
     title: CPU evidence and stage performance measurements
     status: FROZEN_FOR_BATCH_REVIEW
     commit: 8122adf
-next_ready: [] # independent ALR1 review next; R2.04/B02c ownership unchanged
+next_ready: [] # native capture/mirror requires production environment; historical ownership unchanged
 
 # 2026-10-28: independent R5 gate passed; user authorized B01 merge/push.
 # Next batch may start from accepted stable tip; B02c remains unaccepted.

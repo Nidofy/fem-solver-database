@@ -144,6 +144,7 @@ inline void face(Writer &w, FaceId f) {
 // Extension manifest is checked byte-for-byte before decoding any values. Required
 // fields are bounded scalar blocks; Reconstruct/Omit retain declared initial data.
 template<class Sink> void write_registered(const RegisteredState &state, Sink sink) {
+    if(state.in_trial()) throw std::logic_error("cannot persist registered trial state");
     state.validate();
     const auto manifest = state.manifest(); sink(200u, manifest);
     for (std::size_t index=0; index<state.entries().size(); ++index) {

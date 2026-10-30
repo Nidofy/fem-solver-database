@@ -1,15 +1,18 @@
 #pragma once
 #include "state.hpp"
 #include "io/native.hpp"
+#include "dof_space.hpp"
 
 namespace sdb {
 class DofMap {
     std::vector<std::size_t> offsets_{0};
     std::vector<std::int64_t> equations_;
     std::size_t free_ = 0;
+    std::uint64_t model_id_ = 0;
 
   public:
     template <class T> explicit DofMap(const MeshDB<T> &mesh) {
+        model_id_=mesh.fingerprint();
         for (Index n = 0; n < mesh.nodes(); ++n)
             offsets_.push_back(sum(offsets_.back(), mesh.dofs(n)));
         equations_.resize(offsets_.back(), 0);
@@ -27,6 +30,25 @@ class DofMap {
     std::size_t size() const { return free_; }
     std::int64_t equation(NodeId node, Dof component) const {
         return equation(node.value(), static_cast<unsigned>(component));
+    }
+    template<class T> DofSpace contract(const MeshDB<T> &mesh) const {
+        if(mesh.fingerprint()!=model_id_) throw std::invalid_argument("mechanical DOF model mismatch");
+        DofSpaceData d; d.model=mesh.fingerprint(); d.nodes=mesh.nodes(); d.elements=mesh.elements();
+        d.variables={{0,3,DofQuantity::Translation,"displacement","UNSPECIFIED","GLOBAL"},
+                     {1,3,DofQuantity::Rotation,"rotation","UNSPECIFIED","GLOBAL"}};
+        d.external_equations.resize(free_); std::iota(d.external_equations.begin(),d.external_equations.end(),0);
+        d.solver_to_canonical=d.external_equations;
+        if(offsets_.size()!=sum(mesh.nodes(),1)) throw std::invalid_argument("mechanical DOF mesh shape mismatch");
+        std::map<std::pair<Index,unsigned>,double> prescribed;
+        for(const auto &c:mesh.constraints()) prescribed[{c.node,c.component}]=c.value;
+        for(Index node=0;node<mesh.nodes();++node) for(unsigned c=0;c<mesh.dofs(node);++c) {
+            auto eq=equation(node,c); DofBinding b;
+            b.key={DofOwner::Node,node,0,c/3,c%3};
+            if(eq<0) { b.status=DofStatus::Prescribed; b.value=prescribed.at({node,c}); }
+            else { b.status=DofStatus::Free; b.equation=static_cast<std::uint64_t>(eq); }
+            d.bindings.push_back(std::move(b));
+        }
+        return DofSpace(std::move(d));
     }
 };
 // B=1 is CSR, B>1 stores dense row-major blocks. Input columns sorted and unique.

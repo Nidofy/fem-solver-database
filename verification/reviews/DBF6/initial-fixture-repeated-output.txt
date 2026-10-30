@@ -1,0 +1,36 @@
+**********************************************************************
+** Visual Studio 2026 Developer Command Prompt v18.9.2
+** Copyright (c) 2026 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+-- Configuring done (0.3s)
+-- Generating done (0.1s)
+-- Build files have been written to: D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf6-asan
+[1/2] Building CXX object CMakeFiles\sdb_dbf6_contract_tests.dir\tests\dbf6_contract_tests.cpp.obj
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(59): note: the template instantiation context (the oldest one first) is
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(92): note: while compiling class template 'sdb::ContactDB'
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(102): note: see reference to class template instantiation 'sdb::CandidateBuffer<sdb::ContactKey>' being compiled
+D:\Codes\Solver\ExplicitSolver_track_l_c0a_l0\solver_database_v2\include\sdb\contact.hpp(60): warning C4324: 'sdb::CandidateBuffer<sdb::ContactKey>': structure was padded due to alignment specifier
+[2/2] Linking CXX executable sdb_dbf6_contract_tests.exe
+Test project D:/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf6-asan
+    Start  1: dbf6_contracts
+1/3 Test  #1: dbf6_contracts ...................***Failed    0.09 sec
+DBF6 failure after 59: result exists; use explicit append or a new output path
+
+    Start  2: dbf6_process_reader
+Failed test dependencies: dbf6_contracts
+2/3 Test  #2: dbf6_process_reader ..............***Not Run   0.00 sec
+    Start 36: dbf6_wire_oracle
+Failed test dependencies: dbf6_contracts
+3/3 Test #36: dbf6_wire_oracle .................***Not Run   0.00 sec
+
+0% tests passed, 3 tests failed out of 3
+
+Total Test time (real) =   0.12 sec
+
+The following tests FAILED:
+	  1 - dbf6_contracts (Failed)
+	  2 - dbf6_process_reader (Not Run)
+	 36 - dbf6_wire_oracle (Not Run)
+Errors while running CTest

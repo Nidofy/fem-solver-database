@@ -3,7 +3,15 @@
 Updated after every task and review milestone. Cross-session handoff details:
 SESSION_HANDOFF.md.
 
-## Current DBF1 implementation (2026-10-29)
+## Current DBF7 delivery (2026-10-30)
+
+DBF6 independent review and the DBF7 local P0-P2 follow-up are closed within the
+explicit standalone scope. Current evidence: db_foundation/DBF7_HANDOFF.md and
+verification/reviews/DBF7/manifest.json. Windows complete 52/52; Windows OpenMP+
+zstd focus 8/8; Linux focus 9/9; MSVC ASan focus 8/8; TSan and installed C/C++ pass.
+Historical ALR1/B02c states below remain scoped, not blanket-accepted or merged.
+
+## Historical DBF1 implementation (2026-10-29)
 
 The user-requested foundation kit supersedes the ALR1 no-further-development
 instruction for this development branch only. Current batch **DBF1 / READY_FOR_REVIEW**,

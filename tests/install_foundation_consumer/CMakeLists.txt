@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.24)
+project(FoundationConsumer LANGUAGES CXX)
+find_package(SolverDatabaseV2 2 CONFIG REQUIRED)
+add_executable(foundation_consumer main.cpp)
+target_link_libraries(foundation_consumer PRIVATE sdb::solver_database_v2)
+enable_testing()
+add_test(NAME installed_foundation_consumer COMMAND foundation_consumer ${CMAKE_CURRENT_BINARY_DIR}/consumer.sdbf)

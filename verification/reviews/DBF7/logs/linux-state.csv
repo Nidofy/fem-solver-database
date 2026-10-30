@@ -1,0 +1,2 @@
+rows,resident_payload,high_water_payload,copied_payload,clone_ms,trial_ms,rollback_ms
+1000000,24000024,48000048,48000048,12.7402,12.8422,0.306392

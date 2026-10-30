@@ -1,0 +1,24 @@
+Internal ctest changing into directory: /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf7-linux
+Test project /mnt/d/Codes/Solver/ExplicitSolver_track_l_c0a_l0/solver_database_v2/build-dbf7-linux
+    Start  1: dbf7_queries
+1/9 Test  #1: dbf7_queries .....................   Passed    6.97 sec
+    Start  2: dbf7_contracts
+2/9 Test  #2: dbf7_contracts ...................   Passed    0.04 sec
+    Start  3: dbf7_process_reader
+3/9 Test  #3: dbf7_process_reader ..............   Passed    0.01 sec
+    Start  4: dbf6_contracts
+4/9 Test  #4: dbf6_contracts ...................   Passed    0.08 sec
+    Start  5: dbf6_process_reader
+5/9 Test  #5: dbf6_process_reader ..............   Passed    0.01 sec
+    Start 19: dbf5_compressed
+6/9 Test #19: dbf5_compressed ..................   Passed    1.04 sec
+    Start 39: dbf7_tools
+7/9 Test #39: dbf7_tools .......................   Passed    0.14 sec
+    Start 40: dbf7_ffi
+8/9 Test #40: dbf7_ffi .........................   Passed    0.11 sec
+    Start 41: dbf6_wire_oracle
+9/9 Test #41: dbf6_wire_oracle .................   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) =   8.52 sec

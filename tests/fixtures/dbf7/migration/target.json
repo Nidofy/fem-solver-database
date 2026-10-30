@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "capture_id": "fixture-1",
+  "fields": {
+    "mesh.node.labels": {
+      "shape": [
+        2
+      ],
+      "units": "1",
+      "basis": "identity",
+      "index_base": 1,
+      "values": [
+        9007199254740993,
+        18446744073709551615
+      ]
+    }
+  }
+}
