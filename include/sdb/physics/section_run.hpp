@@ -9,6 +9,12 @@ template<class T> class SectionRun {
     StateDB<T> state_;
     std::vector<SectionElement> elements_;
     Field<T,6> forces_;
+    std::optional<Field<T,6>> applied_;
+    bool reconstruct_velocity_=false;
+    static bool energy_name(const std::string& name) {
+        return name=="ALLKE" || name=="ALLSE" || name=="ALLIE" || name=="ALLWK" ||
+               name=="ALLAE" || name=="ALLVD" || name=="ETOTAL";
+    }
     Field<std::uint8_t,6> fixed_;
     std::optional<PenaltyConstraints> penalty_;
     std::uint64_t increments_=0,configuration_=0;
@@ -64,14 +70,15 @@ template<class T> class SectionRun {
         }
     }
     void evaluate(){auto &s=state_.data();auto& r=*s.rotation;
+        if(applied_) applied_->fill(0);
         forces_.fill(0);s.internal_force.fill(0);s.external_force.fill(0);r.torque.fill(0);
         auto f=forces_.write(); auto u=s.displacement.read(),a=r.angle.read();
         for(Index e=0;e<elements_.size();++e) if(s.element_active.read()(e)){
             const auto& el=elements_[e];for(unsigned i=0;i<6*el.count;++i){
                 double fi=0;for(unsigned j=0;j<6*el.count;++j){
-                    auto n=el.nodes[j/6],d=j%6;fi+=el.K[i][j]*(d<3?u(n,d):a(n,d-3));
+                    const auto n=el.nodes[j/6]; const unsigned d=j%6;fi+=el.K[i][j]*(d<3?u(n,d):a(n,d-3));
                 }
-                auto n=el.nodes[i/6],d=i%6;f(n,d)-=T(fi);
+                const auto n=el.nodes[i/6]; const unsigned d=i%6;f(n,d)-=T(fi);
                 if(d<3)s.internal_force.write()(n,d)+=T(fi);else r.torque.write()(n,d-3)+=T(fi);
             }
         }
@@ -87,6 +94,7 @@ template<class T> class SectionRun {
             auto origin=l.origin_step==UINT64_MAX?current:StepId::checked(l.origin_step);
             double val=l.value*model_.load_amplitude(l.amplitude,origin,current,
                 (s.step-segments_[step_id_].first)*dt_,s.time);
+            if(applied_) applied_->write()(l.node,l.component)+=T(val);
             f(l.node,l.component)+=T(val);if(l.component<3)s.external_force.write()(l.node,l.component)+=T(val);
         }
         for(Index n=0;n<model_.mesh.nodes();++n)for(unsigned d=0;d<6;++d){
@@ -103,8 +111,14 @@ template<class T> class SectionRun {
             for (const auto &request : step)
                 for (const auto &name : request.variables)
                     if(name=="S" || name=="E") recovery_model_.emplace();
-                    else if(name!="U" && name!="UR")
-                        throw std::invalid_argument("section backend supports U/UR and section S/E only: "+name);
+                    else if(energy_name(name)) {
+                        if(!request.region.empty()) throw std::invalid_argument("section energy is global");
+                        if((name=="ALLWK" || name=="ETOTAL") && !applied_) {
+                            applied_.emplace(model.mesh.nodes());state_.data().external_work=0.;
+                        }
+                        reconstruct_velocity_ |= name=="ALLKE" || name=="ETOTAL";
+                    } else if(name!="U" && name!="UR")
+                        throw std::invalid_argument("unsupported section output: "+name);
         const auto& def=model.definition;
         auto other=def.foundation;auto extensions=def.extensions;
         if(def.penalty_stiffness>0){other.equations.clear();other.rigids.clear();extensions.couplings.clear();
@@ -171,6 +185,13 @@ template<class T> class SectionRun {
     std::uint64_t increments() const noexcept { return increments_; }
     std::size_t step_index() const noexcept {return step_id_;}
     bool end_of_step() const noexcept {return state_.data().step==segments_[step_id_].first+segments_[step_id_].count;}
+    bool output_due() const {
+        const auto local=state_.data().step-segments_[step_id_].first;
+        const auto& requests=model_.outputs[step_id_];
+        if(requests.empty()) return !local || local==segments_[step_id_].count;
+        return std::any_of(requests.begin(),requests.end(),[&](const auto &r){
+            return lifecycle::OutputScheduler::due(r,local,segments_[step_id_].count);});
+    }
     bool recovery_enabled() const noexcept {return recovery_model_.has_value();}
     lifecycle::ResultModel result_model() const {
         return recovery_model_ ? *recovery_model_ : lifecycle::ResultModel::from(model_,configuration_);
@@ -205,7 +226,24 @@ template<class T> class SectionRun {
             s.velocity.write()(n,d)+=T(dt_)*s.acceleration.read()(n,d);s.displacement.write()(n,d)+=T(dt_)*s.velocity.read()(n,d);
             r.velocity.write()(n,d)+=T(dt_)*r.acceleration.read()(n,d);r.angle.write()(n,d)+=T(dt_)*r.velocity.read()(n,d);
         }
-        ++s.step;s.time=segments_[step_id_].start+dt_*(s.step-segments_[step_id_].first);return true;
+        if(applied_) {
+            auto a=applied_->read(),v=s.velocity.read(),w=r.velocity.read();
+            double increment=0;
+            for(Index n=0;n<model_.mesh.nodes();++n) for(unsigned d=0;d<3;++d)
+                increment+=dt_*(double(a(n,d))*v(n,d)+double(a(n,d+3))*w(n,d));
+            *s.external_work+=increment;
+        }
+        ++s.step;s.time=segments_[step_id_].start+dt_*(s.step-segments_[step_id_].first);
+        if(reconstruct_velocity_) {
+            const auto &seg=segments_[step_id_];
+            for(const auto &request:model_.outputs[step_id_])
+                if(lifecycle::OutputScheduler::due(request,s.step-seg.first,seg.count) &&
+                   (std::find(request.variables.begin(),request.variables.end(),"ALLKE")!=request.variables.end() ||
+                    std::find(request.variables.begin(),request.variables.end(),"ETOTAL")!=request.variables.end())) {
+                    evaluate(); break;
+                }
+        }
+        return true;
     }
     lifecycle::ResultFrame snapshot() const{
         const auto& s=state_.data();lifecycle::ResultFrame frame;
@@ -213,7 +251,37 @@ template<class T> class SectionRun {
         frame.info={s.step,step_id_,local,model_.mesh.fingerprint(),s.time,dt_*local,sizeof(T),8};
         if(recovery_model_) lifecycle::bind_result_frame(frame,*recovery_model_);
         const auto &requests=model_.outputs.at(step_id_);
+        struct Totals {double kinetic=0,stored=0,artificial=0,penalty=0;};
+        std::optional<Totals> energies;
         auto publish=[&](const std::string& name,const std::string& region,bool history) {
+            if(energy_name(name)) {
+                if(!energies) {
+                    energies.emplace();auto& sums=*energies;const auto &r=*s.rotation;
+                    for(Index n=0;n<model_.mesh.nodes();++n) for(unsigned d=0;d<3;++d) {
+                        double v=s.velocity.read()(n,d)+.5*dt_*s.acceleration.read()(n,d);
+                        double w=r.velocity.read()(n,d)+.5*dt_*r.acceleration.read()(n,d);
+                        sums.kinetic+=.5*(s.mass.read()(n)*v*v+r.inertia.read()(n,d)*w*w);
+                    }
+                    for(Index e=0;e<elements_.size();++e) if(s.element_active.read()(e)) {
+                        auto [stored,artificial]=elements_[e].energies(state_);
+                        sums.stored+=stored;sums.artificial+=artificial;
+                    }
+                    if(penalty_) sums.penalty=penalty_->evaluate(state_).potential;
+                }
+                const auto& a=*energies;
+                const double internal=a.stored+a.penalty,work=s.external_work.value_or(0.);
+                double value=0;
+                if(name=="ALLKE")value=a.kinetic;
+                else if(name=="ALLIE")value=internal;
+                else if(name=="ALLSE")value=a.stored-a.artificial;
+                else if(name=="ALLAE")value=a.artificial;
+                else if(name=="ALLWK")value=work;
+                else if(name=="ETOTAL")value=a.kinetic+internal-work;
+                lifecycle::ResultField f;f.descriptor.name=name;f.descriptor.components={name};
+                f.descriptor.location=lifecycle::Location::Global;f.descriptor.history=history;
+                f.descriptor.provenance="section six-DOF energy audit";f.ids={0};f.values={value};
+                frame.fields.push_back(std::move(f));return;
+            }
             const bool nodal=name=="U" || name=="UR";
             std::vector<Index> all;
             if(region.empty()) {all.resize(nodal?model_.mesh.nodes():elements_.size());std::iota(all.begin(),all.end(),Index(0));}
@@ -254,6 +322,7 @@ template<class T> class SectionRun {
     }
     void restore(const std::filesystem::path& path){
         StateDB<T> next(model_.mesh,true);
+        next.data().external_work=state_.data().external_work;
         auto info=lifecycle::RestartDB::load(path,model_,next,configuration_);
         if(info.step>=segments_.size())throw std::invalid_argument("section restart step mismatch");
         auto seg=segments_[info.step];

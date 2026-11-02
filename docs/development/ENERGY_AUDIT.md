@@ -24,3 +24,21 @@ on the initial conditions and timestep. It is not a contact friction ledger.
 The forced TET fixture provides an independent work reference: unit force
 times the single free displacement equals ALLWK. Tests compare float/double
 elastic/J2 results, zero and nonzero viscosity, balance and split restart.
+
+## Sectional models
+
+SectionRun supports ALLKE, ALLSE, ALLIE, ALLWK, ALLAE, ALLVD and ETOTAL.
+Full-time reconstructed velocities include all three translations and rotations.
+ALLWK integrates the applied forces and moments against the accepted displacement
+and angle increments, including the compiled distributed loads at their effective
+step time. Penalty forces and moments are internal and excluded from ALLWK.
+ALLSE is the physical beam/shell strain energy. ALLAE collects the shell
+checkerboard and artificial drill modes. Edge shear interpolation belongs to
+physical stiffness. ALLIE includes ALLSE, ALLAE and the constraint potential.
+ALLVD is zero for the undamped section backend. ETOTAL subtracts ALLWK from
+the sum of internal and kinetic energies. The standard audited lifecycle
+restart header carries cumulative work through non-output increments.
+
+section_energy parses a rectangular beam deck with a tip torque and an energy
+output request. It checks torque times tip angle, the elastic constraint
+potential, the energy residual and bitwise restart parity in both precisions.

@@ -11,3 +11,10 @@ add_test(NAME energy_audit COMMAND sdb_energy_audit_tests "${CMAKE_CURRENT_SOURC
 add_executable(sdb_section_recovery_tests tests/section_recovery_tests.cpp)
 target_link_libraries(sdb_section_recovery_tests PRIVATE sdb_lifecycle)
 add_test(NAME section_recovery COMMAND sdb_section_recovery_tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus" "${CMAKE_CURRENT_BINARY_DIR}/section-recovery")
+add_executable(sdb_section_energy_tests tests/section_energy_tests.cpp)
+target_link_libraries(sdb_section_energy_tests PRIVATE sdb_lifecycle)
+add_test(NAME section_energy COMMAND sdb_section_energy_tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus" "${CMAKE_CURRENT_BINARY_DIR}/section-energy")
+if(Python3_Interpreter_FOUND)
+  add_test(NAME section_energy_cli COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/section_energy_cli.py"
+    "$<TARGET_FILE:sdb_section_run>" "$<TARGET_FILE:sdb_run>" "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus/section_beam.inp")
+endif()

@@ -30,8 +30,9 @@ membrane and signed curvature strains, plane-stress elasticity and tensor
 shear strain. Artificial drilling and shear stabilization do not enter the
 reported material tensor. Every recovery field has an explicit local-to-global
 basis and uses typed3 result storage; inactive elements contribute no rows.
-U/UR are nodal variables. Other explicit output requests, including energy,
-are rejected by this dedicated backend. For a deck without output cards the
+U/UR are nodal variables. Global sectional energies include translational and rotary kinetic energy,
+material and stabilization energy, penalty potential and applied force/moment work.
+See ENERGY_AUDIT.md. Unlisted output requests are rejected. For a deck without output cards the
 CLI retains its legacy initial/final U/UR result.
 
 The section_recovery test verifies both signs of analytic pure-bending stress

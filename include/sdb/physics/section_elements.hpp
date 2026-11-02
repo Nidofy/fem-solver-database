@@ -1,5 +1,6 @@
 #pragma once
 #include "../model_compiler/compiler.hpp"
+#include <numeric>
 namespace sdb::physics {
 using Vec3=std::array<double,3>;
 inline Vec3 difference(Vec3 a,Vec3 b){for(unsigned i=0;i<3;++i)a[i]-=b[i];return a;}
@@ -12,11 +13,13 @@ class SectionElement {
     std::array<Vec3,3> axes_;
     double length_=0,width_=0,depth_=0,young_=0,poisson_=0;
     unsigned point_count_=0;
-    void mode(double stiffness,const Row& local){
+    std::vector<std::pair<double,Row>> artificial_;
+    void mode(double stiffness,const Row& local,bool artificial=false){
         Row g{};
         for(unsigned a=0;a<count;++a)for(unsigned kind=0;kind<2;++kind)
             for(unsigned d=0;d<3;++d)for(unsigned j=0;j<3;++j)
                 g[6*a+3*kind+j]+=local[6*a+3*kind+d]*axes_[d][j];
+        if(artificial) artificial_.emplace_back(stiffness,g);
         for(unsigned i=0;i<6*count;++i) for(unsigned j=0;j<6*count;++j) K[i][j]+=stiffness*g[i]*g[j];
     }
   public:
@@ -26,6 +29,21 @@ class SectionElement {
     double nodal_mass=0, rotary_mass=0;
     const Vec3& axis(unsigned i) const { return axes_.at(i); }
     double load_measure() const { return count==2?length_:length_*width_; }
+    template<class T> std::pair<double,double> energies(const StateDB<T>& state) const {
+        Row q{};
+        auto u=state.data().displacement.read(),r=state.data().rotation->angle.read();
+        for(unsigned a=0;a<count;++a) for(unsigned d=0;d<3;++d) {
+            q[6*a+d]=u(nodes[a],d);q[6*a+3+d]=r(nodes[a],d);
+        }
+        double total=0,artificial=0;
+        for(unsigned i=0;i<6*count;++i) for(unsigned j=0;j<6*count;++j)
+            total+=.5*q[i]*K[i][j]*q[j];
+        for(const auto &[k,g]:artificial_) {
+            double mode=std::inner_product(q.begin(),q.end(),g.begin(),0.);
+            artificial+=.5*k*mode*mode;
+        }
+        return {total,artificial};
+    }
     unsigned sample_count() const noexcept {return point_count_;}
     lifecycle::Rotation recovery_basis() const {
         lifecycle::Rotation r{};
@@ -125,7 +143,7 @@ class SectionElement {
                 mode(v*E/(2*(1-nu)),sum);mode(v*G,diff);mode(v*G,shear);
             };
             plane(ex,ey,xy,area*t);plane(kx,ky,kxy,area*t*t*t/12);
-            mode(area*t*G*5/6,xz);mode(area*t*G*5/6,yz); mode(.01*area*t*G,drill);
+            mode(area*t*G*5/6,xz);mode(area*t*G*5/6,yz); mode(.01*area*t*G,drill,true);
             // Opposite-edge midpoint transverse shears define the two linear
             // variations omitted by the center point. Their squared integral is A/3.
             Row xz_variation{}, yz_variation{};
@@ -141,9 +159,9 @@ class SectionElement {
             // also constrain the three zero-energy variations of nodal drill.
             for(unsigned d=0;d<5;++d){
                 Row r{};for(unsigned a=0;a<4;++a) r[6*a+d]=sx[a]*sy[a]/4.;
-                mode(.1*G*t*(d<3?1:t*t/12),r);
+                mode(.1*G*t*(d<3?1:t*t/12),r,true);
             }
-            for(unsigned a=1;a<4;++a){Row r{};r[5]=-1;r[6*a+5]=1;mode(.001*area*t*G,r);}
+            for(unsigned a=1;a<4;++a){Row r{};r[5]=-1;r[6*a+5]=1;mode(.001*area*t*G,r,true);}
         } else throw std::invalid_argument("section backend supports S4R or B31 RECT only");
         if(!(nodal_mass>0 && rotary_mass>0) || !std::isfinite(nodal_mass) || !std::isfinite(rotary_mass))
             throw std::invalid_argument("invalid lumped sectional inertia");

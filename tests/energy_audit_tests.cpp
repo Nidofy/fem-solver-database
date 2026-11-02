@@ -70,13 +70,7 @@ void boundary_cases(const std::filesystem::path& dir) {
            std::abs(scalar(f,"ETOTAL"))>1e-5)
             throw std::runtime_error("constraint/follower work or energy balance");
     }
-    auto ir=ReaderRegistry{}.read(dir/"section_beam.inp").model;
-    ir.steps[0].outputs.push_back({false,1,0,"",{"ALLWK"},{}});
-    auto beam=ModelCompiler{}.compile<double>(ir);
-    bool rejected=false;
-    try {physics::SectionRun<double> section(beam);}
-    catch(const std::invalid_argument&) {rejected=true;}
-    if(!rejected) throw std::runtime_error("unavailable section recovery accepted");
+
 }
 int main(int argc,char **argv) {
     try {
