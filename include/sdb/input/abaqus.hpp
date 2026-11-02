@@ -217,6 +217,7 @@ class AbaqusInpReader final : public IModelReader {
         std::optional<std::size_t> pending_coupling;
         std::uint32_t next_constraint=0;
         std::map<std::string,LoadId> pressure_ids;
+        bool has_dload=false;
         auto source_key=[&](std::string target,const Source &at) {
             SourceKey key; target=upper(target); auto dot=target.find('.');
             if(dot!=target.npos) {
@@ -454,6 +455,40 @@ class AbaqusInpReader final : public IModelReader {
                     m.foundation.initial_conditions.push_back(i);
                 }
                 m.schema=std::max(m.schema,3u);
+            } else if (b.key == "DLOAD" && options.mode == ImportMode::Solve) {
+                params({"OP","AMPLITUDE"});
+                if(!step || in_part || in_assembly || param("OP","MOD")!="MOD" || b.data.empty())
+                    fail(b.at,"DLOAD requires step, OP=MOD and data");
+                for(const auto& line:b.data) {
+                    auto f=fields(line); if(f.size()<3) fail(line.at,"incomplete DLOAD row");
+                    auto region=upper(f[0]),kind=upper(f[1]);
+                    if(region.empty()) fail(line.at,"DLOAD requires an element or ELSET");
+                    const auto key="DLOAD:"+kind+":"+region;
+                    auto [it,first]=pressure_ids.emplace(key,LoadId(index_of(pressure_ids.size())));
+                    LoadDefinition def{it->second,StepId(index_of(m.steps.size()-1)),region,param("AMPLITUDE"),
+                                       CoordinateId(0),false,LoadUpdate::Replace,line.at};
+                    double magnitude=number(f[2],line.at);
+                    if(kind=="GRAV" || kind=="BX" || kind=="BY" || kind=="BZ") {
+                        IRBodyLoad load;load.definition=def;
+                        if(kind=="GRAV") {
+                            count(f,6,6,line.at); load.kind=BodyLoadKind::Acceleration;
+                            for(unsigned d=0;d<3;++d)load.value[d]=number(f[d+3],line.at);
+                            double norm=std::hypot(load.value[0],load.value[1],load.value[2]);
+                            if(!(norm>0) || !std::isfinite(norm))fail(line.at,"invalid gravity direction");
+                            for(auto &x:load.value)x=(x/norm)*magnitude;
+                        } else {
+                            count(f,3,3,line.at);load.kind=BodyLoadKind::ForcePerVolume;
+                            load.value[kind[1]-'X']=magnitude;
+                        }
+                        m.foundation.body_loads.push_back(std::move(load));
+                    } else if(kind.size()==2 && kind[0]=='P' && kind[1]>='1' && kind[1]<='6') {
+                        count(f,3,3,line.at);
+                        def.region="__SDB_DLOAD_FACE_"+std::to_string(def.id.value());
+                        if(first) m.surfaces.push_back({"",def.region,{{region,"S"+kind.substr(1)}},line.at});
+                        m.foundation.face_loads.push_back({def,FaceLoadKind::Pressure,magnitude,{}});
+                    } else fail(line.at,"unsupported DLOAD type "+kind);
+                }
+                has_dload=true;
             } else if (b.key == "DSLOAD") {
                 params({"OP","AMPLITUDE"});
                 if(!step || in_part || in_assembly || param("OP","MOD")!="MOD" || b.data.empty()) fail(b.at,"DSLOAD supports step pressure with OP=MOD only");
@@ -759,6 +794,7 @@ class AbaqusInpReader final : public IModelReader {
         for(auto &i:m.foundation.initial_conditions) qualify(i.node,i.source);
         result.report.parsed = true;
         if (!m.plastic.empty()) m.schema = 5;
+        if (has_dload) m.schema = 7;
         return result;
     }
 };

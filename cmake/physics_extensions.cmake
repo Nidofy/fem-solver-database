@@ -1,3 +1,6 @@
+add_executable(sdb_distributed_loads_tests tests/distributed_loads_tests.cpp)
+target_link_libraries(sdb_distributed_loads_tests PRIVATE sdb_lifecycle)
+add_test(NAME distributed_loads COMMAND sdb_distributed_loads_tests ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus/distributed_hex.inp ${CMAKE_CURRENT_BINARY_DIR}/dload-scratch)
 add_executable(sdb_penalty_constraints_tests tests/penalty_constraints_tests.cpp)
 target_link_libraries(sdb_penalty_constraints_tests PRIVATE sdb_lifecycle)
 add_test(NAME penalty_constraints COMMAND sdb_penalty_constraints_tests ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus/forced_tet.inp ${CMAKE_CURRENT_BINARY_DIR}/penalty-scratch)

@@ -2,6 +2,7 @@
 #include "../input/abaqus.hpp"
 #include "../state.hpp"
 #include "../j2.hpp"
+#include "../physics/distributed_loads.hpp"
 #include "../model_ir/foundation_validate.hpp"
 #include <numbers>
 
@@ -167,7 +168,7 @@ template <class T> struct CompiledModel {
 class ModelCompiler {
   public:
     template <class T> CompiledModel<T> compile(ModelIR ir, CpuPolicy policy = CpuPolicy::Serial) const {
-        if (ir.schema != 1 && ir.schema != 2 && ir.schema != 3 && ir.schema != 4 && ir.schema != 5 && ir.schema != 6)
+        if (ir.schema != 1 && ir.schema != 2 && ir.schema != 3 && ir.schema != 4 && ir.schema != 5 && ir.schema != 6 && ir.schema != 7)
             throw std::runtime_error("unsupported ModelIR schema");
         if (ir.schema == 1 && !ir.history_bindings.empty())
             throw std::runtime_error("history bindings require ModelIR schema 2");
@@ -194,14 +195,17 @@ class ModelCompiler {
             report.diagnostics.push_back({s, why, false});
         };
         bool allow_foundation = false, allow_extensions = false;
-        if (ir.penalty_stiffness != 0) {
-            if (ir.schema != 6 || !(ir.penalty_stiffness > 0) || !std::isfinite(ir.penalty_stiffness))
+        if (ir.penalty_stiffness != 0 || ir.schema==7) {
+            if (ir.schema < 6 || ir.penalty_stiffness < 0 || !std::isfinite(ir.penalty_stiffness))
                 throw std::invalid_argument("invalid explicit penalty configuration");
             auto other = ir.foundation;
-            other.equations.clear(); other.rigids.clear();
+            if(ir.penalty_stiffness>0) { other.equations.clear(); other.rigids.clear(); }
+            if(ir.schema==7) { other.face_loads.clear(); other.body_loads.clear(); }
             auto extensions = ir.extensions;
-            extensions.couplings.clear();
+            if(ir.penalty_stiffness>0) extensions.couplings.clear();
             allow_foundation = other.empty(); allow_extensions = extensions.empty();
+            for(const auto& l:ir.foundation.face_loads) if(l.definition.follower || l.kind!=FaceLoadKind::Pressure || l.definition.coordinate.value()!=0) allow_foundation=false;
+            for(const auto& l:ir.foundation.body_loads) if(l.definition.follower || l.definition.coordinate.value()!=0) allow_foundation=false;
             for (const auto& equation:ir.foundation.equations)
                 for (const auto& term:equation.terms)
                     if (term.dof>Dof::Z) allow_foundation=false;
@@ -765,6 +769,7 @@ class ModelCompiler {
         report.executable_cpu = executable;
         report.executable_cuda = false;
         result.report = std::move(report);
+        if (result.definition.schema==7 && executable) distributed::compile(result);
         return result;
     }
 };

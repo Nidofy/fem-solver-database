@@ -196,7 +196,7 @@ struct ModelIR {
     double penalty_stiffness = 0;
     template <class F> void visit(F f) {
         f(schema);
-        if (schema != 1 && schema != 2 && schema != 3 && schema != 4 && schema != 5 && schema != 6)
+        if (schema != 1 && schema != 2 && schema != 3 && schema != 4 && schema != 5 && schema != 6 && schema != 7)
             throw std::runtime_error("unsupported ModelIR schema");
         f(units, assembly, mode, parts, instances, sets, materials, sections, surfaces, amplitudes,
           initial_boundaries, steps, opaque);
