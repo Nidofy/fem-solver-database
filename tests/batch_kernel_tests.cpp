@@ -45,8 +45,29 @@ template<class T> void compare(CpuPolicy policy,TetKernel kernel) {
     if(kernel==TetKernel::Mixed8 && !(batched.mixed_peak_error()>0 && batched.mixed_peak_error()<1.e-4))
         throw std::runtime_error("mixed precision audit");
 }
+void mixed_energy() {
+    auto mesh=oscillator_model<double>();
+    StateDB<double> s(mesh);
+    CpuExplicit<double> cpu(mesh,s,CpuPolicy::Serial,Assembly::Deterministic,{},TetKernel::Mixed8);
+    const auto n=mesh.node_index(40);
+    s.data().displacement.write()(n,0)=.01;
+    constexpr double h=.0001, stiffness=100./6, mass=1./24;
+    const double initial=.5*stiffness*.01*.01;
+    cpu.initialize(s,h);
+    double peak=0;
+    for(unsigned i=0;i<2000;++i) {
+        cpu.step(s);
+        const auto& derived=cpu.output_forces(s);
+        double u=s.data().displacement.read()(n,0);
+        double v=s.data().velocity.read()(n,0)-.5*h*derived.internal_force.read()(n,0)/mass;
+        peak=std::max(peak,std::abs(.5*(stiffness*u*u+mass*v*v)/initial-1));
+    }
+    if(!(peak<3e-6)) throw std::runtime_error("mixed oscillator energy drift");
+    std::cout<<"mixed peak relative energy drift="<<peak<<std::endl;
+}
 int main() {
     try {
+        mixed_energy();
         for(auto policy:{CpuPolicy::Serial
 #ifdef _OPENMP
             ,CpuPolicy::OpenMP

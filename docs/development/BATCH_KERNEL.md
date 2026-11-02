@@ -29,3 +29,9 @@ The forced fixture completed 2000 increments with observed peak 1.31e-7 or
 less. batch_kernel_contracts tests shuffled connectivity, idle elements, tails,
 both worker policies and numerical drift over 36 steps. Other physics and
 native single precision reject mixed8 rather than downgrading material history.
+
+The mixed forced-response and free-vibration tests use FP64 state. Over 2000
+steps of an unforced oscillator, the peak relative mechanical-energy error was
+9.71e-7 (test limit 3e-6). GCC's optimization report confirmed 16-byte SIMD
+instructions for the lane loops on the baseline x86-64 target. The batch
+parity contracts also passed MSVC 19.51 ASan and WSL GCC 13 Index64 ASan/UBSan.
