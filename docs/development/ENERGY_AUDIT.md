@@ -8,8 +8,9 @@ use solver versions 3/4 (without/with explicit controls), carrying both work
 accumulators and checking configuration and finite values on restore.
 
 ALLWK accumulates the start-of-increment applied force dotted with the accepted
-half-step velocity times dt. This includes the contact-force buffer and any
-constraint reactions already folded into the applied RHS. For varying loads
+half-step velocity times dt. This includes the contact-force buffer. Constraint penalty reactions are excluded
+from ALLWK. Their stored potential enters ALLIE and ETOTAL; a follower load is
+evaluated at the current start-of-increment configuration. For varying loads
 this uses the force that drove the explicit update. Prescribed moving supports
 are outside the current homogeneous-boundary scope. ALLVD accumulates the bulk
 viscosity power integrated over the reference volume at the force time level.

@@ -21,6 +21,7 @@ template <class T> class CpuRun {
     std::vector<StepPlan> plans_;
     std::uint64_t config_ = 0, step_ = 0, increment_ = 0;
     bool initialized_ = false;
+    std::optional<Field<T,3>> applied_without_penalty_;
     void mask(std::size_t step) {
         std::vector<Constraint> cs;
         for (auto &a : model_.analysis.steps.at(step).boundaries)
@@ -64,6 +65,7 @@ template <class T> class CpuRun {
         LoadEvaluator::apply(model_.analysis, step_, double(increment_) * plans_[step_].dt,
                              state_.data().time, state_);
         follower_loads(state_,step_,double(increment_)*plans_[step_].dt,state_.data().time);
+        if (penalty_ && state_.data().external_work) applied_without_penalty_=state_.data().external_force;
         apply_penalty(state_);
     }
     // Prepare every throwing operation on the candidate. set_constraints checks
@@ -235,7 +237,8 @@ template <class T> class CpuRun {
         if (state_.data().external_work) {
             // The integrator used these start-of-increment forces. Updated
             // half-step velocity times dt is the accepted displacement increment.
-            auto v=state_.data().velocity.read(), f=state_.data().external_force.read(),
+            auto v=state_.data().velocity.read(),
+                 f=applied_without_penalty_ ? applied_without_penalty_->read() : state_.data().external_force.read(),
                  contact=state_.data().contact_force.read();
             double work=0;
             for (std::size_t n=0;n<v.count;++n) for(unsigned c=0;c<3;++c)
@@ -255,8 +258,18 @@ template <class T> class CpuRun {
                        increment_,         model_.mesh.fingerprint(),
                        state_.data().time, double(increment_) * plans_[step_].dt,
                        sizeof(T),          8};
+        std::optional<double> penalty_energy;
+        if (penalty_) {
+            for (const auto &r:model_.outputs.at(step_))
+                if(OutputScheduler::due(r,increment_,plans_[step_].increments) &&
+                   (std::find(r.variables.begin(),r.variables.end(),"ALLIE")!=r.variables.end() ||
+                    std::find(r.variables.begin(),r.variables.end(),"ETOTAL")!=r.variables.end())) {
+                    penalty_energy=penalty_->evaluate(state_).potential;
+                    break;
+                }
+        }
         return ResultPublisher::publish(model_, state_, cpu_, info, model_.outputs.at(step_),
-                                        plans_[step_].increments, budget);
+                                        plans_[step_].increments, budget, penalty_energy);
     }
     void save(const std::filesystem::path &path) {
         if (!initialized_)

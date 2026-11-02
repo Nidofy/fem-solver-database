@@ -430,7 +430,8 @@ class ResultPublisher {
     template <class T>
     static ResultFrame publish(const CompiledModel<T> &model, const StateDB<T> &state, CpuExplicit<T> &cpu,
                                FrameInfo info, const std::vector<IROutput> &requests,
-                               std::uint64_t increments, std::uint64_t budget = native::default_limit) {
+                               std::uint64_t increments, std::uint64_t budget = native::default_limit,
+                               std::optional<double> penalty_energy = {}) {
         // Due-selection happens before any constitutive re-evaluation: a non-output
         // increment must not pay for a force pass, and a pure-displacement frame
         // needs no force data at all. Evaluation below is pure linear constitutive
@@ -543,6 +544,11 @@ class ResultPublisher {
                             if (name=="ALLWK" || name=="ETOTAL") {
                                 if(!s.external_work) throw std::logic_error("energy audit not initialized");
                                 energy += name=="ALLWK" ? *s.external_work : -*s.external_work;
+                            }
+                            if ((name=="ALLIE" || name=="ETOTAL") && model.definition.penalty_stiffness>0) {
+                                if(!penalty_energy || !std::isfinite(*penalty_energy) || *penalty_energy<0)
+                                    throw std::invalid_argument("missing/invalid current penalty potential");
+                                energy+=*penalty_energy;
                             }
                             if (name=="ALLVD" || name=="ETOTAL") energy+=s.bulk_dissipation;
                             if (name == "ALLAE" || name=="ALLIE" || name=="ETOTAL") {
