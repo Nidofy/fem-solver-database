@@ -33,6 +33,8 @@ struct MemoryStats {
     void released(std::size_t n) noexcept { live.fetch_sub(n); }
 };
 inline MemoryStats host_memory;
+// Opt in on the allocating thread. Touch new large buffers before vector initialization.
+inline thread_local bool parallel_first_touch = false;
 template <class T, std::size_t Alignment = 64> struct AlignedAllocator {
     using value_type = T;
     using is_always_equal = std::true_type;
@@ -46,6 +48,17 @@ template <class T, std::size_t Alignment = 64> struct AlignedAllocator {
         static_assert((a & (a - 1)) == 0);
         auto bytes = product(n, sizeof(T));
         auto *p = static_cast<T *>(::operator new(bytes, std::align_val_t(a)));
+#ifdef _OPENMP
+        if (parallel_first_touch && bytes >= (1u << 20)) {
+            auto *raw = reinterpret_cast<volatile unsigned char *>(p);
+            // A 4 KiB stride also covers platforms with larger base pages.
+            const auto chunks = static_cast<std::ptrdiff_t>((bytes - 1) / 4096 + 1);
+#pragma omp parallel for schedule(static)
+            for (std::ptrdiff_t i=0; i<chunks; ++i)
+                raw[static_cast<std::size_t>(i)*4096] = 0;
+            raw[bytes-1] = 0;
+        }
+#endif
         host_memory.acquired(bytes);
         return p;
     }

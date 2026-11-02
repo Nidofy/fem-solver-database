@@ -229,6 +229,11 @@ int main(int argc, char **argv) {
         auto n = argc > 1 ? std::stoull(argv[1]) : 100000;
         auto repeats = argc > 2 ? std::stoull(argv[2]) : 20;
         bool omp = argc > 3 && std::string(argv[3]) == "omp";
+        if (argc > 4) {
+            if (!omp || argc != 5 || std::string(argv[4]) != "first-touch")
+                throw std::invalid_argument("expected omp first-touch");
+            sdb::parallel_first_touch = true;
+        }
         if (n < 4 || n >= sdb::invalid_index || repeats == 0)
             throw std::invalid_argument("usage: sdb_benchmark nodes>=4 repetitions [omp]");
         auto policy = omp ? sdb::CpuPolicy::OpenMP : sdb::CpuPolicy::Serial;
