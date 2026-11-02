@@ -1,3 +1,3 @@
 add_executable(sdb_penalty_constraints_tests tests/penalty_constraints_tests.cpp)
 target_link_libraries(sdb_penalty_constraints_tests PRIVATE sdb_lifecycle)
-add_test(NAME penalty_constraints COMMAND sdb_penalty_constraints_tests ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus/forced_tet.inp)
+add_test(NAME penalty_constraints COMMAND sdb_penalty_constraints_tests ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus/forced_tet.inp ${CMAKE_CURRENT_BINARY_DIR}/penalty-scratch)

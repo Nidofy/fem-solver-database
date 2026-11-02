@@ -1,6 +1,7 @@
 #pragma once
 #include "results/results.hpp"
 #include "io/restart.hpp"
+#include "physics/penalty_constraints.hpp"
 
 namespace sdb::lifecycle {
 struct StepPlan {
@@ -16,6 +17,7 @@ template <class T> class CpuRun {
     const CompiledModel<T> &model_;
     StateDB<T> state_;
     CpuExplicit<T> cpu_;
+    std::optional<physics::PenaltyConstraints> penalty_;
     std::vector<StepPlan> plans_;
     std::uint64_t config_ = 0, step_ = 0, increment_ = 0;
     bool initialized_ = false;
@@ -25,9 +27,21 @@ template <class T> class CpuRun {
             cs.push_back({a.node, a.component, a.value});
         cpu_.set_constraints(cs, state_);
     }
+    void apply_penalty(StateDB<T>& state) const {
+        if (!penalty_) return;
+        auto reaction=penalty_->evaluate(state).restoring_force;
+        auto f=state.data().external_force.write();
+        for (std::size_t n=0;n<f.count;++n) for(unsigned d=0;d<3;++d) {
+            double total=double(f(n,d))+reaction.read()(n,d);
+            if (!std::isfinite(total) || std::abs(total)>std::numeric_limits<T>::max())
+                throw std::overflow_error("constraint force accumulation overflow");
+            f(n,d)=T(total);
+        }
+    }
     void loads() {
         LoadEvaluator::apply(model_.analysis, step_, double(increment_) * plans_[step_].dt,
                              state_.data().time, state_);
+        apply_penalty(state_);
     }
     // Prepare every throwing operation on the candidate. set_constraints checks
     // all inputs before its nonallocating mask/velocity/acceleration writes.
@@ -38,6 +52,7 @@ template <class T> class CpuRun {
             constraints.push_back({a.node, a.component, a.value});
         LoadEvaluator::apply(model_.analysis, step, double(increment) * plans_.at(step).dt,
                              candidate.data().time, candidate);
+        apply_penalty(candidate);
         cpu_.set_constraints(constraints, candidate);
         static_assert(std::is_nothrow_move_assignable_v<StateData<T>>);
         state_.data() = std::move(candidate.data());
@@ -100,11 +115,17 @@ template <class T> class CpuRun {
     explicit CpuRun(const CompiledModel<T> &model, ExplicitControls controls = {}, CpuPolicy policy = CpuPolicy::Serial, TetKernel kernel = TetKernel::Scalar)
         : model_(model), state_(validated(model).mesh), cpu_(model.mesh, state_, policy, Assembly::Deterministic, controls,kernel) {
         model.require_cpu();
+        double stable = cpu_.plan().stable_step;
+        if (model.definition.penalty_stiffness > 0) {
+            penalty_.emplace(model, model.definition.penalty_stiffness);
+            auto bound = penalty_->evaluate(state_).frequency_squared_bound;
+            stable = 2/(2/stable + std::sqrt(bound));
+        }
         double start = 0;
         for (auto &s : model.analysis.steps) {
-            double bound = double(cpu_.plan().stable_step) * .8;
+            double bound = stable * .8;
             double requested = s.increment > 0 ? s.increment : bound;
-            if (s.direct && requested > double(cpu_.plan().stable_step))
+            if (s.direct && requested > stable)
                 fail(s.source, "direct increment exceeds CPU stability bound");
             double target = s.direct ? requested : std::min(requested, bound);
             double count = std::ceil(s.period / target - 1e-12);
@@ -119,6 +140,7 @@ template <class T> class CpuRun {
             start += double(n) * dt;
         }
         native::Writer w;
+        if (penalty_) native::encode(w, std::string("explicit-penalty-v1"));
         bool hex = false;
         for (const auto &d : model.descriptors)
             hex = hex || d.shape == Topology::Hex8;
@@ -127,6 +149,7 @@ template <class T> class CpuRun {
         if (cpu_.plan().hex && cpu_.plan().hex->hourglass_stiffness.size())
             native::encode(w, std::string("c3d8r/uniform-strain/elastic-hourglass-v1"));
         if (!cpu_.plan().plastic_points.empty()) native::encode(w, std::string("j2/tet4/radial-return-v1"));
+        if (kernel == TetKernel::Tiled8) native::encode(w,std::string("tet4/tiled8-v1"));
         if (kernel == TetKernel::Batch8) native::encode(w,std::string("tet4/aosoa8-v1"));
         if (policy == CpuPolicy::OpenMP) native::encode(w,std::string("openmp/deterministic-v1"));
         if (controls.enabled()) {

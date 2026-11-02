@@ -167,7 +167,7 @@ template <class T> struct CompiledModel {
 class ModelCompiler {
   public:
     template <class T> CompiledModel<T> compile(ModelIR ir, CpuPolicy policy = CpuPolicy::Serial) const {
-        if (ir.schema != 1 && ir.schema != 2 && ir.schema != 3 && ir.schema != 4 && ir.schema != 5)
+        if (ir.schema != 1 && ir.schema != 2 && ir.schema != 3 && ir.schema != 4 && ir.schema != 5 && ir.schema != 6)
             throw std::runtime_error("unsupported ModelIR schema");
         if (ir.schema == 1 && !ir.history_bindings.empty())
             throw std::runtime_error("history bindings require ModelIR schema 2");
@@ -176,7 +176,7 @@ class ModelCompiler {
         if (ir.schema < 3 && !ir.foundation.empty())
             throw std::runtime_error("foundation requires ModelIR schema 3");
         if(ir.schema<4 && !ir.extensions.empty()) throw std::runtime_error("model extensions require ModelIR schema 4");
-        if ((ir.schema == 5) != !ir.plastic.empty())
+        if ((ir.schema == 5 && ir.plastic.empty()) || (ir.schema < 5 && !ir.plastic.empty()))
             throw std::runtime_error("plasticity requires ModelIR schema 5 and a yield table");
         auto foundation = validate_foundation<T>(ir.foundation);
         ModelBuilder<T> b;
@@ -193,11 +193,28 @@ class ModelCompiler {
             executable = false;
             report.diagnostics.push_back({s, why, false});
         };
-        if (!ir.foundation.empty()) {
+        bool allow_foundation = false, allow_extensions = false;
+        if (ir.penalty_stiffness != 0) {
+            if (ir.schema != 6 || !(ir.penalty_stiffness > 0) || !std::isfinite(ir.penalty_stiffness))
+                throw std::invalid_argument("invalid explicit penalty configuration");
+            auto other = ir.foundation;
+            other.equations.clear(); other.rigids.clear();
+            auto extensions = ir.extensions;
+            extensions.couplings.clear();
+            allow_foundation = other.empty(); allow_extensions = extensions.empty();
+            for (const auto& equation:ir.foundation.equations)
+                for (const auto& term:equation.terms)
+                    if (term.dof>Dof::Z) allow_foundation=false;
+            for (const auto& rigid:ir.foundation.rigids)
+                if (rigid.dof_mask>7) allow_foundation=false;
+            for (const auto& c:ir.extensions.couplings)
+                if (c.dof_mask>7 || c.coordinate.value()!=0) allow_extensions=false;
+        }
+        if (!ir.foundation.empty() && !allow_foundation) {
             b.set_storage_contract(semantic_hash(ir.foundation));
             incapable({}, "schema-3 foundation semantics are storage-only; CPU kernel unavailable");
         }
-        if(ir.schema==4 || !ir.extensions.empty()) {
+        if(ir.schema==4 || (!ir.extensions.empty() && !allow_extensions)) {
             b.set_storage_contract(semantic_hash(std::array<std::uint64_t,2>{semantic_hash(ir.foundation),semantic_hash(ir.extensions)}));
             incapable({},"schema-4 model extensions are storage-only; CPU kernel unavailable");
         }
