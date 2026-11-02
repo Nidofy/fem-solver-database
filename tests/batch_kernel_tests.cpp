@@ -2,8 +2,7 @@
 #include <iostream>
 using namespace sdb;
 
-template<class T> MeshDB<T> make_mesh(CpuPolicy policy) {
-    constexpr Index cells=513;
+template<class T> MeshDB<T> make_mesh(CpuPolicy policy, Index cells=513) {
     ModelBuilder<T> b;
     b.add_material({1,1,{T(2),T(123),T(.27)},0});
     b.add_part(1);
@@ -45,6 +44,16 @@ template<class T> void compare(CpuPolicy policy,TetKernel kernel) {
     if(kernel==TetKernel::Mixed8 && !(batched.mixed_peak_error()>0 && batched.mixed_peak_error()<1.e-4))
         throw std::runtime_error("mixed precision audit");
 }
+void small_mixed_geometry() {
+    ModelBuilder<double> b;
+    b.add_material({1,1,{1,100,0},0}); b.add_part(1);
+    b.add_node(1,{0,0,0}); b.add_node(2,{1e-17,0,0}); b.add_node(3,{0,1e-17,0}); b.add_node(4,{0,0,1e-17});
+    b.add_element(1,Topology::Tet4,{1,2,3,4},1,1);
+    auto m=b.finalize(); StateDB<double> state(m);
+    try { CpuExplicit<double> mixed(m,state,CpuPolicy::Serial,Assembly::Deterministic,{},TetKernel::Mixed8); }
+    catch(const std::range_error&) {return;}
+    throw std::runtime_error("unrepresentable mixed geometry accepted");
+}
 void mixed_energy() {
     auto mesh=oscillator_model<double>();
     StateDB<double> s(mesh);
@@ -67,7 +76,13 @@ void mixed_energy() {
 }
 int main() {
     try {
-        mixed_energy();
+        small_mixed_geometry(); mixed_energy();
+#ifdef _OPENMP
+        // Cross the asynchronous fingerprint threshold, with an independently finalized serial reference.
+        if(make_mesh<double>(CpuPolicy::Serial,4097).fingerprint()!=
+           make_mesh<double>(CpuPolicy::OpenMP,4097).fingerprint())
+            throw std::runtime_error("overlapped mesh fingerprint mismatch");
+#endif
         for(auto policy:{CpuPolicy::Serial
 #ifdef _OPENMP
             ,CpuPolicy::OpenMP

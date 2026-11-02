@@ -16,7 +16,12 @@ template<class T, class Real=T> class TetBatch8 {
         if constexpr (!std::is_same_v<T,Real>)
             if (!std::isfinite(value) || std::abs(value)>std::numeric_limits<Real>::max())
                 throw std::range_error("reference value outside mixed kernel precision");
-        return static_cast<Real>(value);
+        const auto converted=static_cast<Real>(value);
+        if constexpr (!std::is_same_v<T,Real>) {
+            if (value!=0 && converted==0)
+                throw std::range_error("nonzero reference value vanishes in mixed precision");
+        }
+        return converted;
     }
     Field<Index,4,AoSoA<W>> nodes_;
     Field<Real,12,AoSoA<W>> gradients_;
