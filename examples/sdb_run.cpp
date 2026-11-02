@@ -97,9 +97,9 @@ template <class T> int run(const Args &a) {
     if (a.contains("--save-model"))
         ModelStore::save(a.at("--save-model"), model);
     const auto mode = a.contains("--tet-kernel") ? a.at("--tet-kernel") : "scalar";
-    if (mode!="scalar" && mode!="batch8" && mode!="tiled8") throw std::invalid_argument("expected scalar, batch8 or tiled8");
+    if (mode!="scalar" && mode!="batch8" && mode!="tiled8" && mode!="mixed8") throw std::invalid_argument("expected scalar, batch8, tiled8 or mixed8");
     CpuRun<T> cpu(model,explicit_controls(a,model),a.contains("--omp")?CpuPolicy::OpenMP:CpuPolicy::Serial,
-                  mode=="tiled8"?TetKernel::Tiled8:(mode=="batch8"?TetKernel::Batch8:TetKernel::Scalar));
+                  mode=="mixed8"?TetKernel::Mixed8:mode=="tiled8"?TetKernel::Tiled8:(mode=="batch8"?TetKernel::Batch8:TetKernel::Scalar));
     if (cpu.controls().options.enabled()) {
         const auto &plan = cpu.controls();
         auto e = plan.controlling_element;
@@ -169,6 +169,7 @@ template <class T> int run(const Args &a) {
         CheckpointLink::publish_durable(storage, a.at("--checkpoint"), cpu, model, durability_level);
     else
         storage.barrier(durability_level);
+    if(mode=="mixed8") std::cout << std::setprecision(9) << "mixed_sampled_peak_relative_error=" << cpu.mixed_peak_error() << "\n";
     std::cout << std::setprecision(17) << "nodes=" << model.mesh.nodes()
               << " elements=" << model.mesh.elements() << " increments=" << cpu.state().data().step
               << " time=" << cpu.state().data().time << " precision=" << sizeof(T)

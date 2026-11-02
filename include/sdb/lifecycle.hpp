@@ -27,6 +27,28 @@ template <class T> class CpuRun {
             cs.push_back({a.node, a.component, a.value});
         cpu_.set_constraints(cs, state_);
     }
+    void follower_loads(StateDB<T>& state,std::size_t step,double local,double total) const {
+        if(!model_.definition.finite_geometry) return;
+        auto f=state.data().external_force.write(); auto x=state.current_view(model_.mesh);
+        for(const auto& value:model_.effective_load_values(StepId::checked(step),local,total)) {
+            if(value.kind!=LoadValueKind::Pressure) continue;
+            const auto& resolved=model_.foundation.load(value.definition.id,value.definition.step);
+            for(auto face:model_.mesh.surfaces().at(resolved.surface.value()).faces) {
+                Index e=model_.mesh.element_index(face.element); auto ns=model_.mesh.connectivity(e);
+                auto faceids=topology_face_nodes(Topology::Tet4,face.local);
+                distributed::Vec a{},b{};for(unsigned d=0;d<3;++d) {
+                    a[d]=double(x(ns[faceids[1]],d))-x(ns[faceids[0]],d);
+                    b[d]=double(x(ns[faceids[2]],d))-x(ns[faceids[0]],d);
+                }
+                auto area=distributed::cross(a,b);
+                for(auto i:faceids) for(unsigned d=0;d<3;++d) {
+                    auto v=double(f(ns[i],d))-value.scalar*area[d]/6;
+                    if(!std::isfinite(v)||std::abs(v)>std::numeric_limits<T>::max()) throw std::overflow_error("current pressure overflow");
+                    f(ns[i],d)=T(v);
+                }
+            }
+        }
+    }
     void apply_penalty(StateDB<T>& state) const {
         if (!penalty_) return;
         auto reaction=penalty_->evaluate(state).restoring_force;
@@ -41,6 +63,7 @@ template <class T> class CpuRun {
     void loads() {
         LoadEvaluator::apply(model_.analysis, step_, double(increment_) * plans_[step_].dt,
                              state_.data().time, state_);
+        follower_loads(state_,step_,double(increment_)*plans_[step_].dt,state_.data().time);
         apply_penalty(state_);
     }
     // Prepare every throwing operation on the candidate. set_constraints checks
@@ -52,6 +75,7 @@ template <class T> class CpuRun {
             constraints.push_back({a.node, a.component, a.value});
         LoadEvaluator::apply(model_.analysis, step, double(increment) * plans_.at(step).dt,
                              candidate.data().time, candidate);
+        follower_loads(candidate,step,double(increment)*plans_[step].dt,candidate.data().time);
         apply_penalty(candidate);
         cpu_.set_constraints(constraints, candidate);
         static_assert(std::is_nothrow_move_assignable_v<StateData<T>>);
@@ -113,7 +137,7 @@ template <class T> class CpuRun {
 
   public:
     explicit CpuRun(const CompiledModel<T> &model, ExplicitControls controls = {}, CpuPolicy policy = CpuPolicy::Serial, TetKernel kernel = TetKernel::Scalar)
-        : model_(model), state_(validated(model).mesh), cpu_(model.mesh, state_, policy, Assembly::Deterministic, controls,kernel) {
+        : model_(model), state_(validated(model).mesh), cpu_(model.mesh, state_, policy, Assembly::Deterministic, controls,kernel,model.definition.finite_geometry) {
         model.require_cpu();
         double stable = cpu_.plan().stable_step;
         if (model.definition.penalty_stiffness > 0) {
@@ -140,6 +164,7 @@ template <class T> class CpuRun {
             start += double(n) * dt;
         }
         native::Writer w;
+        if(model.definition.finite_geometry) native::encode(w,std::string("finite-tet4/neo-hookean-v1"));
         if (penalty_) native::encode(w, std::string("explicit-penalty-v1"));
         bool hex = false;
         for (const auto &d : model.descriptors)
@@ -149,6 +174,7 @@ template <class T> class CpuRun {
         if (cpu_.plan().hex && cpu_.plan().hex->hourglass_stiffness.size())
             native::encode(w, std::string("c3d8r/uniform-strain/elastic-hourglass-v1"));
         if (!cpu_.plan().plastic_points.empty()) native::encode(w, std::string("j2/tet4/radial-return-v1"));
+        if (kernel == TetKernel::Mixed8) native::encode(w,std::string("tet4/mixed8-v1"));
         if (kernel == TetKernel::Tiled8) native::encode(w,std::string("tet4/tiled8-v1"));
         if (kernel == TetKernel::Batch8) native::encode(w,std::string("tet4/aosoa8-v1"));
         if (policy == CpuPolicy::OpenMP) native::encode(w,std::string("openmp/deterministic-v1"));
@@ -174,6 +200,7 @@ template <class T> class CpuRun {
     StateDB<T> &state() { return state_; }
     const StateDB<T> &state() const { return state_; }
     const CompiledModel<T> &model() const { return model_; }
+    double mixed_peak_error() const noexcept {return cpu_.mixed_peak_error();}
     const ExplicitControlPlan& controls() const { return cpu_.plan().controls; }
     const auto &plans() const { return plans_; }
     std::uint64_t configuration() const { return config_; }

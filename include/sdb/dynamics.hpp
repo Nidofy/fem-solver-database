@@ -2,6 +2,7 @@
 #include "state.hpp"
 #include "hex8.hpp"
 #include "j2.hpp"
+#include "physics/finite_tet.hpp"
 #include "tet_batch.hpp"
 #include <chrono>
 
@@ -241,20 +242,57 @@ template <class T> class CpuExplicit {
     CpuPolicy policy_;
     Assembly assembly_;
     std::optional<TetBatch8<T>> batch_;
+    std::optional<TetBatch8<T,float>> mixed_;
+    double mixed_peak_error_ = 0;
+    void audit_mixed(const StateDB<T>& state, View<T,12> local, View<T,6> stress, View<T,6> strain) {
+        // Deterministic, rotating reference element per 32 TETs. Normalize in each field's units.
+        const auto canonical=plan_.views();
+        for (std::size_t e=state.data().step%32;e<plan_.is_tet.size();e+=32) {
+            if(!state.data().element_active.read()(e)) continue;
+            Index n[4]; T g[12], f[12], s[6], eps[6];
+            for(unsigned a=0;a<4;++a) n[a]=canonical.nodes(e,a);
+            for(unsigned c=0;c<12;++c) g[c]=canonical.gradients(e,c);
+            TetViews<T> one{{n,1},{g,1},{&canonical.volume(e),1},{&canonical.lambda(e),1},{&canonical.mu(e),1}};
+            tet_force(0,one,state.data().displacement.read(),{f,1},{s,1},{eps,1});
+            auto compare=[&](const auto& ref,auto values,std::size_t index) {
+                double err=0, norm=0;
+                for(unsigned c=0;c<std::size(ref);++c) {
+                    err=std::max(err,std::abs(double(ref[c])-values(index,c)));
+                    norm=std::max(norm,std::abs(double(ref[c])));
+                }
+                mixed_peak_error_=std::max(mixed_peak_error_,err/std::max(norm,1e-30));
+            };
+            compare(f,local,e); compare(s,stress,plan_.ip_offsets[e]); compare(eps,strain,plan_.ip_offsets[e]);
+        }
+    }
     std::uint64_t force_evaluations_ = 0, output_force_evaluations_ = 0;
     std::optional<ForceSnapshot<T>> output_;
     std::vector<J2Trial<T>> plastic_trial_;
+    std::vector<double> finite_energy_, finite_mass_;
 
   public:
     CpuExplicit(const MeshDB<T> &mesh, StateDB<T> &state, CpuPolicy policy = CpuPolicy::Serial,
-                Assembly assembly = Assembly::Deterministic, ExplicitControls controls = {}, TetKernel kernel = TetKernel::Scalar)
+                Assembly assembly = Assembly::Deterministic, ExplicitControls controls = {}, TetKernel kernel = TetKernel::Scalar, bool finite_geometry=false)
         : plan_(mesh, state, true, std::move(controls), policy), policy_(policy), assembly_(assembly), plastic_trial_(plan_.plastic_points.size()) {
-        if (kernel != TetKernel::Scalar) batch_.emplace(plan_,kernel==TetKernel::Tiled8);
+        if(finite_geometry) {
+            if(kernel!=TetKernel::Scalar || plan_.hex || !plan_.plastic_points.empty() || plan_.controls.options.enabled())
+                throw std::invalid_argument("NLGEOM supports scalar elastic TET4s without explicit controls");
+            finite_energy_.resize(mesh.elements()); finite_mass_.resize(mesh.elements());
+            for(Index e=0;e<mesh.elements();++e)
+                finite_mass_[e]=plan_.volume.read()(e)*mesh.materials()[mesh.element(e).material].parameters[0]/4;
+        }
+        if (kernel==TetKernel::Mixed8) {
+            if (!std::is_same_v<T,double> || plan_.hex || !plan_.plastic_points.empty())
+                throw std::invalid_argument("mixed8 requires FP64 linear elastic TET4");
+            mixed_.emplace(plan_,false);
+        } else if (kernel != TetKernel::Scalar) batch_.emplace(plan_,kernel==TetKernel::Tiled8);
 #ifndef _OPENMP
         if (policy == CpuPolicy::OpenMP)
             throw std::runtime_error("OpenMP not compiled");
 #endif
     }
+    const auto& finite_energy() const {return finite_energy_;}
+    double mixed_peak_error() const noexcept {return mixed_peak_error_;}
     const char* batch_pages() const {return batch_ ? batch_->page_mode() : "none";}
     const TetPlan<T> &plan() const { return plan_; }
     const auto &plastic_trials() const noexcept { return plastic_trial_; }
@@ -316,7 +354,10 @@ template <class T> class CpuExplicit {
         auto tet = plan_.views();
         auto is_tet = plan_.is_tet.data();
         auto ip_offsets = plan_.ip_offsets.data();
-        if (batch_) batch_->evaluate(policy_,plan_.ip_offsets,u,active,local,stress,strain);
+        if (mixed_) {
+            mixed_->evaluate(policy_,plan_.ip_offsets,u,active,local,stress,strain);
+            audit_mixed(state,local,stress,strain);
+        } else if (batch_) batch_->evaluate(policy_,plan_.ip_offsets,u,active,local,stress,strain);
         else parallel_for(tet.nodes.count, policy_, [=](std::size_t e) {
             if (!is_tet[e])
                 return;
@@ -331,6 +372,16 @@ template <class T> class CpuExplicit {
                 }
             }
         });
+        for(std::size_t e=0;e<finite_energy_.size();++e) {
+            finite_energy_[e]=0;
+            if(!active(e)) continue;
+            auto point=physics::finite_tet(e,tet.gradients,tet.volume(e),tet.lambda(e),tet.mu(e),finite_mass_[e],
+                [&](unsigned a,unsigned d){return u(tet.nodes(e,a),d);});
+            if(s.dt*s.dt*point.max_frequency_squared>=4) throw std::domain_error("NLGEOM current stiffness exceeds selected increment");
+            finite_energy_[e]=point.energy;
+            for(unsigned i=0;i<12;++i)local(e,i)=T(point.force[i]);
+            for(unsigned i=0;i<6;++i){stress(ip_offsets[e],i)=T(point.stress[i]);strain(ip_offsets[e],i)=T(point.strain[i]);}
+        }
         // Replace the elastic predictor for the sparse set of plastic TETs before assembly.
         // Stage every point before publishing history; snapshots and forces() remain pure.
         for (std::size_t j=0; j<plan_.plastic_points.size(); ++j) {
