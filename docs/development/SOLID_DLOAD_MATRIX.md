@@ -6,6 +6,7 @@
 | CENT, CENTRIF | Radial acceleration per unit angular speed squared projected normal to the supplied axis. CENT magnitude already includes density. CENTRIF multiplies physical material density. |
 | ROTA | Negative angular acceleration crossed with position relative to the axis, weighted by material density. |
 | CORIO | Magnitude includes density times angular speed. A row-sum lumped per-node coefficient multiplies minus twice the cross product of axis direction and velocity. |
+| TRVECn, TRSHRn | Global traction per area or normalized tangential projection at each integration point. A purely normal shear direction contributes zero. |
 | HPn | Inward pressure varying linearly with global Z, zero above the surface. The reference pressure level must be below the zero level. |
 | OP=NEW | Replaces all propagated element-based DLOADs, including loads defined on other sets. CLOAD and surface-based DSLOAD have independent histories. |
 | Whole-model target | Blank gravity/rotation target selects the whole mechanical solid model. |
@@ -24,7 +25,7 @@ native layouts. MeshOnly preserves unsupported element DLOAD cards as opaque.
 The rotating-frame and hydrostatic variants use Standard's keyword conventions
 as standalone CPU extensions. Finite-configuration rotation/HP, ROTDYNF
 complex rotor matrices, user DLOAD/VDLOAD callbacks, ambient fluid/porous,
-pipe/elbow, acoustic, traction and Aqua load families have no execution
+pipe/elbow, acoustic, nonuniform traction and Aqua load families have no execution
 route in this slice. Such cards require a corresponding formulation, reference
 state or external data. The parser rejects unknown load types.
 

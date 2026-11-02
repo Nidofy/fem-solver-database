@@ -196,14 +196,16 @@ template<class T,class Resolve> void resolve_foundation(const ModelIR &ir,Compil
     }
     for(auto &l:f.face_loads) {
         auto r=load(l.definition,10+static_cast<unsigned>(l.kind),Dof::X);
-        if(l.kind>FaceLoadKind::Hydrostatic || !out.surface_ids.contains(l.definition.region)) fail(l.definition.source,"invalid face load surface/kind");
+        if(l.kind>FaceLoadKind::ShearTraction || !out.surface_ids.contains(l.definition.region)) fail(l.definition.source,"invalid face load surface/kind");
+        if(l.kind==FaceLoadKind::ShearTraction && (ir.schema<9 || ir.finite_geometry))
+            fail(l.definition.source,"TRSHRn requires small strain and schema 9");
         if(l.kind==FaceLoadKind::Hydrostatic) {
             if(ir.schema<9 || ir.finite_geometry || !(l.levels[0]>l.levels[1]))
                 fail(l.definition.source,"HPn requires small strain and a submerged reference level");
             for(auto z:l.levels) foundation_real<T>(z,l.definition.source);
         }
         foundation_real<T>(l.pressure,l.definition.source); for(auto v:l.traction) foundation_real<T>(v,l.definition.source);
-        if((l.kind==FaceLoadKind::Pressure && l.traction!=std::array<double,3>{}) || (l.kind==FaceLoadKind::Traction && l.pressure!=0)) fail(l.definition.source,"face load inactive value lane is nonzero");
+        if((l.kind==FaceLoadKind::Pressure && l.traction!=std::array<double,3>{}) || ((l.kind==FaceLoadKind::Traction || l.kind==FaceLoadKind::ShearTraction) && l.pressure!=0)) fail(l.definition.source,"face load inactive value lane is nonzero");
         r.surface=out.surface_ids.at(l.definition.region); out.loads.push_back(std::move(r));
     }
     for(auto &l:f.body_loads) {

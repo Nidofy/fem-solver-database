@@ -149,7 +149,7 @@ template <class T> struct CompiledModel {
             auto contribution=foundation.load_contribution(load.id,introduced);
             auto factor=load_amplitude(contribution.definition.amplitude,introduced,current,local,total);
             contribution.scalar*=factor; foundation_real<T>(contribution.scalar,contribution.definition.source);
-            if(contribution.kind<LoadValueKind::Centrifugal) for(auto &v:contribution.vector) {v*=factor;foundation_real<T>(v,contribution.definition.source);}
+            if(contribution.kind<LoadValueKind::Centrifugal || contribution.kind>LoadValueKind::Coriolis) for(auto &v:contribution.vector) {v*=factor;foundation_real<T>(v,contribution.definition.source);}
             // Coordinate/follower metadata remains explicit; this cold query applies
             // amplitudes only and never invents a deformed geometry transformation.
             values.push_back(std::move(contribution));
@@ -207,7 +207,7 @@ class ModelCompiler {
             auto extensions = ir.extensions;
             if(ir.penalty_stiffness>0) extensions.couplings.clear();
             allow_foundation = other.empty(); allow_extensions = extensions.empty();
-            for(const auto& l:ir.foundation.face_loads) if((l.definition.follower && !ir.finite_geometry) || (l.kind!=FaceLoadKind::Pressure && l.kind!=FaceLoadKind::Hydrostatic) || l.definition.coordinate.value()!=0) allow_foundation=false;
+            for(const auto& l:ir.foundation.face_loads) if((l.definition.follower && !ir.finite_geometry) || (l.kind!=FaceLoadKind::Pressure && l.kind!=FaceLoadKind::Hydrostatic && (ir.schema<9 || ir.finite_geometry)) || l.definition.coordinate.value()!=0) allow_foundation=false;
             for(const auto& l:ir.foundation.body_loads) if(l.definition.follower || l.definition.coordinate.value()!=0) allow_foundation=false;
             for (const auto& equation:ir.foundation.equations)
                 for (const auto& term:equation.terms)

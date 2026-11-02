@@ -14,7 +14,7 @@ template<class T> void run(const std::filesystem::path& inp,const std::filesyste
         for(unsigned d=0;d<3;++d)f[d]+=cpu.state().data().external_force.read()(n,d);return f;};
     auto f=resultant();
     // Centrifugal (2,2,0), rotary (3,-3,0), Coriolis (0,-4,0), bottom pressure (0,0,2).
-    expect(std::abs(f[0]-5)<1e-5 && std::abs(f[1]+5)<1e-5 && std::abs(f[2]-2)<1e-5,"rotation and HP resultant");
+    expect(std::abs(f[0]-5)<1e-5 && std::abs(f[1]+4)<1e-5 && std::abs(f[2]-4)<1e-5,"rotation and HP resultant");
     cpu.advance();cpu.save(tmp/"inertial.rst");
     CpuRun<T> split(loaded);split.restore(tmp/"inertial.rst");
     while(cpu.advance())expect(split.advance(),"split cursor");

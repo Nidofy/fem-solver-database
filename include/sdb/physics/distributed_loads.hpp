@@ -166,6 +166,22 @@ template<class Model> void compile(Model& model) {
                     }
                     integrate_body(model.mesh,id.value(),body,add);
                 }
+            } else if(v.kind==LoadValueKind::Traction || v.kind==LoadValueKind::ShearTraction) {
+                for(auto face:model.mesh.surfaces().at(r.surface.value()).faces)
+                    integrate_pressure(model.mesh,face,-1.,[&](Index n,Vec area,double w){
+                        const double length=std::hypot(area[0],area[1],area[2]);
+                        if(!(length>0) || !std::isfinite(length))throw std::invalid_argument("degenerate traction face");
+                        auto t=v.vector;
+                        if(v.kind==LoadValueKind::ShearTraction) {
+                            for(auto& a:area)a/=length;
+                            double normal=dot(area,t),mag=std::hypot(t[0],t[1],t[2]);
+                            for(unsigned d=0;d<3;++d)t[d]-=normal*area[d];
+                            double tangential=std::hypot(t[0],t[1],t[2]);
+                            if(tangential<=32*std::numeric_limits<double>::epsilon()*mag)return;
+                            for(auto& a:t)a*=mag/tangential;
+                        }
+                        add(n,t,w*length);
+                    });
             } else if(v.kind==LoadValueKind::Hydrostatic) {
                 for(auto face:model.mesh.surfaces().at(r.surface.value()).faces) hydrostatic(model.mesh,face,v,add);
             } else if(v.kind>=LoadValueKind::Centrifugal && v.kind<=LoadValueKind::Coriolis) {

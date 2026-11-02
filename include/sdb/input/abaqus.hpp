@@ -497,6 +497,18 @@ class AbaqusInpReader final : public IModelReader {
                         if(!(norm>0) || !std::isfinite(norm)) fail(line.at,"invalid rotation axis");
                         for(auto& v:l.value)v/=norm;
                         m.foundation.body_loads.push_back(l);extended_dload=true;
+                    } else if(kind.size()==6 && (kind.starts_with("TRVEC") || kind.starts_with("TRSHR")) &&
+                              kind[5]>='1' && kind[5]<='6') {
+                        count(f,6,6,line.at);
+                        def.region="__SDB_DLOAD_FACE_"+std::to_string(def.id.value());
+                        if(first)m.surfaces.push_back({"",def.region,{{region,"S"+kind.substr(5)}},line.at});
+                        IRFaceLoad l; l.definition=def;
+                        l.kind=kind.starts_with("TRVEC")?FaceLoadKind::Traction:FaceLoadKind::ShearTraction;
+                        for(unsigned d=0;d<3;++d)l.traction[d]=number(f[d+3],line.at);
+                        double len=std::hypot(l.traction[0],l.traction[1],l.traction[2]);
+                        if(!(len>0) || !std::isfinite(len))fail(line.at,"invalid traction direction");
+                        for(auto& v:l.traction)v=(v/len)*magnitude;
+                        m.foundation.face_loads.push_back(l);extended_dload=true;
                     } else if(kind.size()==3 && kind.starts_with("HP") && kind[2]>='1' && kind[2]<='6') {
                         count(f,5,5,line.at);
                         def.region="__SDB_DLOAD_FACE_"+std::to_string(def.id.value());

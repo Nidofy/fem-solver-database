@@ -148,7 +148,7 @@ struct IRNodalLoad {
     double value = 0;
     template<class F> void visit(F f) { f(definition,dof,value); }
 };
-enum class FaceLoadKind : std::uint8_t { Pressure, Traction, Hydrostatic };
+enum class FaceLoadKind : std::uint8_t { Pressure, Traction, Hydrostatic, ShearTraction };
 struct IRFaceLoad {
     LoadDefinition definition;
     FaceLoadKind kind = FaceLoadKind::Pressure;
@@ -288,7 +288,7 @@ struct EffectiveLoad {
     LoadId id;
     std::vector<StepId> contributions; // Replace resets; Add retains distinct amplitude/basis provenance
 };
-enum class LoadValueKind : std::uint8_t { Nodal, Pressure, Traction, Acceleration, ForcePerVolume, Centrifugal, DensityWeightedCent, RotaryAcceleration, Coriolis, Hydrostatic };
+enum class LoadValueKind : std::uint8_t { Nodal, Pressure, Traction, Acceleration, ForcePerVolume, Centrifugal, DensityWeightedCent, RotaryAcceleration, Coriolis, Hydrostatic, ShearTraction };
 struct LoadContribution {
     LoadDefinition definition;
     LoadValueKind kind=LoadValueKind::Nodal;
@@ -372,7 +372,7 @@ struct CompiledFoundation {
     LoadContribution load_contribution(LoadId id,StepId step) const {
         require_step(step);
         for(const auto &l:definition.nodal_loads) if(l.definition.id==id && l.definition.step==step) return {l.definition,LoadValueKind::Nodal,l.dof,l.value,{}};
-        for(const auto &l:definition.face_loads) if(l.definition.id==id && l.definition.step==step) return {l.definition,l.kind==FaceLoadKind::Hydrostatic?LoadValueKind::Hydrostatic:l.kind==FaceLoadKind::Pressure?LoadValueKind::Pressure:LoadValueKind::Traction,Dof::X,l.pressure,l.traction,{},l.levels};
+        for(const auto &l:definition.face_loads) if(l.definition.id==id && l.definition.step==step) return {l.definition,l.kind==FaceLoadKind::ShearTraction?LoadValueKind::ShearTraction:l.kind==FaceLoadKind::Hydrostatic?LoadValueKind::Hydrostatic:l.kind==FaceLoadKind::Pressure?LoadValueKind::Pressure:LoadValueKind::Traction,Dof::X,l.pressure,l.traction,{},l.levels};
         for(const auto &l:definition.body_loads) if(l.definition.id==id && l.definition.step==step) return {l.definition,static_cast<LoadValueKind>(unsigned(LoadValueKind::Acceleration)+unsigned(l.kind)),Dof::X,l.magnitude,l.value,l.axis_point};
         throw std::out_of_range("unknown load contribution");
     }
