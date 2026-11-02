@@ -1,0 +1,3 @@
+add_executable(sdb_material_registry_tests tests/material_registry_tests.cpp)
+target_link_libraries(sdb_material_registry_tests PRIVATE solver_database_v2)
+add_test(NAME material_registry COMMAND sdb_material_registry_tests)
