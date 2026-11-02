@@ -47,7 +47,7 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t *data, std::size_t size
 #if SDB_FUZZ_TARGET == 1
     ReaderOptions options;
     options.allowed_root = scratch().dir;
-    options.max_depth = 0;
+    options.max_depth = 1; // Parse the root deck; nested includes hit the depth limit.
     options.max_bytes = limit;
     options.max_entities = 4096;
 #elif SDB_FUZZ_TARGET == 3
