@@ -150,6 +150,8 @@ with tabulated isotropic hardening, PEEQ output and committed restart history.
 The CPU lifecycle also supports optional [mass scaling, bulk viscosity and
 element stability controls](docs/development/EXPLICIT_CONTROLS.md).
 
+The [local CPU development handoff](docs/development/LOCAL_PROGRAM_HANDOFF.md) lists the new solver entry points, reproducible checks and environment-limited work.
+
 Read [`docs/LAYOUT_AND_SYNC.md`](docs/LAYOUT_AND_SYNC.md) before borrowing views.
 # Lifecycle extension (2.1)
 

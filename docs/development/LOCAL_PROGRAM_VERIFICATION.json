@@ -1,0 +1,341 @@
+{
+  "tested_source_commit": "367f1e19580260cddf8ac24d3651751c169db5bd",
+  "tracked_blobs_verified": 1507,
+  "environment": "WSL Linux GCC 13.3, native Linux filesystem, Release -O1 -DNDEBUG",
+  "configuration": {
+    "SDB_OPENMP": true,
+    "SDB_ZSTD": true,
+    "SDB_C_API": true,
+    "SDB_IO_FAULT_TESTS": true,
+    "SDB_INDEX_BITS": 32,
+    "OMP_NUM_THREADS": 4
+  },
+  "ctest": [
+    {
+      "test": "model_foundation_contracts",
+      "seconds": 0.02
+    },
+    {
+      "test": "dbf7_contracts",
+      "seconds": 0.01
+    },
+    {
+      "test": "dbf6_contracts",
+      "seconds": 0.01
+    },
+    {
+      "test": "foundation_contracts",
+      "seconds": 0.03
+    },
+    {
+      "test": "dbf3_model",
+      "seconds": 0.06
+    },
+    {
+      "test": "dbf3_state",
+      "seconds": 0.08
+    },
+    {
+      "test": "dbf3_result",
+      "seconds": 0.0
+    },
+    {
+      "test": "foundation_integration",
+      "seconds": 0.03
+    },
+    {
+      "test": "publication_io_failures",
+      "seconds": 0.03
+    },
+    {
+      "test": "dbf7_queries",
+      "seconds": 0.29
+    },
+    {
+      "test": "dbf7_process_reader",
+      "seconds": 0.0
+    },
+    {
+      "test": "dbf6_process_reader",
+      "seconds": 0.0
+    },
+    {
+      "test": "dbf8_contracts",
+      "seconds": 0.02
+    },
+    {
+      "test": "general_contact_contracts",
+      "seconds": 0.03
+    },
+    {
+      "test": "general_contact_demo",
+      "seconds": 0.04
+    },
+    {
+      "test": "general_contact_domain_demo",
+      "seconds": 0.07
+    },
+    {
+      "test": "general_contact_geometry",
+      "seconds": 0.16
+    },
+    {
+      "test": "foundation_process_reader",
+      "seconds": 0.0
+    },
+    {
+      "test": "storage_contracts",
+      "seconds": 0.02
+    },
+    {
+      "test": "dbf3_contracts",
+      "seconds": 0.0
+    },
+    {
+      "test": "dbf4_atomic",
+      "seconds": 0.04
+    },
+    {
+      "test": "dbf4_result_durability",
+      "seconds": 0.09
+    },
+    {
+      "test": "dbf4_link_publication",
+      "seconds": 0.08
+    },
+    {
+      "test": "lifecycle_contracts",
+      "seconds": 0.48
+    },
+    {
+      "test": "dbf5_codec",
+      "seconds": 0.28
+    },
+    {
+      "test": "dbf5_consumer",
+      "seconds": 0.02
+    },
+    {
+      "test": "dbf5_migration",
+      "seconds": 0.01
+    },
+    {
+      "test": "dbf3_restore_faults",
+      "seconds": 0.03
+    },
+    {
+      "test": "dbf3_model_reader",
+      "seconds": 0.0
+    },
+    {
+      "test": "dbf3_state_reader",
+      "seconds": 0.0
+    },
+    {
+      "test": "dbf3_result_reader",
+      "seconds": 0.0
+    },
+    {
+      "test": "foundation_boundaries",
+      "seconds": 0.01
+    },
+    {
+      "test": "typed_admission_budget",
+      "seconds": 0.03
+    },
+    {
+      "test": "model_foundation_process_reader",
+      "seconds": 0.0
+    },
+    {
+      "test": "typed_results_contracts",
+      "seconds": 0.05
+    },
+    {
+      "test": "foundation_integration_process_reader",
+      "seconds": 0.0
+    },
+    {
+      "test": "explicit_control_contracts",
+      "seconds": 0.01
+    },
+    {
+      "test": "j2_contracts",
+      "seconds": 0.02
+    },
+    {
+      "test": "hex8_contracts",
+      "seconds": 0.1
+    },
+    {
+      "test": "dbf5_compressed",
+      "seconds": 0.57
+    },
+    {
+      "test": "async_results_contracts",
+      "seconds": 0.04
+    },
+    {
+      "test": "dbf8_inp_document",
+      "seconds": 0.09
+    },
+    {
+      "test": "dbf8_process_envelope",
+      "seconds": 0.27
+    },
+    {
+      "test": "dbf7_tools",
+      "seconds": 0.05
+    },
+    {
+      "test": "dbf7_ffi",
+      "seconds": 0.02
+    },
+    {
+      "test": "dbf6_wire_oracle",
+      "seconds": 0.02
+    },
+    {
+      "test": "dbf5_cli",
+      "seconds": 0.1
+    },
+    {
+      "test": "dbf5_fault_campaign",
+      "seconds": 0.3
+    },
+    {
+      "test": "dbf4_cli_durability",
+      "seconds": 0.1
+    },
+    {
+      "test": "dbf4_fault_campaign",
+      "seconds": 0.87
+    },
+    {
+      "test": "dbf3_wire_oracle",
+      "seconds": 0.03
+    },
+    {
+      "test": "dbf3_legacy_golden",
+      "seconds": 0.04
+    },
+    {
+      "test": "typed_process_pipeline",
+      "seconds": 0.06
+    },
+    {
+      "test": "foundation3_legacy_golden",
+      "seconds": 0.03
+    },
+    {
+      "test": "foundation_legacy_golden",
+      "seconds": 0.03
+    },
+    {
+      "test": "lifecycle_process_pipeline",
+      "seconds": 0.98
+    },
+    {
+      "test": "database_contracts",
+      "seconds": 0.03
+    },
+    {
+      "test": "explicit_numerics",
+      "seconds": 0.01
+    },
+    {
+      "test": "batch_kernel_contracts",
+      "seconds": 0.06
+    },
+    {
+      "test": "analytic_reference_suite",
+      "seconds": 0.08
+    },
+    {
+      "test": "manufactured_bar_convergence",
+      "seconds": 0.02
+    },
+    {
+      "test": "legacy_db_synthetic",
+      "seconds": 0.06
+    },
+    {
+      "test": "inertial_load_contracts",
+      "seconds": 0.02
+    },
+    {
+      "test": "section_dload_contracts",
+      "seconds": 0.03
+    },
+    {
+      "test": "cantilever_bending_reference",
+      "seconds": 0.0
+    },
+    {
+      "test": "distributed_loads",
+      "seconds": 0.02
+    },
+    {
+      "test": "penalty_constraints",
+      "seconds": 0.01
+    },
+    {
+      "test": "material_registry",
+      "seconds": 0.0
+    },
+    {
+      "test": "finite_tet",
+      "seconds": 0.03
+    },
+    {
+      "test": "section_elements",
+      "seconds": 0.04
+    },
+    {
+      "test": "surface_coupling",
+      "seconds": 0.02
+    },
+    {
+      "test": "objective_rate",
+      "seconds": 0.0
+    },
+    {
+      "test": "mapped_result_contract",
+      "seconds": 0.01
+    },
+    {
+      "test": "mechanical_publishers",
+      "seconds": 0.0
+    },
+    {
+      "test": "energy_audit",
+      "seconds": 0.03
+    },
+    {
+      "test": "section_recovery",
+      "seconds": 0.01
+    },
+    {
+      "test": "section_energy",
+      "seconds": 0.01
+    },
+    {
+      "test": "section_energy_cli",
+      "seconds": 0.03
+    },
+    {
+      "test": "indexed_results_contracts",
+      "seconds": 10.84
+    }
+  ],
+  "installed_cli": {
+    "section_increments": 1000,
+    "verified_result_frames": 2
+  },
+  "additional_checks": [
+    "Windows GCC15 and MSVC19.51 ASan targeted kernels",
+    "Linux Index64 ASan/UBSan targeted kernels and immutable mapped reads",
+    "Linux TSan, zstd ordered compression, 63 checks",
+    "Clang libFuzzer with ASan/UBSan: INP/native/checkpoint, 5000 runs each"
+  ]
+}

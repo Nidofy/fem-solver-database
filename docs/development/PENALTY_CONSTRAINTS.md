@@ -12,6 +12,7 @@ normalized distributing coupling weights from CompiledFoundation. For a standalo
 penalty_stiffness to the chosen positive value, and compile it. CpuRun then
 adds the restoring force at every load evaluation and re-evaluates it on
 restore. Its step limit is 2/(2/h_structural + sqrt(constraint_bound)).
+Both CLI runners accept --penalty-stiffness K on INP input. Model reload uses the stored value.
 The schema and stiffness are persisted by ModelStore and included in restart
 identity. Other foundation semantics continue through their existing capability
 gates. The reference fixture adds a constraint to the forced tetrahedron,

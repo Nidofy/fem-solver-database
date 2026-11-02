@@ -184,14 +184,16 @@ tasks:
   - id: R2.01
     title: Hybrid core CPU affinity diagnostics and fair benchmark
     depends_on: [R0.04]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/CPU_TOPOLOGY.md
     batch_hint: B02
     risk: performance
     exit: Measured P/E and mixed-core comparison, not assumed root causes.
   - id: R2.02
     title: CPU hotspot and OpenMP scheduling breakdown
     depends_on: [R2.01]
-    status: PLANNED
+    status: IN_PROGRESS
+    evidence: docs/development/CPU_TOPOLOGY.md
     batch_hint: B02
     risk: performance
     exit: Profiling identifies real imbalance, bandwidth or cache constraints.
@@ -205,7 +207,8 @@ tasks:
   - id: R2.05
     title: TetPlan and finalize parallel build / amortized setup
     depends_on: [R2.01]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/PARALLEL_SETUP.md
     batch_hint: B02
     risk: architecture_performance
     exit: Stable IDs and fingerprints, cold-start and long-run cost documented.
@@ -226,7 +229,8 @@ tasks:
   - id: R4.04
     title: ResultReader streaming and out-of-core access
     depends_on: [R4.02]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/MAPPED_RESULTS.md
     batch_hint: B03
     risk: data_integrity_performance
     exit: Bounded memory with large frame counts and tested selective reads.
@@ -296,28 +300,32 @@ tasks:
   - id: R3.01
     title: SIMD batch API with scalar oracle
     depends_on: [R2.04]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/BATCH_KERNEL.md
     batch_hint: B07
     risk: performance_numerical
     exit: Reproducible scalar equivalence and compiler fallback.
   - id: R3.02
     title: AoSoA TET4 vectorized kernels
     depends_on: [R3.01]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/BATCH_KERNEL.md
     batch_hint: B07
     risk: performance
     exit: Tail-block and ISA correctness with real before/after timing.
   - id: R3.03
     title: Locality-aware tiling and node ordering
     depends_on: [R3.02]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/BATCH_KERNEL.md
     batch_hint: B07
     risk: architecture_performance
     exit: Stable external IDs and measured steady-state impact.
   - id: R3.04
     title: Optional mixed-precision with drift controls
     depends_on: [R3.02]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/BATCH_KERNEL.md
     batch_hint: B07
     risk: high_numerical
     exit: Default precision unchanged; explicit opt-in validated by errors and energy.
@@ -338,14 +346,16 @@ tasks:
   - id: R6.03
     title: Finite deformation and objectivity tests
     depends_on: [R6.02]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/FINITE_TET.md
     batch_hint: B09
     risk: high_numerical
     exit: Rigid rotation/objectivity and energetic consistency tests.
   - id: R6.04
     title: Time-varying loads and additional INP analysis semantics
     depends_on: [R5.04]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/SOLID_DLOAD_MATRIX.md
     batch_hint: B09
     risk: input_numerical
     exit: Supported loads represented and applied correctly; unsupported rejected.
@@ -360,14 +370,16 @@ tasks:
   - id: R7.01
     title: Incremental persistent BVH refit and rebuild comparison
     depends_on: [R0.04]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/CONTACT_SEARCH_B6.md
     batch_hint: B10
     risk: contact_performance
     exit: Identical pair detection and bounded memory with fair timing.
   - id: R7.02
     title: Deterministic parallel contact candidate assembly
     depends_on: [R7.01]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/CONTACT_SEARCH_B6.md
     batch_hint: B10
     risk: contact_concurrency
     exit: Shared candidates/races/duplicate tests and numerical consistency.
@@ -381,21 +393,24 @@ tasks:
   - id: R7.04
     title: Continuous collision detection integration
     depends_on: [R7.02]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/CONTACT_SEARCH_B6.md
     batch_hint: B11
     risk: high_contact_numerical
     exit: No untested claims of whole-domain CCD; verified missed-contact cases.
   - id: R7.05
     title: Contact results and history publishers
     depends_on: [R7.03, R4.02]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/MECHANICAL_PUBLISHERS.md
     batch_hint: B11
     risk: contact_result
     exit: Source identity, sign, location and energy output verified.
   - id: G0.01
     title: CUDA TET4 actual-device build and reference acceptance
     depends_on: [R0.05]
-    status: PLANNED
+    status: BLOCKED_ENV
+    evidence: docs/development/LOCAL_PROGRAM_HANDOFF.md
     batch_hint: G00
     risk: high_gpu
     exit: Toolchain, GPU, sanitizer and CPU/GPU numerical evidence, or BLOCKED_ENV.
@@ -423,7 +438,8 @@ tasks:
   - id: R8.01
     title: Shell S4R and beam B31 vertical slices
     depends_on: [R5.05, R6.01]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
+    evidence: docs/development/SECTION_ELEMENTS.md
     batch_hint: LONG_TERM
     risk: high_numerical
     exit: Per-family complete description, kernel, INP, Result and reference tests.
