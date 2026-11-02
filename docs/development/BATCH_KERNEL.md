@@ -8,3 +8,13 @@ Windows GCC 15.2, -O2 -fopenmp, four workers, 33334 TETs (partial final block), 
 |---|---:|---:|
 | 32 | 7.374 | 6.269 |
 | 64 | 8.882 | 7.302 |
+
+The optional tiled8 variant buckets elements by the neighborhood of their node
+indices, orders a private node table by first use and stages updated displacements
+through this table each pass. Mesh labels, stored connectivity, integration
+points and the global assembly order remain canonical. Its dedicated scratch
+requests large pages on Windows, with ordinary pages on privilege/allocation
+failure; Linux reports THP advice separately from actual page promotion.
+Windows reported ordinary pages on this machine. A 33334-element four-thread
+raw comparison passed in both precisions with zero hot aligned allocations.
+No cache-miss or TLB-counter improvement is claimed.

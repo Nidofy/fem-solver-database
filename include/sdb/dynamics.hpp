@@ -249,12 +249,13 @@ template <class T> class CpuExplicit {
     CpuExplicit(const MeshDB<T> &mesh, StateDB<T> &state, CpuPolicy policy = CpuPolicy::Serial,
                 Assembly assembly = Assembly::Deterministic, ExplicitControls controls = {}, TetKernel kernel = TetKernel::Scalar)
         : plan_(mesh, state, true, std::move(controls), policy), policy_(policy), assembly_(assembly), plastic_trial_(plan_.plastic_points.size()) {
-        if (kernel == TetKernel::Batch8) batch_.emplace(plan_);
+        if (kernel != TetKernel::Scalar) batch_.emplace(plan_,kernel==TetKernel::Tiled8);
 #ifndef _OPENMP
         if (policy == CpuPolicy::OpenMP)
             throw std::runtime_error("OpenMP not compiled");
 #endif
     }
+    const char* batch_pages() const {return batch_ ? batch_->page_mode() : "none";}
     const TetPlan<T> &plan() const { return plan_; }
     const auto &plastic_trials() const noexcept { return plastic_trial_; }
     // Completed element+assembly passes; observable for output-scheduling contracts.

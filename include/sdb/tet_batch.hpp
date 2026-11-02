@@ -2,32 +2,62 @@
 #include "field.hpp"
 #include "index.hpp"
 #include "cpu_policy.hpp"
+#include "batch_pages.hpp"
 
 namespace sdb {
-enum class TetKernel { Scalar, Batch8 };
+enum class TetKernel { Scalar, Batch8, Tiled8 };
 
 // Immutable reference tables. Each work item owns one eight-element block.
 template<class T> class TetBatch8 {
     static constexpr unsigned W=8;
-    std::vector<Index> elements_;
+    std::vector<Index> elements_, node_order_;
+    BatchPages<T> displacement_;
     Field<Index,4,AoSoA<W>> nodes_;
     Field<T,12,AoSoA<W>> gradients_;
     Field<T,3,AoSoA<W>> constants_; // volume, lambda, mu
   public:
-    template<class Plan> explicit TetBatch8(const Plan& plan) {
+    template<class Plan> explicit TetBatch8(const Plan& plan, bool tiled) {
         for(Index e=0;e<plan.is_tet.size();++e)
             if(plan.is_tet[e]) elements_.push_back(e);
+        std::vector<Index> inverse;
+        if(tiled) {
+            auto nodes=plan.nodes.read();
+            // Coarse element buckets retain canonical order within each neighborhood.
+            auto tile=[&](Index e) {
+                std::uint64_t sum=0;
+                for(unsigned c=0;c<4;++c) sum+=nodes(e,c)/4;
+                return sum/256;
+            };
+            std::stable_sort(elements_.begin(),elements_.end(),[&](Index a,Index b){return tile(a)<tile(b);});
+            inverse.assign(plan.fixed.size(),invalid_index);
+            for(auto e:elements_) for(unsigned a=0;a<4;++a) {
+                Index global=nodes(e,a);
+                if(inverse[global]==invalid_index) {
+                    inverse[global]=index_of(node_order_.size());
+                    node_order_.push_back(global);
+                }
+            }
+            displacement_.allocate(product(node_order_.size(),3));
+        }
         nodes_.resize(elements_.size()); gradients_.resize(elements_.size()); constants_.resize(elements_.size());
         auto n=nodes_.write(); auto g=gradients_.write(); auto p=constants_.write();
         for(std::size_t j=0;j<elements_.size();++j) {
             auto e=elements_[j];
-            for(unsigned a=0;a<4;++a) n(j,a)=plan.nodes.read()(e,a);
+            for(unsigned a=0;a<4;++a) n(j,a)=tiled?inverse[plan.nodes.read()(e,a)]:plan.nodes.read()(e,a);
             for(unsigned c=0;c<12;++c) g(j,c)=plan.gradients.read()(e,c);
             p(j,0)=plan.volume.read()(e); p(j,1)=plan.lambda.read()(e); p(j,2)=plan.mu.read()(e);
         }
     }
+    const char* page_mode() const {return displacement_.mode();}
     void evaluate(CpuPolicy policy, const std::vector<std::size_t>& ips, View<const T,3> u,
-                  View<const std::uint8_t> active, View<T,12> local, View<T,6> stress, View<T,6> strain) const {
+                  View<const std::uint8_t> active, View<T,12> local, View<T,6> stress, View<T,6> strain) {
+        if (!node_order_.empty()) {
+            View<T,3> staged{displacement_.data(),node_order_.size()};
+            parallel_for(node_order_.size(),policy,[&](std::size_t n){
+                for(unsigned c=0;c<3;++c) staged(n,c)=u(node_order_[n],c);
+            });
+            u={staged.data,staged.count};
+        }
         const auto nodes=nodes_.read(); const auto grad=gradients_.read(); const auto props=constants_.read();
         parallel_for((elements_.size()+W-1)/W,policy,[&](std::size_t block){
             const auto first=block*W, count=std::min<std::size_t>(W,elements_.size()-first);

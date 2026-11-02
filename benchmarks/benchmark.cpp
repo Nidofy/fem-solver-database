@@ -188,7 +188,7 @@ template <class T> void benchmark(std::size_t n, std::size_t repetitions, sdb::C
 #else
     std::cout << 1;
 #endif
-    std::cout << ",\"tet_kernel\":\"" << (kernel==sdb::TetKernel::Batch8?"batch8":"scalar") << "\",\"finalize_ms\":" << finalize_ms << ",\"tet_plan_ms\":" << plan_ms << ",\"mesh_fingerprint\":\"" << mesh.fingerprint() << "\",\"node_view_ms\":" << view_ms << ",\"node_raw_ms\":" << raw_ms << ",\"ip_ms\":" << ip_ms
+    std::cout << ",\"tet_kernel\":\"" << (kernel==sdb::TetKernel::Tiled8?"tiled8":kernel==sdb::TetKernel::Batch8?"batch8":"scalar") << "\",\"scratch_pages\":\"" << solver.batch_pages() << "\",\"finalize_ms\":" << finalize_ms << ",\"tet_plan_ms\":" << plan_ms << ",\"mesh_fingerprint\":\"" << mesh.fingerprint() << "\",\"node_view_ms\":" << view_ms << ",\"node_raw_ms\":" << raw_ms << ",\"ip_ms\":" << ip_ms
               << ",\"material_group_ms\":" << group_ms << ",\"candidate_ms\":" << contact_ms
               << ",\"candidate_batch_ms\":" << contact_batch_ms << ",\"gather_scatter_ms\":" << gather_scatter
               << ",\"explicit_steps_ms\":" << explicit_ms
@@ -236,6 +236,7 @@ int main(int argc, char **argv) {
         auto kernel = sdb::TetKernel::Scalar;
         for (int i=4;i<argc;++i) {
             if (std::string(argv[i])=="first-touch" && omp) sdb::parallel_first_touch=true;
+            else if (std::string(argv[i])=="tiled8") kernel=sdb::TetKernel::Tiled8;
             else if (std::string(argv[i])=="batch8") kernel=sdb::TetKernel::Batch8;
             else throw std::invalid_argument("expected first-touch or batch8");
         }

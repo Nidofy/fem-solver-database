@@ -97,9 +97,9 @@ template <class T> int run(const Args &a) {
     if (a.contains("--save-model"))
         ModelStore::save(a.at("--save-model"), model);
     const auto mode = a.contains("--tet-kernel") ? a.at("--tet-kernel") : "scalar";
-    if (mode!="scalar" && mode!="batch8") throw std::invalid_argument("expected scalar or batch8");
+    if (mode!="scalar" && mode!="batch8" && mode!="tiled8") throw std::invalid_argument("expected scalar, batch8 or tiled8");
     CpuRun<T> cpu(model,explicit_controls(a,model),a.contains("--omp")?CpuPolicy::OpenMP:CpuPolicy::Serial,
-                  mode=="batch8"?TetKernel::Batch8:TetKernel::Scalar);
+                  mode=="tiled8"?TetKernel::Tiled8:(mode=="batch8"?TetKernel::Batch8:TetKernel::Scalar));
     if (cpu.controls().options.enabled()) {
         const auto &plan = cpu.controls();
         auto e = plan.controlling_element;
