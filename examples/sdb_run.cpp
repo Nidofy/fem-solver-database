@@ -1,4 +1,5 @@
 #include <sdb/lifecycle.hpp>
+#include "penalty_option.hpp"
 #include <sdb/results/async_writer.hpp>
 #include <sdb/results/checkpoint_link.hpp>
 #include <sdb/results/export.hpp>
@@ -101,9 +102,16 @@ template <class T> int run(const Args &a) {
     const bool compressed = compression_policy && compression_policy->enabled();
     if (compressed && a.contains("--indexed")) throw std::invalid_argument("compression cannot use indexed2");
     const auto policy=a.contains("--omp") ? CpuPolicy::OpenMP : CpuPolicy::Serial;
-    auto model = a.contains("--model")
-                     ? ModelStore::load<T>(a.at("--model"))
-                     : ModelCompiler{}.compile<T>(ReaderRegistry{}.read(a.at("--input")).model,policy);
+    auto model = [&] {
+        if(a.contains("--model")) {
+            if(a.contains("--penalty-stiffness"))
+                throw std::invalid_argument("penalty stiffness is already bound in the saved model");
+            return ModelStore::load<T>(a.at("--model"));
+        }
+        auto ir=ReaderRegistry{}.read(a.at("--input")).model;
+        if(a.contains("--penalty-stiffness")) apply_penalty_option(ir,a.at("--penalty-stiffness"));
+        return ModelCompiler{}.compile<T>(std::move(ir),policy);
+    }();
     if (a.contains("--save-model"))
         ModelStore::save(a.at("--save-model"), model);
     const auto mode = a.contains("--tet-kernel") ? a.at("--tet-kernel") : "scalar";
@@ -195,7 +203,7 @@ int main(int argc, char **argv) {
             "--precision", "--output", "--checkpoint", "--restart", "--stop-after", "--buffer-mib",
             "--read",      "--field",  "--region",     "--time",    "--entity",     "--component",
             "--vtk",       "--xdmf",   "--convert-v2", "--durability", "--compression", "--compression-level",
-            "--compression-workers","--compression-fields", "--convert-result","--tet-kernel","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction",
+            "--penalty-stiffness","--compression-workers","--compression-fields", "--convert-result","--tet-kernel","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction",
             "--bulk-linear","--bulk-quadratic","--max-compression-rate"};
         for (int i = 1; i < argc; ++i) {
             std::string key = argv[i];
@@ -215,7 +223,7 @@ int main(int argc, char **argv) {
             (a.contains("--compression") || a.contains("--compression-level") || a.contains("--compression-fields") || a.contains("--compression-workers")))
             throw std::invalid_argument("compression options when reading require --convert-result");
         if (a.contains("--read") || a.contains("--inspect")) {
-            for (auto key : {"--omp","--tet-kernel","--refined-tet-dt","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction","--bulk-linear",
+            for (auto key : {"--penalty-stiffness","--omp","--tet-kernel","--refined-tet-dt","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction","--bulk-linear",
                              "--bulk-quadratic","--max-compression-rate"})
                 if (a.contains(key)) throw std::invalid_argument("explicit controls require a simulation");
         }

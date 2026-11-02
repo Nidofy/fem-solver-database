@@ -184,4 +184,13 @@ invoke("--input",fixture,"--output",split,"--checkpoint",rst,"--stop-after","741
 invoke("--input",fixture,"--output",split,"--restart",rst,"--append",fail=True)
 invoke("--input",fixture,"--output",split,"--restart",rst,"--append",*flags)
 assert full.read_bytes()==split.read_bytes()
+penalty = scratch/"penalty.inp"
+penalty.write_text(Path(fixture).read_text().replace("*Boundary","*Equation\n2\n40,1,1,10,1,-1\n*Boundary",1))
+result = scratch/"penalty.sdbres"
+saved = scratch/"penalty.sdbmodel"
+(scratch/"penalty-replay.sdbres").unlink(missing_ok=True)
+result.unlink(missing_ok=True)
+invoke("--input",penalty,"--penalty-stiffness","100","--output",result,"--save-model",saved)
+invoke("--model",saved,"--penalty-stiffness","200","--output",result,fail=True)
+assert "completed=1" in invoke("--model",saved,"--output",scratch/"penalty-replay.sdbres")
 print("pipeline PASS")
