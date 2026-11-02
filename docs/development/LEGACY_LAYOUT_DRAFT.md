@@ -8,8 +8,7 @@ Field ordinals are one-based; that fact cannot establish the base of stored IDs.
 
 The Windows ABI assumption follows compsch::getFieldType. INT declarations with
 nominal size 2 use sizeof(int), and DOUBLE uses sizeof(double) even when the ASC
-size disagrees. STR includes a trailing terminator slot. NODE_DATA depends on an
-external structure layout. Count mismatches carry reduced confidence on every
+size disagrees. STR includes a trailing terminator slot. NODE_DATA uses the Win64 layout from old/include/dbtypetyp.h::node_data and old/include/gen1typ.h::point3Df (28 bytes). Count mismatches carry reduced confidence on every
 field of that subfile. Native capture and round-trip qualification remain pending.
 
 ## Synthetic record probe
@@ -23,9 +22,7 @@ Use tools/legacy_db_reader.py FILE INVENTORY EXTENSION CASE KEY for inspection.
 String bytes are returned as hex to preserve padding and encoding.
 
 The reader assumes little endian, default x64 packing, six i32 date/time fields
-and signed 64-bit offsets. It handles indexed (fixed_size=0), constant-length
-records. Block allocation, VARLOC records and NODE_DATA layout require separate
-fixtures. Sources: old/cacdb/header.cpp (main and subfile headers),
+and signed 64-bit offsets. It handles indexed records, VARLOC repeated groups and --block block-addressed fixed records. All 25 ASC families have synthetic readback, including the NODE_DATA structure. Record lengths include the first active/deleted status byte. Production packing and word sizes require validation against the captured headers. Sources: old/cacdb/header.cpp (main and subfile headers),
 index.cpp::get_key (two-level case index, signed record addresses),
 schema.cpp::sch_prepare_fldend, and include/cfmDbase.h::_fhead.
 These tests use independent synthetic bytes. They do not certify the production

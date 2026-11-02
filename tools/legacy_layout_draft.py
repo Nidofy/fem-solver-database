@@ -15,7 +15,7 @@ def layout(field):
     if kind == "STR":
         return "byte", [size+1], size+1
     if kind == "NODE_DATA":
-        return None, None, None
+        return "node_data_i32_3xf32_3xi32", [1], 28
     raise ValueError("unrecognized field type: " + kind)
 
 
