@@ -60,6 +60,15 @@ std::uint64_t mib(const std::string &text) {
         throw std::length_error("memory budget overflow or zero");
     return n * 1024 * 1024;
 }
+std::size_t compression_workers(const Args& a) {
+    if (!a.contains("--compression-workers")) return 1;
+    const auto &value=a.at("--compression-workers");
+    if(value.empty() || value.find_first_not_of("0123456789")!=std::string::npos)
+        throw std::invalid_argument("compression worker count must be an integer in 1..64");
+    auto n=std::stoull(value);
+    if(!n || n>64) throw std::invalid_argument("compression worker count outside 1..64");
+    return static_cast<std::size_t>(n);
+}
 template<class T> ExplicitControls explicit_controls(const Args& args,const CompiledModel<T>& model) {
     ExplicitControls controls;
     auto number = [&](const char* name, double fallback) {
@@ -136,7 +145,7 @@ template <class T> int run(const Args &a) {
                                    a.contains("--recover-tail"));
         },
         a.contains("--indexed"), compressed ? ResultFormat::CompressedIndexed4 :
-            a.contains("--typed-indexed") ? ResultFormat::TypedIndexed3 : ResultFormat::Auto, compression_policy);
+            a.contains("--typed-indexed") ? ResultFormat::TypedIndexed3 : ResultFormat::Auto, compression_policy,compression_workers(a));
     ResultWriter writer(storage);
     if (auto last = storage.last(); last && last->time > cpu.state().data().time)
         throw std::runtime_error(
@@ -179,13 +188,13 @@ template <class T> int run(const Args &a) {
 int main(int argc, char **argv) {
     try {
         Args a;
-        const std::set<std::string> flags{"--omp","--refined-tet-dt","--indexed", "--typed-indexed", "--typed", "--append", "--recover-tail", "--inspect", "--verify"};
+        const std::set<std::string> flags{"--mmap","--omp","--refined-tet-dt","--indexed", "--typed-indexed", "--typed", "--append", "--recover-tail", "--inspect", "--verify"};
         const std::set<std::string> value_options{
             "--async-mib", "--ip",     "--input",      "--model",   "--save-model", "--backend",
             "--precision", "--output", "--checkpoint", "--restart", "--stop-after", "--buffer-mib",
             "--read",      "--field",  "--region",     "--time",    "--entity",     "--component",
             "--vtk",       "--xdmf",   "--convert-v2", "--durability", "--compression", "--compression-level",
-            "--compression-fields", "--convert-result","--tet-kernel","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction",
+            "--compression-workers","--compression-fields", "--convert-result","--tet-kernel","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction",
             "--bulk-linear","--bulk-quadratic","--max-compression-rate"};
         for (int i = 1; i < argc; ++i) {
             std::string key = argv[i];
@@ -200,8 +209,9 @@ int main(int argc, char **argv) {
         }
         if ((a.contains("--verify") || a.contains("--convert-result")) && !a.contains("--read"))
             throw std::invalid_argument("--verify and --convert-result require --read");
+        if (a.contains("--mmap") && !a.contains("--read")) throw std::invalid_argument("--mmap requires --read");
         if (a.contains("--read") && !a.contains("--convert-result") &&
-            (a.contains("--compression") || a.contains("--compression-level") || a.contains("--compression-fields")))
+            (a.contains("--compression") || a.contains("--compression-level") || a.contains("--compression-fields") || a.contains("--compression-workers")))
             throw std::invalid_argument("compression options when reading require --convert-result");
         if (a.contains("--read") || a.contains("--inspect")) {
             for (auto key : {"--omp","--tet-kernel","--refined-tet-dt","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction","--bulk-linear",
@@ -210,7 +220,7 @@ int main(int argc, char **argv) {
         }
         if (a.contains("--read")) {
             auto limit = a.contains("--buffer-mib") ? mib(a.at("--buffer-mib")) : native::default_limit;
-            ResultReader r(a.at("--read"), false, limit);
+            ResultReader r(a.at("--read"), false, limit, a.contains("--mmap")?ResultReadMode::MappedImmutable:ResultReadMode::Stream);
             std::cout << std::setprecision(17);
             if (a.contains("--verify")) {
                 for (std::size_t i = 0; i < r.index.size(); ++i) (void)r.frame(i);
@@ -220,7 +230,7 @@ int main(int argc, char **argv) {
                 const auto policy = compression_options(a);
                 const auto target = policy && policy->enabled() ? ResultFormat::CompressedIndexed4 : ResultFormat::TypedIndexed3;
                 const auto level = requested_durability(a);
-                NativeResultStorage output(a.at("--convert-result"), r.model, false, false, limit, {}, false, target, policy);
+                NativeResultStorage output(a.at("--convert-result"), r.model, false, false, limit, {}, false, target, policy,compression_workers(a));
                 for (std::size_t i = 0; i < r.index.size(); ++i) {
                     auto frame = r.frame(i);
                     if (!frame.binding) bind_result_frame(frame, r.model);

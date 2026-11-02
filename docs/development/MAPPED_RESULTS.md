@@ -17,3 +17,8 @@ when a writer or repair process owns the original.
 
 mapped_result_contract checks range and decoded frame parity with stream reads.
 Local verification: Windows x64 GCC 15, generated C3D4 indexed trajectory.
+
+The CLI selects immutable indexed reads with --read FILE --mmap. For indexed4,
+--compression-workers N sets a bounded pool (1..64) on writes and conversions.
+On Windows GCC 15.2 a three-worker zstd run with --buffer-mib 512 generated
+21 frames; --mmap --verify decoded and validated every frame.
