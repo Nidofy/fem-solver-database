@@ -169,6 +169,8 @@ template<class T> class SectionRun {
         }
     }
     std::uint64_t increments() const noexcept { return increments_; }
+    std::size_t step_index() const noexcept {return step_id_;}
+    bool end_of_step() const noexcept {return state_.data().step==segments_[step_id_].first+segments_[step_id_].count;}
     bool recovery_enabled() const noexcept {return recovery_model_.has_value();}
     lifecycle::ResultModel result_model() const {
         return recovery_model_ ? *recovery_model_ : lifecycle::ResultModel::from(model_,configuration_);
