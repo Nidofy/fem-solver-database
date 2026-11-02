@@ -3,8 +3,7 @@
 GeneralContact retains the surface BVH partition across evaluations, including after
 trial rollback. Each call validates the facets and recomputes their current boxes.
 Reverse-order refit compares leaf bounds and propagates changes only through their
-ancestors. Geometric bounds are refreshed from the current trial. The rounded-edge
-search uses its separate per-call tree. Severe mesh rearrangement can reduce query
+ancestors. Geometric bounds are refreshed from the current trial. The rounded-edge search refits a separate persistent tree for its selected edges. Severe mesh rearrangement can reduce query
 selectivity; correctness does not require rebalancing.
 
 Whole-domain surface candidate counts and fills run per source node, with a serial

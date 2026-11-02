@@ -5,7 +5,7 @@
 namespace sdb::general_contact {
 template <class T>
 std::vector<RoundedEdgeContact<T>> detect_rounded_edges(const Model<T> &model,
-                                                        const GeometryDB<T> &geometry) {
+                                                        const GeometryDB<T> &geometry, std::optional<detail::BVH<T>>* cache = nullptr) {
     const auto &settings = model.definition().controls;
     std::map<Feature, Index> identities;
     for (Index i = 0; i < model.edges().size(); ++i)
@@ -26,7 +26,10 @@ std::vector<RoundedEdgeContact<T>> detect_rounded_edges(const Model<T> &model,
         }
         boxes.push_back(box);
     }
-    detail::BVH<T> bvh(boxes);
+    std::optional<detail::BVH<T>> local;
+    auto& tree=cache?*cache:local;
+    if(tree)tree->refit(boxes);else tree.emplace(boxes);
+    const auto& bvh=*tree;
     std::vector<Index> hits;
     hits.reserve(selected.size());
     std::vector<RoundedEdgeContact<T>> result;
@@ -92,7 +95,8 @@ template <class T> struct Evaluation {
 template <class T>
 Evaluation<T> evaluate_general(Database<T> &db, const MeshDB<T> &mesh, const Model<T> &model,
                                const GeometryDB<T> &geometry, Analysis analysis, Execution execution,
-                               const DofMap *dofs, std::optional<detail::BVH<T>>* surface_tree = nullptr) {
+                               const DofMap *dofs, std::optional<detail::BVH<T>>* surface_tree = nullptr,
+                               std::optional<detail::BVH<T>>* edge_tree = nullptr) {
     if (!db.in_trial())
         throw std::logic_error("general contact evaluation requires trial");
     db.invalidate_trial();
@@ -114,7 +118,7 @@ Evaluation<T> evaluate_general(Database<T> &db, const MeshDB<T> &mesh, const Mod
             result.surface_statistics = surface.statistics;
         }
         validate_surface_history(db, surface, model);
-        auto edges = detect_rounded_edges(model, geometry);
+        auto edges = detect_rounded_edges(model, geometry, edge_tree);
         result.rounded_edge_constraints = edges.size();
         std::map<Id, Property<T>> properties;
         for (const auto &p : model.definition().properties)
@@ -203,7 +207,7 @@ template <class T> class GeneralContact {
     DofMap dofs_;
     std::vector<Vec<T>> accepted_positions_;
     std::optional<CoupledTrial<T>> trial_;
-    std::optional<detail::BVH<T>> surface_tree_;
+    std::optional<detail::BVH<T>> surface_tree_, edge_tree_;
     std::uint64_t evaluated_epoch_ = 0;
     std::vector<Vec<T>> coordinates(const StateDB<T> &state) const {
         auto view = state.current_view(mesh_);
@@ -225,6 +229,7 @@ template <class T> class GeneralContact {
     // straight nodal paths. The caller can retry with dt*fraction before commit.
     // Moving targets and quads still use discrete detection.
     std::optional<T> static_triangle_step_fraction(std::span<const Vec<T>> predicted) const {
+        if (!model_.definition().controls.node_face) return std::nullopt;
         if (predicted.size()!=mesh_.nodes()) throw std::invalid_argument("predicted coordinate count");
         for (const auto& x : predicted) for (T v : x) finite(v);
         const auto& faces=model_.facets();
@@ -284,7 +289,7 @@ template <class T> class GeneralContact {
         auto x = coordinates(state_);
         geometry_.update(mesh_, x, accepted_positions_);
         auto result = evaluate_general(contact_, mesh_, model_, geometry_, analysis, execution,
-                                       analysis == Analysis::Implicit ? &dofs_ : nullptr, &surface_tree_);
+                                       analysis == Analysis::Implicit ? &dofs_ : nullptr, &surface_tree_, &edge_tree_);
         trial_->apply_force(result.frame);
         evaluated_epoch_ = contact_.epoch();
         return result;
