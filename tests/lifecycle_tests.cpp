@@ -242,11 +242,7 @@ int main(int argc, char **argv) {
         auto continuation =
             replaced(source, "*Element, type=C3D4, elset=SOLID", "*Element,\n type=C3D4, elset=SOLID");
         check(parse(continuation).model.parts[0].elements[0].nodes.size() == 4, "keyword/data continuation");
-        for (auto [a, b] :
-             std::vector<std::pair<std::string, std::string>>{{"*Elastic", "*Plastic"}, {"100/6", "100/6"}}) {
-            if (a == "*Elastic")
-                rejects([&] { parse(replaced(source, a, b)); }, "buffer.inp:");
-        }
+        rejects([&] { parse(replaced(source, "*Elastic", "*Plastic,hardening=KINEMATIC")); }, "buffer.inp:");
         rejects([&] { parse(replaced(source, "U,V,A,RF", "PEEQ")); }, "unsupported output");
         rejects([&] { parse(replaced(source, "FREE,2,3", "FREE,2,3,0.1")); }, "zero boundary");
         rejects([&] { parse(replaced(source, "*Elastic", "*Elastic,dependencies=1")); },

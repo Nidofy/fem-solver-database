@@ -169,6 +169,12 @@ struct IRHistoryBinding {
     HistorySchema history_schema;
     template <class F> void visit(F f) { f(material, model, history_schema); }
 };
+struct IRPlastic {
+    std::string name;
+    std::vector<std::pair<double,double>> points;
+    Source source;
+    template<class F> void visit(F f) { f(name, points, source); }
+};
 struct ModelIR {
     std::uint32_t schema = 1;
     std::string units = "unspecified", assembly;
@@ -186,9 +192,10 @@ struct ModelIR {
     std::vector<IRHistoryBinding> history_bindings;
     ModelFoundation foundation;
     ModelExtensions extensions;
+    std::vector<IRPlastic> plastic;
     template <class F> void visit(F f) {
         f(schema);
-        if (schema != 1 && schema != 2 && schema != 3 && schema != 4)
+        if (schema != 1 && schema != 2 && schema != 3 && schema != 4 && schema != 5)
             throw std::runtime_error("unsupported ModelIR schema");
         f(units, assembly, mode, parts, instances, sets, materials, sections, surfaces, amplitudes,
           initial_boundaries, steps, opaque);
@@ -199,6 +206,8 @@ struct ModelIR {
         else if (!foundation.empty()) throw std::runtime_error("foundation requires ModelIR schema 3");
         if(schema>=4) f(extensions);
         else if(!extensions.empty()) throw std::runtime_error("model extensions require ModelIR schema 4");
+        if (schema == 5) f(plastic);
+        else if (!plastic.empty()) throw std::runtime_error("plasticity requires ModelIR schema 5");
     }
 };
 struct SourceEntry {

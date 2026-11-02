@@ -83,7 +83,7 @@ class DocumentTests(unittest.TestCase):
         self.assertIsNone(doc['cards'][0]['data'][0]['fields'])
         self.assertEqual(len(doc['diagnostics']),1)
         self.assertEqual(doc['cards'][1]['coverage']['mapping'],'SUBSET_AVAILABLE_NOT_VALIDATED')
-        self.assertEqual(doc['cards'][2]['coverage']['mapping'],'UNMAPPED')
+        self.assertEqual(doc['cards'][2]['coverage']['mapping'],'SUBSET_AVAILABLE_NOT_VALIDATED')
         self.assertTrue(all(not c['coverage']['solve_authorized'] for c in doc['cards']))
     def test_symlink_alias_roundtrip(self):
         (self.root/'child.inp').write_bytes(b'*NODE\n1,0,0,0\n')

@@ -1,6 +1,7 @@
 #pragma once
 #include "../input/abaqus.hpp"
 #include "../state.hpp"
+#include "../j2.hpp"
 #include "../model_ir/foundation_validate.hpp"
 #include <numbers>
 
@@ -29,6 +30,7 @@ inline ModelIR canonical_definition(ModelIR ir) {
     };
     strip(strip,ir);
     auto by_name=[](auto &v) { std::sort(v.begin(),v.end(),[](auto &a,auto &b){return a.name<b.name;}); };
+    by_name(ir.plastic);
     by_name(ir.parts); by_name(ir.instances); by_name(ir.materials); by_name(ir.amplitudes);
     for(auto &p:ir.parts) {
         std::sort(p.nodes.begin(),p.nodes.end(),[](auto &a,auto &b){return a.label<b.label;});
@@ -165,7 +167,7 @@ template <class T> struct CompiledModel {
 class ModelCompiler {
   public:
     template <class T> CompiledModel<T> compile(ModelIR ir) const {
-        if (ir.schema != 1 && ir.schema != 2 && ir.schema != 3 && ir.schema != 4)
+        if (ir.schema != 1 && ir.schema != 2 && ir.schema != 3 && ir.schema != 4 && ir.schema != 5)
             throw std::runtime_error("unsupported ModelIR schema");
         if (ir.schema == 1 && !ir.history_bindings.empty())
             throw std::runtime_error("history bindings require ModelIR schema 2");
@@ -174,6 +176,8 @@ class ModelCompiler {
         if (ir.schema < 3 && !ir.foundation.empty())
             throw std::runtime_error("foundation requires ModelIR schema 3");
         if(ir.schema<4 && !ir.extensions.empty()) throw std::runtime_error("model extensions require ModelIR schema 4");
+        if ((ir.schema == 5) != !ir.plastic.empty())
+            throw std::runtime_error("plasticity requires ModelIR schema 5 and a yield table");
         auto foundation = validate_foundation<T>(ir.foundation);
         ModelBuilder<T> b;
         std::vector<std::uint8_t> node_dofs;
@@ -193,7 +197,7 @@ class ModelCompiler {
             b.set_storage_contract(semantic_hash(ir.foundation));
             incapable({}, "schema-3 foundation semantics are storage-only; CPU kernel unavailable");
         }
-        if(ir.schema>=4) {
+        if(ir.schema==4 || !ir.extensions.empty()) {
             b.set_storage_contract(semantic_hash(std::array<std::uint64_t,2>{semantic_hash(ir.foundation),semantic_hash(ir.extensions)}));
             incapable({},"schema-4 model extensions are storage-only; CPU kernel unavailable");
         }
@@ -369,6 +373,11 @@ class ModelCompiler {
                 fail(m.source,"typed material missing material anchor");
             typed_materials.emplace(m.material,&m);
         }
+        std::map<std::string, const IRPlastic*> curves;
+        for (const auto &curve : ir.plastic)
+            if (!curves.emplace(curve.name, &curve).second || history_bindings.contains(curve.name) ||
+                typed_materials.contains(curve.name))
+                fail(curve.source, "duplicate/conflicting plastic material");
         for (auto &m : ir.materials) {
             Index idx = index_of(materials.size());
             if (!materials.emplace(m.name, idx).second)
@@ -387,6 +396,24 @@ class ModelCompiler {
                 material.model = 1;
                 material.parameters = {static_cast<T>(m.density), static_cast<T>(m.young), static_cast<T>(m.poisson)};
             }
+            if (curves.contains(m.name)) {
+                material.model = j2_model;
+                material.history_schema = j2_schema<T>();
+                material.history_variables = 7;
+                double previous_yield = 0, previous_eq = -1;
+                for (auto [yield, eq] : curves.at(m.name)->points) {
+                    foundation_real<T>(yield, curves.at(m.name)->source);
+                    foundation_real<T>(eq, curves.at(m.name)->source);
+                    if (!(yield > 0) || yield < previous_yield || !(eq > previous_eq) ||
+                        (previous_eq < 0 && eq != 0))
+                        fail(curves.at(m.name)->source, "expected monotone yield stress vs plastic strain starting at zero");
+                    previous_yield = yield;
+                    previous_eq = eq;
+                    material.parameters.push_back(static_cast<T>(yield));
+                    material.parameters.push_back(static_cast<T>(eq));
+                }
+                validate_j2(material);
+            }
             foundation.material_ids.emplace(m.name, MaterialId(idx));
             if (auto it = history_bindings.find(m.name); it != history_bindings.end()) {
                 if (typed_materials.contains(m.name) && typed_materials.at(m.name)->algorithm != it->second->model)
@@ -398,6 +425,8 @@ class ModelCompiler {
             }
             b.add_material(std::move(material));
         }
+        for (auto &[name, curve] : curves)
+            if (!materials.contains(name)) fail(curve->source,"unknown plastic material");
         for (const auto &[name, definition] : typed_materials)
             if (!materials.contains(name)) fail(definition->source,"typed material missing material anchor");
         for (const auto &[name, binding] : history_bindings)
@@ -493,6 +522,8 @@ class ModelCompiler {
                     }
                 } else {
                     mat = Id(materials.at(s->material)) + 1;
+                    if (curves.contains(s->material) && d.token != "C3D4")
+                        incapable(e.source, "J2 CPU implementation requires C3D4");
                     d.section = s->scope + "/" + s->set;
                     sections.push_back({ei, materials.at(s->material), s->kind, s->properties, s->source});
                     bool match =
@@ -667,7 +698,7 @@ class ModelCompiler {
                     fail(o.source, "invalid output selection/schedule");
                 for (auto &v : o.variables)
                     if (v != "U" && v != "V" && v != "A" && v != "RF" && v != "S" && v != "E" &&
-                        v != "ALLKE" && v != "ALLSE" && v != "ALLAE")
+                        v != "PEEQ" && v != "ALLKE" && v != "ALLSE" && v != "ALLAE")
                         fail(o.source, "unsupported output variable: " + v);
                 if (!o.region.empty()) {
                     bool node = o.variables.front() == "U" || o.variables.front() == "V" ||

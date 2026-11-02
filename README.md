@@ -145,6 +145,8 @@ full-integration C3D8, and uniform-strain C3D8R with elastic hourglass control.
 The [C3D8 contract](docs/development/astra_lifecycle_result/C3D8.md) and
 [C3D8R contract](docs/development/astra_lifecycle_result/C3D8R.md) specify
 mass, stability, integration-point output and numerical verification.
+C3D4 also supports [small-strain J2 plasticity](docs/development/J2_C3D4.md)
+with tabulated isotropic hardening, PEEQ output and committed restart history.
 
 Read [`docs/LAYOUT_AND_SYNC.md`](docs/LAYOUT_AND_SYNC.md) before borrowing views.
 # Lifecycle extension (2.1)

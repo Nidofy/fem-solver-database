@@ -331,7 +331,7 @@ tasks:
   - id: R6.02
     title: J2 plasticity with loading and unloading reference tests
     depends_on: [R6.01]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
     batch_hint: B08
     risk: high_numerical
     exit: Return mapping, dissipation and restart tests pass.

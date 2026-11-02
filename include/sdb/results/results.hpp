@@ -484,6 +484,8 @@ class ResultPublisher {
                             : "CPU linear TET4; current displacement constitutive evaluation";
                     if (cpu.plan().hex && cpu.plan().hex->hourglass_stiffness.size())
                         d.provenance = "CPU linear solids; HEX8 integration follows element descriptor";
+                    if (!cpu.plan().plastic_points.empty())
+                        d.provenance = "CPU small-strain solids; current displacement material trial";
                     bool nodal = name == "U" || name == "V" || name == "A" || name == "RF";
                     bool global = name == "ALLKE" || name == "ALLSE" || name == "ALLAE";
                     d.location =
@@ -492,6 +494,7 @@ class ResultPublisher {
                         global ? std::vector<std::string>{name}
                                : (nodal ? std::vector<std::string>{"X", "Y", "Z"}
                                         : std::vector<std::string>{"XX", "YY", "ZZ", "XY", "YZ", "ZX"});
+                    if (name == "PEEQ") d.components = {"PEEQ"};
                     if (!nodal && !global) {
                         d.integration_point = point;
                         d.tensor_shear = name == "E";
@@ -512,7 +515,9 @@ class ResultPublisher {
                     }
                     if (!nodal && !global) {
                         std::erase_if(
-                            ids, [&](Index e) { return model.mesh.element(e).integration_points < point; });
+                            ids, [&](Index e) { const auto &el = model.mesh.element(e);
+                                return el.integration_points < point ||
+                                       (name == "PEEQ" && model.mesh.materials()[el.material].model != j2_model); });
                         if (ids.empty())
                             continue;
                     }
@@ -536,13 +541,28 @@ class ResultPublisher {
                             } else if (name == "ALLAE") {
                                 if (cpu.plan().hex)
                                     energy = cpu.plan().hex->artificial_energy(u, s.element_active.read());
-                            } else
-                                for (std::size_t e = 0; e < s.stress.size(); ++e)
+                            } else {
+                                std::size_t plastic = 0;
+                                const auto &plan = cpu.plan();
+                                for (std::size_t e = 0; e < s.stress.size(); ++e) {
+                                    if (plastic < plan.plastic_points.size() &&
+                                        e == plan.ip_offsets[plan.plastic_points[plastic].element]) {
+                                        energy += plan.integration_weight.read()(e) *
+                                                  cpu.plastic_trials()[plastic++].elastic_energy;
+                                        continue;
+                                    }
                                     for (unsigned c = 0; c < 6; ++c)
                                         energy += .5 * double(cpu.plan().integration_weight.read()(e)) *
                                                   double(stress(e, c)) * double(strain(e, c)) *
                                                   (c < 3 ? 1 : 2);
+                                }
+                            }
                             field.values.push_back(energy);
+                        } else if (name == "PEEQ") {
+                            const auto &points = cpu.plan().plastic_points;
+                            auto it = std::lower_bound(points.begin(),points.end(),i,
+                                [](const auto &p, Index e){return p.element < e;});
+                            field.values.push_back(cpu.plastic_trials().at(it-points.begin()).history[6]);
                         } else if (nodal)
                             for (unsigned c = 0; c < 3; ++c)
                                 field.values.push_back(

@@ -531,6 +531,19 @@ class AbaqusInpReader final : public IModelReader {
                     fail(b.at, "MATERIAL must be model-level");
                 m.materials.push_back({required("NAME"), 0, 0, 0, b.at});
                 material = &m.materials.back();
+            } else if (b.key == "PLASTIC" && options.mode == ImportMode::Solve) {
+                params({"HARDENING"});
+                if (!material || step || in_part || in_assembly || b.data.empty() ||
+                    param("HARDENING","ISOTROPIC") != "ISOTROPIC")
+                    fail(b.at,"PLASTIC requires model-level isotropic yield data");
+                IRPlastic curve{material->name, {}, b.at};
+                for (const auto &line : b.data) {
+                    auto f = fields(line);
+                    while (!f.empty() && f.back().empty()) f.pop_back();
+                    count(f,2,2,line.at);
+                    curve.points.emplace_back(number(f[0],line.at),number(f[1],line.at));
+                }
+                m.plastic.push_back(std::move(curve));
             } else if (b.key == "DENSITY" || b.key == "ELASTIC") {
                 if (step || in_part || in_assembly)
                     fail(b.at, "material property must be model-level");
@@ -717,7 +730,7 @@ class AbaqusInpReader final : public IModelReader {
                             continue;
                         bool ok = b.key == "NODE OUTPUT"
                                       ? (name == "U" || name == "V" || name == "A" || name == "RF")
-                                      : (b.key == "ELEMENT OUTPUT" ? (name == "S" || name == "E")
+                                      : (b.key == "ELEMENT OUTPUT" ? (name == "S" || name == "E" || name == "PEEQ")
                                                                    : (name == "ALLKE" || name == "ALLSE" || name == "ALLAE"));
                         if (!ok)
                             fail(l.at, "unsupported output variable: " + name);
@@ -745,6 +758,7 @@ class AbaqusInpReader final : public IModelReader {
         for(auto &c:m.extensions.couplings) qualify(c.reference,c.source);
         for(auto &i:m.foundation.initial_conditions) qualify(i.node,i.source);
         result.report.parsed = true;
+        if (!m.plastic.empty()) m.schema = 5;
         return result;
     }
 };

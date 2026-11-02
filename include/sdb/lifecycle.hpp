@@ -104,6 +104,7 @@ template <class T> class CpuRun {
                                           : "cpu/tet4/linear/cd-v1/serial/deterministic"));
         if (cpu_.plan().hex && cpu_.plan().hex->hourglass_stiffness.size())
             native::encode(w, std::string("c3d8r/uniform-strain/elastic-hourglass-v1"));
+        if (!cpu_.plan().plastic_points.empty()) native::encode(w, std::string("j2/tet4/radial-return-v1"));
         native::encode(w, plans_);
         native::encode(w, std::uint8_t(sizeof(T)));
         // Only runs affected by the corrected propagated step-time amplitude

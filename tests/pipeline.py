@@ -133,7 +133,7 @@ for field in ("U","V","A","RF","S","E"):
 print("indexed independent-process linked restart/async PASS")
 
 # C3D8 full and mixed C3D4/C3D8: separate processes, both precisions/backends.
-for kind in ("forced_hex", "mixed_hex_tet", "forced_hex_reduced"):
+for kind in ("forced_hex", "mixed_hex_tet", "forced_hex_reduced", "j2_tet"):
     for precision in ("float", "double"):
         for indexed_mode in (False, True):
             prefix = f"{kind}-{precision}-{indexed_mode}"
@@ -149,19 +149,24 @@ for kind in ("forced_hex", "mixed_hex_tet", "forced_hex_reduced"):
                    "--checkpoint", hr, *flags)
             invoke("--model", hm, "--precision", precision, "--output", hs, "--restart", hr,
                    "--append", "--async-mib", "1")
-            for field, entity in (("U", "2"), ("S", "1")):
-                options = ["--ip", "8"] if field == "S" and kind != "forced_hex_reduced" else []
+            has_eight_ips = kind in ("forced_hex", "mixed_hex_tet")
+            queries = [("U","2"), ("S","1")]
+            if kind == "j2_tet": queries.append(("PEEQ","1"))
+            for field, entity in queries:
+                options = ["--ip", "8"] if field == "S" and has_eight_ips else []
                 assert invoke("--read", hf, "--field", field, "--entity", entity, *options) == invoke(
                     "--read", hs, "--field", field, "--entity", entity, *options)
             if not indexed_mode: assert hf.read_bytes() == hs.read_bytes()
             target = scratch / (prefix + "-vtk")
             invoke("--read", hf, "--vtk", target)
-            arrays = ET.parse(target / "frame_1000.vtu").findall("./UnstructuredGrid/Piece/CellData/DataArray")
+            last_frame = 2000 if kind == "j2_tet" else 1000
+            arrays = ET.parse(target / f"frame_{last_frame}.vtu").findall("./UnstructuredGrid/Piece/CellData/DataArray")
             names = {array.attrib["Name"] for array in arrays}
-            assert ("S@IP8" in names) == (kind != "forced_hex_reduced")
-            assert ("E@IP8" in names) == (kind != "forced_hex_reduced")
+            assert ("S@IP8" in names) == has_eight_ips
+            assert ("E@IP8" in names) == has_eight_ips
+            if kind == "j2_tet": assert "PEEQ" in names
             assert "S" in names and "E" in names
-print("C3D8 mixed/float/double/legacy/indexed/async/restart/export process matrix PASS")
+print("HEX8/J2 float/double/legacy/indexed/async/restart/export process matrix PASS")
 
 assert "CPU" in invoke("--input", Path(fixture).with_name("stored_types.inp"),
                         "--output", scratch / "unsupported.sdbres", fail=True)

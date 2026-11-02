@@ -1,6 +1,7 @@
 #pragma once
 #include "state.hpp"
 #include "hex8.hpp"
+#include "j2.hpp"
 #include <chrono>
 
 namespace sdb {
@@ -26,6 +27,16 @@ template <class T> struct TetViews {
     View<const T, 12> gradients;
     View<const T> volume, lambda, mu;
 };
+template<class T>
+SDB_HD void tet_integrate_stress(std::size_t e, TetViews<T> t, const T* s, View<T,12> local) {
+    for (unsigned a = 0; a < 4; ++a) {
+        const T gx = t.gradients(e, 3 * a), gy = t.gradients(e, 3 * a + 1), gz = t.gradients(e, 3 * a + 2),
+                v = t.volume(e);
+        local(e, 3 * a) = v * (s[0] * gx + s[3] * gy + s[5] * gz);
+        local(e, 3 * a + 1) = v * (s[3] * gx + s[1] * gy + s[4] * gz);
+        local(e, 3 * a + 2) = v * (s[5] * gx + s[4] * gy + s[2] * gz);
+    }
+}
 // Tensor order xx,yy,zz,xy,yz,zx. Strain stores tensor shear, not engineering shear.
 template <class T>
 SDB_HD void tet_force(std::size_t e, TetViews<T> t, View<const T, 3> u, View<T, 12> local, View<T, 6> stress,
@@ -50,13 +61,7 @@ SDB_HD void tet_force(std::size_t e, TetViews<T> t, View<const T, 3> u, View<T, 
         stress(point, c) = s[c];
         strain(point, c) = eps[c];
     }
-    for (unsigned a = 0; a < 4; ++a) {
-        const T gx = t.gradients(e, 3 * a), gy = t.gradients(e, 3 * a + 1), gz = t.gradients(e, 3 * a + 2),
-                v = t.volume(e);
-        local(e, 3 * a) = v * (s[0] * gx + s[3] * gy + s[5] * gz);
-        local(e, 3 * a + 1) = v * (s[3] * gx + s[1] * gy + s[4] * gz);
-        local(e, 3 * a + 2) = v * (s[5] * gx + s[4] * gy + s[2] * gz);
-    }
+    tet_integrate_stress(e, t, s, local);
 }
 template <class T> class TetPlan {
   public:
@@ -67,6 +72,9 @@ template <class T> class TetPlan {
     Field<T> integration_weight;
     std::vector<std::size_t> ip_offsets;
     std::vector<std::uint8_t> is_tet;
+    struct PlasticPoint { Index element; std::size_t law, history; };
+    std::vector<PlasticPoint> plastic_points;
+    std::vector<J2Law<T>> plastic_laws;
     std::unique_ptr<HexPlan<T>> hex;
     Field<std::uint8_t, 3> fixed;
     AlignedVector<std::size_t> adjacency_offsets;
@@ -108,6 +116,7 @@ template <class T> class TetPlan {
         auto shear = mu.write();
         auto dt = computed_dt.write();
         adjacency_offsets.resize(mesh.nodes() + 1, 0);
+        std::map<Index,std::size_t> law_ids;
         const auto x = mesh.reference();
         for (Index e = 0; e < mesh.elements(); ++e) {
             const auto &el = mesh.element(e);
@@ -115,8 +124,14 @@ template <class T> class TetPlan {
             if (el.topology == Topology::Hex8 && hex)
                 continue;
             is_tet[e] = 1;
-            if (el.topology != Topology::Tet4 || el.integration_points != 1 || mat.model != 1 ||
-                !mat.history_schema.empty())
+            const bool plastic = mat.model == j2_model && mat.history_schema.id == "sdb.j2.isotropic";
+            if (plastic && allow_hex && el.topology == Topology::Tet4 && el.integration_points == 1 &&
+                !mesh.has_sample_layout()) {
+                auto [it, inserted] = law_ids.emplace(el.material, plastic_laws.size());
+                if (inserted) plastic_laws.emplace_back(mat);
+                plastic_points.push_back({e, it->second, state.history_offsets()[e]});
+            } else if (el.topology != Topology::Tet4 || el.integration_points != 1 || mat.model != 1 ||
+                       !mat.history_schema.empty())
                 throw std::invalid_argument("TET4 linear-elastic one-IP kernel required");
             auto ns = mesh.connectivity(e);
             T a[3], b[3], c[3], cross_bc[3], cross_ca[3], cross_ab[3];
@@ -206,17 +221,19 @@ template <class T> class CpuExplicit {
     Assembly assembly_;
     std::uint64_t force_evaluations_ = 0, output_force_evaluations_ = 0;
     std::optional<ForceSnapshot<T>> output_;
+    std::vector<J2Trial<T>> plastic_trial_;
 
   public:
     CpuExplicit(const MeshDB<T> &mesh, StateDB<T> &state, CpuPolicy policy = CpuPolicy::Serial,
                 Assembly assembly = Assembly::Deterministic)
-        : plan_(mesh, state, true), policy_(policy), assembly_(assembly) {
+        : plan_(mesh, state, true), policy_(policy), assembly_(assembly), plastic_trial_(plan_.plastic_points.size()) {
 #ifndef _OPENMP
         if (policy == CpuPolicy::OpenMP)
             throw std::runtime_error("OpenMP not compiled");
 #endif
     }
     const TetPlan<T> &plan() const { return plan_; }
+    const auto &plastic_trials() const noexcept { return plastic_trial_; }
     // Completed element+assembly passes; observable for output-scheduling contracts.
     std::uint64_t force_evaluations() const noexcept { return force_evaluations_; }
     // Step-level homogeneous translation mask. No parser or result dependency.
@@ -251,6 +268,14 @@ template <class T> class CpuExplicit {
     std::uint64_t output_force_evaluations() const noexcept { return output_force_evaluations_; }
 
   private:
+    void commit_plastic(StateDB<T>& state) {
+        if (plastic_trial_.empty()) return;
+        auto history = state.data().history.write();
+        for (std::size_t j=0; j<plastic_trial_.size(); ++j)
+            for (unsigned c=0; c<7; ++c)
+                history(plan_.plastic_points[j].history+c) = plastic_trial_[j].history[c];
+    }
+
     void evaluate(const StateDB<T> &state, Field<T, 3> &target_force, Field<T, 6> &target_stress,
                   Field<T, 6> &target_strain) {
         if (state.model_id() != plan_.model_id)
@@ -280,6 +305,26 @@ template <class T> class CpuExplicit {
                 }
             }
         });
+        // Replace the elastic predictor for the sparse set of plastic TETs before assembly.
+        // Stage every point before publishing history; snapshots and forces() remain pure.
+        for (std::size_t j=0; j<plan_.plastic_points.size(); ++j) {
+            const auto &point = plan_.plastic_points[j];
+            const auto e = point.element;
+            const auto ip = ip_offsets[e];
+            auto &trial = plastic_trial_[j];
+            std::array<T,7> old{};
+            for (unsigned c=0; c<7; ++c) old[c] = s.history.read()(point.history+c);
+            if (!active(e)) {
+                trial = {};
+                trial.history = old;
+                continue;
+            }
+            std::array<T,6> eps{};
+            for (unsigned c=0; c<6; ++c) eps[c] = strain(ip,c);
+            trial = plan_.plastic_laws[point.law].trial(eps, old);
+            for (unsigned c=0; c<6; ++c) stress(ip,c) = trial.stress[c];
+            tet_integrate_stress(e, tet, trial.stress.data(), local);
+        }
         if (plan_.hex) {
             auto hex = plan_.hex.get();
             auto hex_local = hex->local_force.write();
@@ -367,6 +412,7 @@ template <class T> class CpuExplicit {
                 }
             }
         });
+        commit_plastic(state);
         s.dt = dt;
     }
     void step(StateDB<T> &state) {
@@ -380,13 +426,41 @@ template <class T> class CpuExplicit {
         auto f = s.internal_force.read(), ext = s.external_force.read(), contact = s.contact_force.read();
         auto fixed = plan_.fixed.read();
         auto active = s.node_active.read();
+        auto acceleration = [&](Index n, unsigned c) {
+            return (ext(n,c)+contact(n,c)-f(n,c))*inv(n);
+        };
+        // Stage the endpoint at t[n+1]. Use the same half-step arithmetic as the
+        // nodal update below, without copying the complete nodal state.
+        for (std::size_t j=0; j<plastic_trial_.size(); ++j) {
+            const auto &point = plan_.plastic_points[j];
+            const auto e = point.element;
+            if (!s.element_active.read()(e)) continue;
+            T grad[3][3]{};
+            for (unsigned b=0; b<4; ++b) {
+                const Index n = plan_.nodes.read()(e,b);
+                for (unsigned i=0; i<3; ++i) {
+                    T end = u(n,i);
+                    if (!fixed(n,i) && active(n)) {
+                        T acc = acceleration(n,i);
+                        end += dt*(v(n,i)+dt*acc);
+                    }
+                    for (unsigned k=0; k<3; ++k)
+                        grad[i][k] += end*plan_.gradients.read()(e,3*b+k);
+                }
+            }
+            std::array<T,6> eps{grad[0][0], grad[1][1], grad[2][2],
+                T(.5)*(grad[0][1]+grad[1][0]), T(.5)*(grad[1][2]+grad[2][1]),
+                T(.5)*(grad[2][0]+grad[0][2])};
+            plastic_trial_[j] = plan_.plastic_laws[point.law].trial(eps, plastic_trial_[j].history);
+        }
+        commit_plastic(state);
         parallel_for(u.count, policy_, [=](std::size_t n) {
             for (unsigned c = 0; c < 3; ++c) {
                 if (fixed(n, c) || !active(n)) {
                     v(n, c) = a(n, c) = 0;
                     continue;
                 }
-                a(n, c) = (ext(n, c) + contact(n, c) - f(n, c)) * inv(n);
+                a(n, c) = acceleration(n, c);
                 v(n, c) += dt * a(n, c);
                 u(n, c) += dt * v(n, c);
             }
