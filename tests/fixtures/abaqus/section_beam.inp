@@ -1,0 +1,24 @@
+*Heading
+Rectangular two-node elastic beam, axial tip load
+*Node
+1,0,0,0
+2,1,0,0
+*Element,type=B31,elset=SECTION
+1,1,2
+*Material,name=MAT
+*Density
+1
+*Elastic
+100,0
+*Beam Section,material=MAT,elset=SECTION,section=RECT
+.2,.1
+0,1,0
+*Boundary
+1,1,6
+2,2,6
+*Step,name=AXIAL,nlgeom=NO
+*Dynamic,Explicit,Direct User Control
+.0001,.1
+*Cload
+2,1,.002
+*End Step

@@ -709,8 +709,8 @@ class AbaqusInpReader final : public IModelReader {
                     a.source = l.at;
                     auto first = label(f[1], l.at);
                     auto last = bc && f.size() > 2 && !f[2].empty() ? label(f[2], l.at) : first;
-                    if (first > 3 || last > 3 || last < first)
-                        fail(l.at, "only translation DOF 1..3 supported");
+                    if (first > 6 || last > 6 || last < first)
+                        fail(l.at, "boundary/load DOF outside 1..6");
                     a.first = static_cast<std::uint8_t>(first - 1);
                     a.last = static_cast<std::uint8_t>(last - 1);
                     a.value =

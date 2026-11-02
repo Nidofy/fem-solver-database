@@ -672,7 +672,7 @@ class ModelCompiler {
             std::set<ActionKey> updated;
             for (auto &block : blocks)
                 for (auto &a : block.actions) {
-                    if (a.first > a.last || a.last >= 3 || !std::isfinite(a.value))
+                    if (a.first > a.last || a.last >= 6 || !std::isfinite(a.value))
                         fail(a.source, "invalid action DOF/value");
                     if (!a.amplitude.empty() && !analysis.amplitudes.contains(a.amplitude))
                         fail(a.source, "unknown amplitude: " + a.amplitude);
@@ -687,6 +687,7 @@ class ModelCompiler {
                         fail(a.source, "scaled action exceeds selected precision range");
                     for (auto n : resolve(true, a.target, "", a.source))
                         for (auto c = a.first; c <= a.last; ++c) {
+                            if(c>=node_dofs.at(n)) fail(a.source,"action selects unavailable nodal DOF");
                             ActionKey key{n, c};
                             if (!updated.insert(key).second)
                                 fail(a.source, "overlapping action targets in same step; combine explicitly");

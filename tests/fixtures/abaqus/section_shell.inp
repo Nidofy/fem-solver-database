@@ -1,0 +1,28 @@
+*Heading
+Planar reduced shell, uniform membrane extension
+*Node
+1,0,0,0
+2,1,0,0
+3,1,1,0
+4,0,1,0
+*Element,type=S4R,elset=SECTION
+1,1,2,3,4
+*Material,name=MAT
+*Density
+1
+*Elastic
+100,0
+*Shell Section,material=MAT,elset=SECTION
+.1
+*Boundary
+1,1,6
+4,1,6
+2,2,6
+3,2,6
+*Step,name=AXIAL,nlgeom=NO
+*Dynamic,Explicit,Direct User Control
+.0001,.1
+*Cload
+2,1,.005
+3,1,.005
+*End Step
