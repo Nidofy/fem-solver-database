@@ -47,6 +47,18 @@ template <class F> double timed(F &&fn) {
 }
 template <class T> void benchmark(std::size_t n, std::size_t repetitions, sdb::CpuPolicy policy, sdb::TetKernel kernel) {
     using namespace sdb;
+    int team=1;
+#ifdef _OPENMP
+    if (policy == CpuPolicy::OpenMP) {
+        // Keep one fixed team size through this benchmark. Runtime thread limits still apply.
+        omp_set_dynamic(0);
+#pragma omp parallel
+        {
+#pragma omp single
+            team=omp_get_num_threads();
+        }
+    }
+#endif
     auto begin = Clock::now();
     Field<T, 3> x(n), v(n);
     x.fill(T(.2));
@@ -183,11 +195,8 @@ template <class T> void benchmark(std::size_t n, std::size_t repetitions, sdb::C
     std::cout << std::setprecision(9) << "{\"precision\":" << sizeof(T) * 8 << ",\"nodes\":" << n
               << ",\"elements\":" << ne << ",\"repetitions\":" << repetitions << ",\"steps\":" << steps
               << ",\"threads\":";
-#ifdef _OPENMP
-    std::cout << (policy == CpuPolicy::OpenMP ? omp_get_max_threads() : 1);
-#else
-    std::cout << 1;
-#endif
+    std::cout << team << ",\"execution_policy\":\"" << (policy==CpuPolicy::OpenMP?"openmp":"serial")
+              << "\",\"first_touch\":" << (parallel_first_touch?"true":"false");
     std::cout << ",\"tet_kernel\":\"" << (kernel==sdb::TetKernel::Tiled8?"tiled8":kernel==sdb::TetKernel::Batch8?"batch8":"scalar") << "\",\"scratch_pages\":\"" << solver.batch_pages() << "\",\"finalize_ms\":" << finalize_ms << ",\"tet_plan_ms\":" << plan_ms << ",\"mesh_fingerprint\":\"" << mesh.fingerprint() << "\",\"node_view_ms\":" << view_ms << ",\"node_raw_ms\":" << raw_ms << ",\"ip_ms\":" << ip_ms
               << ",\"material_group_ms\":" << group_ms << ",\"candidate_ms\":" << contact_ms
               << ",\"candidate_batch_ms\":" << contact_batch_ms << ",\"gather_scatter_ms\":" << gather_scatter

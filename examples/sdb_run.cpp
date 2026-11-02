@@ -100,14 +100,15 @@ template <class T> int run(const Args &a) {
     const auto compression_policy = compression_options(a);
     const bool compressed = compression_policy && compression_policy->enabled();
     if (compressed && a.contains("--indexed")) throw std::invalid_argument("compression cannot use indexed2");
+    const auto policy=a.contains("--omp") ? CpuPolicy::OpenMP : CpuPolicy::Serial;
     auto model = a.contains("--model")
                      ? ModelStore::load<T>(a.at("--model"))
-                     : ModelCompiler{}.compile<T>(ReaderRegistry{}.read(a.at("--input")).model);
+                     : ModelCompiler{}.compile<T>(ReaderRegistry{}.read(a.at("--input")).model,policy);
     if (a.contains("--save-model"))
         ModelStore::save(a.at("--save-model"), model);
     const auto mode = a.contains("--tet-kernel") ? a.at("--tet-kernel") : "scalar";
     if (mode!="scalar" && mode!="batch8" && mode!="tiled8" && mode!="mixed8") throw std::invalid_argument("expected scalar, batch8, tiled8 or mixed8");
-    CpuRun<T> cpu(model,explicit_controls(a,model),a.contains("--omp")?CpuPolicy::OpenMP:CpuPolicy::Serial,
+    CpuRun<T> cpu(model,explicit_controls(a,model),policy,
                   mode=="mixed8"?TetKernel::Mixed8:mode=="tiled8"?TetKernel::Tiled8:(mode=="batch8"?TetKernel::Batch8:TetKernel::Scalar));
     if (cpu.controls().options.enabled()) {
         const auto &plan = cpu.controls();

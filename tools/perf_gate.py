@@ -20,7 +20,8 @@ def samples(path):
         if any(type(x) is not int or x <= 0 for x in key):
             raise ValueError("invalid workload identity")
         key += (row.get("pool", "all"), tuple(row.get("cpu_ids", [])),
-                row.get("first_touch", False), row.get("tet_kernel","scalar"))
+                row.get("first_touch", False), row.get("tet_kernel","scalar"),
+                row.get("execution_policy","openmp" if row["threads"]>1 else "serial"))
         if row["explicit_hot_allocations"] or row["node_hot_allocations"]:
             raise ValueError(f"unexpected hot allocation in {key}")
         times = [row[k] for k in METRICS]

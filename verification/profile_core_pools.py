@@ -36,9 +36,12 @@ def main():
                 sys.exit(result.stderr)
             topology = json.loads(result.stderr.splitlines()[0])
             for row in result.stdout.splitlines():
-                print(json.dumps(dict(sample=sample, pool=pool, first_touch=touch,
-                                      cpu_ids=[c["cpu"] for c in topology["processors"]],
-                                      **json.loads(row))),flush=True)
+                sample_row = json.loads(row)
+                if sample_row["threads"] != n or sample_row.get("first_touch",touch) != touch:
+                    raise RuntimeError("benchmark did not execute requested placement configuration")
+                sample_row.update(sample=sample,pool=pool,first_touch=touch,
+                                  cpu_ids=[c["cpu"] for c in topology["processors"]])
+                print(json.dumps(sample_row),flush=True)
 
 
 if __name__ == "__main__":
