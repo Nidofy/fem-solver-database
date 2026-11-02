@@ -733,7 +733,7 @@ class ResultReader {
     std::uint64_t valid_end = 0;
     bool incomplete_tail = false;
     explicit ResultReader(const std::filesystem::path &path, bool allow_incomplete_tail = false,
-                          std::uint64_t limit = native::default_limit)
+                          std::uint64_t limit = native::default_limit, ResultReadMode mode = ResultReadMode::Stream)
         : path_(path), limit_(limit) {
         std::ifstream in(path, std::ios::binary);
         std::array<std::uint8_t, 8> magic_bytes{};
@@ -741,14 +741,15 @@ class ResultReader {
         native::Reader probe{magic_bytes};
         auto file_magic = probe.integer<std::uint64_t>();
         if (file_magic == indexed_detail::magic || file_magic == typed_detail::magic || file_magic == compressed_detail::magic) {
-            indexed_ = std::make_shared<indexed_detail::File>(path, limit, allow_incomplete_tail);
+            indexed_ = std::make_shared<indexed_detail::File>(path, limit, allow_incomplete_tail, mode);
             model = indexed_->model;
             index.bind(indexed_);
             valid_end = indexed_->valid_end;
             incomplete_tail = indexed_->incomplete_tail;
         } else {
             in.seekg(0);
-            native::prefix(in, result_magic);
+            if(mode==ResultReadMode::MappedImmutable) throw std::invalid_argument("mapping requires indexed results");
+        native::prefix(in, result_magic);
             model = native::unpack<ResultModel>(native::record(in, 0, limit), limit);
             typed_detail::validate_model(model,limit);
         }

@@ -1,11 +1,13 @@
 #pragma once
 // Internal native v2 implementation. Included after the common result schema.
+#include "../io/mapped_input.hpp"
 #include <random>
 #include <numeric>
 #include <memory>
 #include "typed_format.hpp"
 #include "compressed_format.hpp"
 namespace sdb::lifecycle {
+enum class ResultReadMode { Stream, MappedImmutable };
 struct ResultReadStats {
     std::uint64_t bytes = 0, decoded_value_bytes = 0;
     std::uint64_t stored_block_bytes = 0, raw_block_bytes = 0, compressed_blocks = 0;
@@ -103,11 +105,25 @@ class File {
     bool compressed_ = false;
     CompressionSettings compression_;
     mutable ResultReadStats stats_;
+    std::unique_ptr<MappedInput> mapped_;
+    native::Bytes mapped_record(std::uint64_t offset,std::uint32_t kind,std::uint64_t size,
+                                std::optional<std::uint32_t> expected_crc) const {
+        native::Reader h{mapped_->slice(offset,16)};
+        if(h.integer<std::uint32_t>()!=kind || h.integer<std::uint64_t>()!=size)
+            throw std::runtime_error("mapped record header mismatch");
+        const auto crc=h.integer<std::uint32_t>();
+        auto body=mapped_->slice(offset+16,size);
+        if((expected_crc && *expected_crc!=crc) || checkpoint_detail::crc(body)!=crc)
+            throw std::runtime_error("mapped record CRC mismatch");
+        stats_.bytes+=16+size;
+        return {body.begin(),body.end()};
+    }
     mutable std::ifstream stream_; // single caller; reused for bounded random metadata reads
     native::Bytes at(const Ref &ref, std::uint32_t kind, std::uint64_t upper, std::uint64_t limit) const {
         if (ref.offset > upper || upper - ref.offset < 16 || ref.size > upper - ref.offset - 16 ||
             ref.size > limit)
             throw std::runtime_error("indexed reference outside committed range/budget");
+        if(mapped_) return mapped_record(ref.offset,kind,ref.size,ref.crc);
         auto &in = stream_;
         in.clear();
         in.seekg(static_cast<std::streamoff>(ref.offset));
@@ -147,15 +163,19 @@ class File {
     Footer footer(std::uint64_t offset) const {
         if (offset < begin_ || offset > size_ || size_ - offset < footer_bytes())
             throw std::runtime_error("indexed footer offset outside file");
-        auto &in = stream_;
-        in.clear();
-        in.seekg(static_cast<std::streamoff>(offset));
-        auto h = native::header(in, 4096);
-        stats_.bytes += 16;
-        if (h.kind != 5 || h.size != footer_bytes() - 16)
-            throw std::runtime_error("incomplete indexed footer; explicit recovery required");
-        auto b = native::body(in, h);
-        stats_.bytes += b.size();
+        native::Bytes b;
+        if(mapped_) b=mapped_record(offset,5,footer_bytes()-16,std::nullopt);
+        else {
+            auto &in = stream_;
+            in.clear();
+            in.seekg(static_cast<std::streamoff>(offset));
+            auto h = native::header(in, 4096);
+            stats_.bytes += 16;
+            if (h.kind != 5 || h.size != footer_bytes() - 16)
+                throw std::runtime_error("incomplete indexed footer; explicit recovery required");
+            b = native::body(in, h);
+            stats_.bytes += b.size();
+        }
         auto f = native::unpack<Footer>(b, 4096);
         if (f.identity.model != identity_.model || f.identity.nonce != identity_.nonce ||
             f.count > size_ / footer_bytes())
@@ -339,8 +359,9 @@ class File {
         if (!out)
             throw std::runtime_error("indexed output flush failed");
     }
-    File(const std::filesystem::path &path, std::uint64_t limit, bool recover = false)
+    File(const std::filesystem::path &path, std::uint64_t limit, bool recover = false, ResultReadMode mode = ResultReadMode::Stream)
         : path_(path), limit_(limit), stream_(path, std::ios::binary) {
+        if(mode==ResultReadMode::MappedImmutable) mapped_=std::make_unique<MappedInput>(path);
         size_ = std::filesystem::file_size(path);
         std::ifstream in(path, std::ios::binary);
         std::array<std::uint8_t,8> header{};
