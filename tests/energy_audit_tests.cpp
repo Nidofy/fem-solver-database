@@ -29,6 +29,8 @@ template<class T> void run_test(const std::filesystem::path &fixture,const std::
     if(std::abs(wk-u)>2e-6 || std::abs(scalar(f,"ETOTAL")-(ie+ke+viscous-wk))>1e-11)
         throw std::runtime_error("external work or total definition");
     bool plastic=!ir.plastic.empty();
+    full.state().data().element_active.fill(0);
+    if(scalar(full.snapshot(),"ALLIE")!=0) throw std::runtime_error("inactive internal energy");
     if(plastic ? !(ie>se) : (ie!=se || std::abs(ie+ke+viscous-wk)>(damping?2e-4:2e-6)))
         throw std::runtime_error("internal energy reference");
 }
