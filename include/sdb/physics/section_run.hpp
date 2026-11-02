@@ -9,6 +9,7 @@ template<class T> class SectionRun {
     std::vector<SectionElement> elements_;
     Field<T,6> forces_;
     Field<std::uint8_t,6> fixed_;
+    std::optional<PenaltyConstraints> penalty_;
     std::uint64_t increments_=0,configuration_=0;
     double dt_=0;
     void evaluate(){
@@ -22,6 +23,13 @@ template<class T> class SectionRun {
                 }
                 auto n=el.nodes[i/6],d=i%6;f(n,d)-=T(fi);
                 if(d<3)s.internal_force.write()(n,d)+=T(fi);else r.torque.write()(n,d-3)+=T(fi);
+            }
+        }
+        if(penalty_) {
+            auto reactions=penalty_->evaluate(state_);
+            for(Index n=0;n<model_.mesh.nodes();++n)for(unsigned d=0;d<3;++d){
+                f(n,d)+=reactions.restoring_force.read()(n,d);
+                f(n,d+3)+=reactions.restoring_moment.read()(n,d);
             }
         }
         for(auto& l:step.loads) {
@@ -38,10 +46,18 @@ template<class T> class SectionRun {
   public:
     explicit SectionRun(const lifecycle::CompiledModel<T>& model):model_(model),state_(model.mesh,true),
         forces_(model.mesh.nodes()),fixed_(model.mesh.nodes()){
+        for (const auto &step : model.outputs)
+            for (const auto &request : step)
+                for (const auto &name : request.variables)
+                    if(name!="U" && name!="UR")
+                        throw std::invalid_argument("section backend publishes U/UR only; requested output unavailable: "+name);
         const auto& def=model.definition;
+        auto other=def.foundation;auto extensions=def.extensions;
+        if(def.penalty_stiffness>0){other.equations.clear();other.rigids.clear();extensions.couplings.clear();
+            penalty_.emplace(model,def.penalty_stiffness);}
         if(def.mode!=lifecycle::ImportMode::Solve || model.analysis.steps.size()!=1 || !def.opaque.empty() ||
-           !def.foundation.empty() || !def.extensions.empty() || def.finite_geometry || !def.plastic.empty() ||
-           def.penalty_stiffness!=0 || model.sections.size()!=model.mesh.elements())
+           !other.empty() || !extensions.empty() || def.finite_geometry || !def.plastic.empty() ||
+           model.sections.size()!=model.mesh.elements())
             throw std::invalid_argument("section backend requires an isolated single-step elastic section model");
         const auto& step=model.analysis.steps[0];
         for(const auto& b:step.boundaries)fixed_.write()(b.node,b.component)=1;
@@ -62,6 +78,7 @@ template<class T> class SectionRun {
             s.inverse_mass.write()(n)=1/s.mass.read()(n);
             for(unsigned d=0;d<3;++d)r.inverse_inertia.write()(n,d)=1/r.inertia.read()(n,d);
         }
+        if(penalty_)bound+=penalty_->evaluate(state_).frequency_squared_bound;
         double h=1.9/std::sqrt(bound);
         if(step.direct && step.increment>h)throw std::domain_error("section increment exceeds stability bound");
         double requested=step.direct?step.increment:std::min(step.increment>0?step.increment:h,.8*h);

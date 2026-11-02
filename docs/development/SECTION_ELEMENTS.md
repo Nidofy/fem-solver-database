@@ -19,5 +19,8 @@ The implementation rejects warped/nonrectangular shells, alternate profiles,
 nonlinear kinematics, multiple steps and unsupported foundation data.
 
 The isolated tests exercise six-DOF rigid motion, a uniform axial oscillator,
-FP32/FP64 and model/restart reload. Layered recovery, point stresses, rotational
+FP32/FP64 and model/restart reload. A constant-curvature kinematic field
+recovers EI/2 for B31 and D/2 for S4R at unit length or area. Pure shell
+transverse shear recovers the 5/6 shear energy. Rectangular beam torsion
+matches the independent Saint-Venant odd Fourier series within 1%. Layered recovery, point stresses, rotational
 inertia tensors and industrial bending benchmarks remain to be qualified.

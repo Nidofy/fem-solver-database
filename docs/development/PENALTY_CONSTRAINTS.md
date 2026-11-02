@@ -16,5 +16,15 @@ The schema and stiffness are persisted by ModelStore and included in restart
 identity. Other foundation semantics continue through their existing capability
 gates. The reference fixture adds a constraint to the forced tetrahedron,
 checks the analytic oscillator response, and resumes after 200 increments.
-Rotational arms, ties and local bases remain outside this consumer. A penalty
+SectionRun also accepts schema-6 equations and couplings. When rotary DOFs
+exist, kinematic rows include reference rotation cross lever arm; rotational
+equation rows use rotary inertia. A distributing cloud obtains reference
+rotation through the normalized weighted rigid-motion least-squares fit about
+its centroid, and translates the fitted motion to the reference point. The
+transpose produces balanced nodal forces and a reference moment. The consumer
+rejects singular clouds for nonzero moment requirements. A pure translational
+reference retains the three-DOF weighted translation convention. The test
+uses unequal weights and an off-centroid reference to check resultant force,
+net torque and rigid-motion invariance. Surface ties and local bases remain
+outside this consumer. A penalty
 permits a finite gap. Scaling an equation changes its penalty stiffness.
