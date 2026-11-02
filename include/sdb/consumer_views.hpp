@@ -96,6 +96,8 @@ template <class T> class ReferenceConsumer {
     MaterialView<T> tet_material_;
     ShapeTableView<T, 4> tet_shape_;
     std::optional<ElementBatchView<8>> hex_;
+    std::optional<BorrowedField<T, 32>> hex_modes_;
+    std::optional<BorrowedField<T>> hex_stiffness_;
     std::optional<MaterialView<T>> hex_material_;
     std::optional<ShapeTableView<T, 8>> hex_shape_;
     std::uint64_t model_id_;
@@ -118,6 +120,8 @@ template <class T> class ReferenceConsumer {
         }
         if (plan.hex) {
             const auto &h = *plan.hex;
+            hex_modes_.emplace(h.hourglass_modes);
+            hex_stiffness_.emplace(h.hourglass_stiffness);
             hex_elements_.resize(h.elements.size()); hex_ips_.resize(h.ip_offsets.size());
             hex_local_.resize(h.elements.size());
             for (std::size_t e = 0; e < h.elements.size(); ++e) {
@@ -148,7 +152,7 @@ template <class T> class ReferenceConsumer {
             hes = hex_->global_elements.resolve(); hactive = hex_->active.resolve();
             h.emplace(HexViews<T>{hex_->nodes.resolve(), hex_shape_->gradients.resolve(),
                 hex_shape_->weights.resolve(), hex_material_->lambda.resolve(), hex_material_->mu.resolve(),
-                hex_->integration_points.resolve()});
+                hex_->integration_points.resolve(), hex_modes_->resolve(), hex_stiffness_->resolve()});
         }
         if (node.element_active.resolve().data != active.data)
             throw std::invalid_argument("consumer bound to another state activity field");

@@ -718,7 +718,7 @@ class AbaqusInpReader final : public IModelReader {
                         bool ok = b.key == "NODE OUTPUT"
                                       ? (name == "U" || name == "V" || name == "A" || name == "RF")
                                       : (b.key == "ELEMENT OUTPUT" ? (name == "S" || name == "E")
-                                                                   : (name == "ALLKE" || name == "ALLSE"));
+                                                                   : (name == "ALLKE" || name == "ALLSE" || name == "ALLAE"));
                         if (!ok)
                             fail(l.at, "unsupported output variable: " + name);
                         o.variables.push_back(name);

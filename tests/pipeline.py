@@ -133,7 +133,7 @@ for field in ("U","V","A","RF","S","E"):
 print("indexed independent-process linked restart/async PASS")
 
 # C3D8 full and mixed C3D4/C3D8: separate processes, both precisions/backends.
-for kind in ("forced_hex", "mixed_hex_tet"):
+for kind in ("forced_hex", "mixed_hex_tet", "forced_hex_reduced"):
     for precision in ("float", "double"):
         for indexed_mode in (False, True):
             prefix = f"{kind}-{precision}-{indexed_mode}"
@@ -150,7 +150,7 @@ for kind in ("forced_hex", "mixed_hex_tet"):
             invoke("--model", hm, "--precision", precision, "--output", hs, "--restart", hr,
                    "--append", "--async-mib", "1")
             for field, entity in (("U", "2"), ("S", "1")):
-                options = ["--ip", "8"] if field == "S" else []
+                options = ["--ip", "8"] if field == "S" and kind != "forced_hex_reduced" else []
                 assert invoke("--read", hf, "--field", field, "--entity", entity, *options) == invoke(
                     "--read", hs, "--field", field, "--entity", entity, *options)
             if not indexed_mode: assert hf.read_bytes() == hs.read_bytes()
@@ -158,12 +158,9 @@ for kind in ("forced_hex", "mixed_hex_tet"):
             invoke("--read", hf, "--vtk", target)
             arrays = ET.parse(target / "frame_1000.vtu").findall("./UnstructuredGrid/Piece/CellData/DataArray")
             names = {array.attrib["Name"] for array in arrays}
-            assert "S@IP8" in names and "E@IP8" in names
+            assert ("S@IP8" in names) == (kind != "forced_hex_reduced")
+            assert ("E@IP8" in names) == (kind != "forced_hex_reduced")
             assert "S" in names and "E" in names
-# Reduced integration is rejected before creating any output file.
-reduced = scratch / "unsupported-c3d8r.inp"
-reduced.write_text(Path(fixture).with_name("forced_hex.inp").read_text().replace("type=C3D8,", "type=C3D8R,"))
-assert "CPU" in invoke("--input", reduced, "--output", scratch / "reduced.sdbres", fail=True)
 print("C3D8 mixed/float/double/legacy/indexed/async/restart/export process matrix PASS")
 
 assert "CPU" in invoke("--input", Path(fixture).with_name("stored_types.inp"),

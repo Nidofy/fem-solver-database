@@ -6,8 +6,17 @@ template <class T> struct HexViews {
     View<const T, 24> gradients;
     View<const T> weights, lambda, mu;
     View<const std::size_t> ip_offsets;
+    View<const T, 32> hourglass_modes{};
+    View<const T> hourglass_stiffness{};
 };
-// Shared unchanged HEX8 force algebra; setup and assembly remain outside the view contract.
+template <class T>
+T hourglass_amplitude(std::size_t h, unsigned mode, unsigned component, View<const Index, 8> nodes,
+                      View<const T, 32> modes, View<const T, 3> u) {
+    T amplitude = 0;
+    for (unsigned a = 0; a < 8; ++a)
+        amplitude += modes(h, 8 * mode + a) * u(nodes(h, a), component);
+    return amplitude;
+}
 template <class T>
 void hex_force(std::size_t h, HexViews<T> t, View<const T, 3> u, View<T, 24> local,
                View<T, 6> stress, View<T, 6> strain, bool active) {
@@ -16,7 +25,22 @@ void hex_force(std::size_t h, HexViews<T> t, View<const T, 3> u, View<T, 24> loc
     auto w = t.weights;
     for (unsigned c = 0; c < 24; ++c)
         local(h, c) = 0;
-    for (unsigned q = 0; q < 8; ++q) {
+    // Positive weights identify full Gauss slots. Reduced plans reserve slots
+    // 1..7 with zero weight so older six-field views cannot masquerade as full.
+    const bool reduced = w(8 * h + 1) == 0;
+    if (reduced && (h >= t.hourglass_modes.count || h >= t.hourglass_stiffness.count ||
+                    !(t.hourglass_stiffness(h) > 0)))
+        throw std::invalid_argument("reduced HEX8 view requires hourglass data");
+    if (active && reduced) {
+        for (unsigned mode = 0; mode < 4; ++mode)
+            for (unsigned i = 0; i < 3; ++i) {
+                T amplitude = hourglass_amplitude(h, mode, i, conn, t.hourglass_modes, u);
+                for (unsigned a = 0; a < 8; ++a)
+                    local(h, 3 * a + i) += t.hourglass_stiffness(h) * amplitude *
+                                            t.hourglass_modes(h, 8 * mode + a);
+            }
+    }
+    for (unsigned q = 0; q < (reduced ? 1u : 8u); ++q) {
         auto p = 8 * h + q, ip = t.ip_offsets(h) + q;
         if (!active) {
             for (unsigned c = 0; c < 6; ++c) {
@@ -50,7 +74,7 @@ void hex_force(std::size_t h, HexViews<T> t, View<const T, 3> u, View<T, 24> loc
         }
     }
 }
-// CPU full-integration small-strain brick. See the formulation contract in docs.
+// CPU full-integration and uniform-strain small-strain bricks. See the formulation contract in docs.
 template <class T> class HexPlan {
   public:
     std::vector<Index> elements;
@@ -59,6 +83,8 @@ template <class T> class HexPlan {
     Field<Index, 8> nodes;
     Field<T, 24> gradients, local_force;
     Field<T> weights, lambda, mu;
+    Field<T, 32> hourglass_modes;
+    Field<T> hourglass_stiffness;
     T stable_step = std::numeric_limits<T>::max();
     HexPlan(const MeshDB<T> &mesh, const StateDB<T> &state, Field<T> &mass_field, Field<T> &dt_field,
             Field<T> &volumes, Field<T> &point_weights) {
@@ -67,6 +93,12 @@ template <class T> class HexPlan {
         for (Index e = 0; e < mesh.elements(); ++e)
             if (mesh.element(e).topology == Topology::Hex8)
                 elements.push_back(e);
+        if (std::any_of(elements.begin(), elements.end(), [&](Index e) {
+                return mesh.element(e).integration_points == 1;
+            })) {
+            hourglass_modes.resize(elements.size());
+            hourglass_stiffness.resize(elements.size());
+        }
         nodes.resize(elements.size());
         gradients.resize(product(elements.size(), 8));
         weights.resize(product(elements.size(), 8));
@@ -88,8 +120,9 @@ template <class T> class HexPlan {
             auto e = elements[h];
             auto &el = mesh.element(e);
             auto &mat = mesh.materials()[el.material];
-            if (el.integration_points != 8 || mat.model != 1 || !mat.history_schema.empty())
-                throw std::invalid_argument("HEX8 full eight-IP linear kernel required");
+            const bool reduced = el.integration_points == 1;
+            if ((!reduced && el.integration_points != 8) || mat.model != 1 || !mat.history_schema.empty())
+                throw std::invalid_argument("HEX8 requires one or eight IPs and linear elasticity");
             auto ns = mesh.connectivity(e);
             ip_offsets.push_back(state.ip_offsets()[e]);
             for (unsigned a = 0; a < 8; ++a) {
@@ -135,7 +168,8 @@ template <class T> class HexPlan {
                     throw std::invalid_argument("invalid HEX8 Jacobian");
                 auto p = 8 * h + q;
                 weight(p) = det;
-                global_weight(ip_offsets.back() + q) = det;
+                if (!reduced)
+                    global_weight(ip_offsets.back() + q) = det;
                 volume(e) += det;
                 for (unsigned a = 0; a < 8; ++a) {
                     lumped[a] += rho * N[a] * det;
@@ -148,6 +182,45 @@ template <class T> class HexPlan {
                         g(p, 3 * a + i) = value;
                     }
                 }
+            }
+            if (reduced) {
+                // Uniform-strain brick: integrate geometry once, evaluate material at one IP.
+                const auto first = 8 * h;
+                for (unsigned c = 0; c < 24; ++c) {
+                    T integral = 0;
+                    for (unsigned q = 0; q < 8; ++q)
+                        integral += weight(first + q) * g(first + q, c);
+                    g(first, c) = integral / volume(e);
+                }
+                for (unsigned q = 1; q < 8; ++q)
+                    weight(first + q) = 0;
+                weight(first) = global_weight(ip_offsets.back()) = volume(e);
+                const T k = shear * std::cbrt(volume(e)) / T(80);
+                if (!(k > 0) || !std::isfinite(k))
+                    throw std::invalid_argument("invalid HEX8 hourglass stiffness");
+                hourglass_stiffness.write()(h) = k;
+                auto modes = hourglass_modes.write();
+                for (unsigned m = 0; m < 4; ++m) {
+                    T moment[3]{};
+                    for (unsigned a = 0; a < 8; ++a) {
+                        const auto &v = signs[a];
+                        int sign = m == 3 ? v[0] * v[1] * v[2] : v[m] * v[(m + 1) % 3];
+                        modes(h, 8 * m + a) = T(sign);
+                        for (unsigned i = 0; i < 3; ++i)
+                            moment[i] += T(sign) * (x(ns[a], i) - x(ns[0], i));
+                    }
+                    for (unsigned a = 0; a < 8; ++a)
+                        for (unsigned i = 0; i < 3; ++i)
+                            modes(h, 8 * m + a) -= g(first, 3 * a + i) * moment[i];
+                    for (unsigned a = 0; a < 8; ++a)
+                        for (unsigned b = 0; b < 8; ++b)
+                            for (unsigned i = 0; i < 3; ++i)
+                                K[3 * a + i][3 * b + i] += k * modes(h, 8 * m + a) * modes(h, 8 * m + b);
+                }
+            }
+            for (unsigned q = 0; q < el.integration_points; ++q) {
+                auto p = 8 * h + q;
+                auto det = weight(p);
                 for (unsigned a = 0; a < 8; ++a)
                     for (unsigned b = 0; b < 8; ++b) {
                         T dot = 0;
@@ -185,10 +258,25 @@ template <class T> class HexPlan {
             for (unsigned a = 0; a < 8; ++a)
                 adjacency[cursor[conn(h, a)]++] = 8 * h + a;
     }
+    double artificial_energy(View<const T, 3> u, View<const std::uint8_t> active) const {
+        double energy = 0;
+        const auto k = hourglass_stiffness.read();
+        for (std::size_t h = 0; h < k.count; ++h)
+            if (k(h) > 0 && active(elements[h]))
+                for (unsigned m = 0; m < 4; ++m)
+                    for (unsigned i = 0; i < 3; ++i) {
+                        double q = hourglass_amplitude(h, m, i, nodes.read(), hourglass_modes.read(), u);
+                        energy += .5 * k(h) * q * q;
+                    }
+        return energy;
+    }
+    HexViews<T> views() const {
+        return {nodes.read(), gradients.read(), weights.read(), lambda.read(), mu.read(),
+                {ip_offsets.data(), ip_offsets.size()}, hourglass_modes.read(), hourglass_stiffness.read()};
+    }
     void force(std::size_t h, View<const T, 3> u, View<T, 24> local, View<T, 6> stress, View<T, 6> strain,
                bool active) const {
-        hex_force(h, HexViews<T>{nodes.read(), gradients.read(), weights.read(), lambda.read(), mu.read(),
-                  {ip_offsets.data(), ip_offsets.size()}}, u, local, stress, strain, active);
+        hex_force(h, views(), u, local, stress, strain, active);
     }
 };
 } // namespace sdb

@@ -441,7 +441,7 @@ class ResultPublisher {
             if (OutputScheduler::due(r, info.increment, increments)) {
                 due.push_back(&r);
                 for (auto &name : r.variables)
-                    if (name != "U")
+                    if (name != "U" && name != "ALLAE")
                         needs_forces = true;
             }
         const ForceSnapshot<T> *derived = needs_forces ? &cpu.output_forces(state) : nullptr;
@@ -482,8 +482,10 @@ class ResultPublisher {
                         cpu.plan().hex
                             ? "CPU linear TET4/HEX8 full; current displacement constitutive evaluation"
                             : "CPU linear TET4; current displacement constitutive evaluation";
+                    if (cpu.plan().hex && cpu.plan().hex->hourglass_stiffness.size())
+                        d.provenance = "CPU linear solids; HEX8 integration follows element descriptor";
                     bool nodal = name == "U" || name == "V" || name == "A" || name == "RF";
-                    bool global = name == "ALLKE" || name == "ALLSE";
+                    bool global = name == "ALLKE" || name == "ALLSE" || name == "ALLAE";
                     d.location =
                         global ? Location::Global : (nodal ? Location::Node : Location::IntegrationPoint);
                     d.components =
@@ -531,6 +533,9 @@ class ResultPublisher {
                                         auto speed = velocity(n, c);
                                         energy += .5 * double(s.mass.read()(n)) * speed * speed;
                                     }
+                            } else if (name == "ALLAE") {
+                                if (cpu.plan().hex)
+                                    energy = cpu.plan().hex->artificial_energy(u, s.element_active.read());
                             } else
                                 for (std::size_t e = 0; e < s.stress.size(); ++e)
                                     for (unsigned c = 0; c < 6; ++c)

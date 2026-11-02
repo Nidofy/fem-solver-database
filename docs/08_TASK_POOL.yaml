@@ -282,14 +282,14 @@ tasks:
   - id: R5.03
     title: C3D8R reduced integration and hourglass stabilization
     depends_on: [R5.02]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
     batch_hint: B06
     risk: high_numerical
     exit: Hourglass modes, energy and reference cases verified separately from HEX8.
   - id: R5.05
     title: C3D8R complete source-to-result scientific tests
     depends_on: [R5.03, R5.04]
-    status: PLANNED
+    status: IMPLEMENTED_SELF_TESTED
     batch_hint: B06
     risk: high_numerical
     exit: Physically grounded tests and stable result/restart outputs.

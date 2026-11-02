@@ -140,10 +140,11 @@ stored stress/force after step belong to the preceding force evaluation.
 `CpuRun::snapshot` reconstructs current-time quantities in reusable read-only
 scratch; `CpuExplicit::output_forces` is the low-level derived-data alternative. Changing
 the time step requires a deliberate velocity re-centering scheme; this example
-implements constant dt. Linear small-strain TET4 and full-integration HEX8 are
-CPU physics kernels. Beam/shell/reduced-hex/polygon storage does not imply
-corresponding physics support. The [C3D8 contract](docs/development/astra_lifecycle_result/C3D8.md)
-defines quadrature, mass, stability, IP order and numerical verification.
+implements constant dt. The small-strain CPU kernels support TET4,
+full-integration C3D8, and uniform-strain C3D8R with elastic hourglass control.
+The [C3D8 contract](docs/development/astra_lifecycle_result/C3D8.md) and
+[C3D8R contract](docs/development/astra_lifecycle_result/C3D8R.md) specify
+mass, stability, integration-point output and numerical verification.
 
 Read [`docs/LAYOUT_AND_SYNC.md`](docs/LAYOUT_AND_SYNC.md) before borrowing views.
 # Lifecycle extension (2.1)

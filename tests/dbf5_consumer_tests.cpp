@@ -17,7 +17,7 @@ static_assert(!std::is_assignable_v<decltype(std::declval<BorrowedField<Index, 4
 static_assert(!std::is_convertible_v<View<const double, 3>, View<double, 3>>);
 static_assert(!std::is_copy_constructible_v<ReferenceConsumer<double>>);
 constexpr int corners[8][3] = {{0,0,0},{1,0,0},{1,1,0},{0,1,0},{0,0,1},{1,0,1},{1,1,1},{0,1,1}};
-template<class T> MeshDB<T> mixed_model(bool hex_only = false) {
+template<class T> MeshDB<T> mixed_model(bool hex_only = false, bool include_reduced = false) {
     ModelBuilder<T> b;
     b.add_material({1,1,{T(2),T(100),T(.25)},0}); b.add_part(1);
     for (unsigned a=0;a<8;++a) {
@@ -25,6 +25,8 @@ template<class T> MeshDB<T> mixed_model(bool hex_only = false) {
         b.add_node(a+1,{x+T(.2)*y+T(.1)*z,T(.1)*x+T(1.2)*y,z+T(.05)*y});
     }
     b.add_element(100,Topology::Hex8,{1,2,3,4,5,6,7,8},1,1,8);
+    if (include_reduced)
+        b.add_element(99,Topology::Hex8,{1,2,3,4,5,6,7,8},1,1,1);
     if (!hex_only) {
         b.add_node(9,{T(-1),0,0});
         b.add_element(200,Topology::Tet4,{1,4,9,5},1,1,1);
@@ -205,7 +207,10 @@ int main(int argc, char **argv) {
         parity<float>(oscillator_model<float>()); parity<double>(oscillator_model<double>());
         parity<float>(mixed_model<float>(true)); parity<double>(mixed_model<double>(true));
         parity<float>(mixed_model<float>()); parity<double>(mixed_model<double>());
+        parity<float>(mixed_model<float>(false, true));
+        parity<double>(mixed_model<double>(false, true));
 #ifdef _OPENMP
+        parity<double>(mixed_model<double>(false, true),CpuPolicy::OpenMP);
         parity<double>(oscillator_model<double>(),CpuPolicy::OpenMP);
         parity<double>(mixed_model<double>(true),CpuPolicy::OpenMP);
         parity<double>(mixed_model<double>(),CpuPolicy::OpenMP);

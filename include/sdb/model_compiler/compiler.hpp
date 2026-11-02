@@ -514,11 +514,14 @@ class ModelCompiler {
                             d.section_points = static_cast<std::uint32_t>(count);
                         }
                     }
-                    if ((d.token == "C3D4" || d.token == "C3D8") && !s->properties.empty() &&
-                        (s->properties.size() != 1 || s->properties[0] != 1))
+                    bool nonunit = !s->properties.empty() &&
+                                   (s->properties.size() != 1 || s->properties[0] != 1);
+                    if (nonunit && d.token == "C3D8R")
+                        incapable(s->source, "C3D8R CPU requires blank/unit solid section data");
+                    if (nonunit && (d.token == "C3D4" || d.token == "C3D8"))
                         fail(s->source, "3D solid section supports blank/unit data only");
                 }
-                if (d.token != "C3D4" && d.token != "C3D8")
+                if (d.token != "C3D4" && d.token != "C3D8" && d.token != "C3D8R")
                     incapable(e.source,
                               d.token + " stored with formulation/integration; CPU kernel unavailable");
                 std::vector<Id> nodes;
@@ -664,7 +667,7 @@ class ModelCompiler {
                     fail(o.source, "invalid output selection/schedule");
                 for (auto &v : o.variables)
                     if (v != "U" && v != "V" && v != "A" && v != "RF" && v != "S" && v != "E" &&
-                        v != "ALLKE" && v != "ALLSE")
+                        v != "ALLKE" && v != "ALLSE" && v != "ALLAE")
                         fail(o.source, "unsupported output variable: " + v);
                 if (!o.region.empty()) {
                     bool node = o.variables.front() == "U" || o.variables.front() == "V" ||

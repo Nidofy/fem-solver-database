@@ -42,12 +42,14 @@ int main(int argc,char **argv) {
         BorrowedField<Index,8> hn(h.nodes);BorrowedField<double,24> hg(h.gradients);BorrowedField<double> hw(h.weights),hl(h.lambda),hm(h.mu);
         Field<std::size_t> ips(h.ip_offsets.size());for(std::size_t i=0;i<ips.size();++i)ips.write()(i)=h.ip_offsets[i];
         BorrowedField<std::size_t> hip(ips);
+        BorrowedField<double,32> modes(h.hourglass_modes);
+        BorrowedField<double> stiffness(h.hourglass_stiffness);
         Field<double,12> local_t(p.nodes.size());Field<double,24> local_h(h.nodes.size());
         // Identical kernel loops, arrays and outputs. Only acquisition changes: direct raw vs checked contract borrows.
         auto kernels=[&](bool checked) {
             TetViews<double> t=checked?TetViews<double>{tn.resolve(),tg.resolve(),tw.resolve(),tl.resolve(),tm.resolve()}:p.views();
-            HexViews<double> hv=checked?HexViews<double>{hn.resolve(),hg.resolve(),hw.resolve(),hl.resolve(),hm.resolve(),hip.resolve()}:
-                HexViews<double>{h.nodes.read(),h.gradients.read(),h.weights.read(),h.lambda.read(),h.mu.read(),ips.read()};
+            HexViews<double> hv=checked?HexViews<double>{hn.resolve(),hg.resolve(),hw.resolve(),hl.resolve(),hm.resolve(),hip.resolve(),modes.resolve(),stiffness.resolve()}:
+                h.views();
             auto displacement=checked?node.displacement.resolve():state.data().displacement.read();
             auto lt=local_t.write();auto lh=local_h.write();auto stress=out.stress.write();auto strain=out.strain.write();
             for(std::size_t e=0;e<p.nodes.size();++e)if(p.is_tet[e])tet_force(e,t,displacement,lt,stress,strain,p.ip_offsets[e]);
