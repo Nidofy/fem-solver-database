@@ -486,6 +486,7 @@ class ResultPublisher {
                         d.provenance = "CPU linear solids; HEX8 integration follows element descriptor";
                     if (!cpu.plan().plastic_points.empty())
                         d.provenance = "CPU small-strain solids; current displacement material trial";
+                    if(model.definition.finite_geometry) d.provenance="Finite TET4; Cauchy stress and Euler-Almansi strain in spatial basis";
                     bool nodal = name == "U" || name == "V" || name == "A" || name == "RF";
                     bool global = name == "ALLKE" || name == "ALLSE" || name == "ALLAE";
                     d.location =
@@ -545,6 +546,7 @@ class ResultPublisher {
                                 std::size_t plastic = 0;
                                 const auto &plan = cpu.plan();
                                 for (std::size_t e = 0; e < s.stress.size(); ++e) {
+                                    if(!cpu.finite_energy().empty()) { energy+=cpu.finite_energy()[e]; continue; }
                                     if (plastic < plan.plastic_points.size() &&
                                         e == plan.ip_offsets[plan.plastic_points[plastic].element]) {
                                         energy += plan.integration_weight.read()(e) *

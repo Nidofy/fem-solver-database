@@ -69,6 +69,7 @@ template<class Model> void compile(Model& model) {
             auto add=[&](Index n,Vec vec,double w){
                 auto& dst=sum[n]; for(unsigned d=0;d<3;++d) dst[d]+=vec[d]*w;
             };
+            if(model.definition.finite_geometry && v.kind==LoadValueKind::Pressure) continue;
             if(v.definition.coordinate.value()!=0 || v.definition.follower)
                 throw std::invalid_argument("only fixed global DLOAD accepted");
             if(v.kind==LoadValueKind::Pressure) {

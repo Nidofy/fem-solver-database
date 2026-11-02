@@ -654,8 +654,12 @@ class AbaqusInpReader final : public IModelReader {
                 m.amplitudes.push_back(std::move(a));
             } else if (b.key == "STEP") {
                 params({"NAME", "NLGEOM"});
-                if (step || in_part || in_assembly || param("NLGEOM", "YES") != "NO")
-                    fail(b.at, "only small-strain sequential steps supported; explicit NLGEOM=NO required");
+                auto geometry=param("NLGEOM","");
+                if(step || in_part || in_assembly || (geometry!="NO" && geometry!="YES"))
+                    fail(b.at,"explicit NLGEOM=NO or YES required");
+                bool finite=geometry=="YES";
+                if(!m.steps.empty() && m.finite_geometry!=finite) fail(b.at,"changing NLGEOM between steps unsupported");
+                m.finite_geometry=finite;
                 m.steps.push_back({});
                 step = &m.steps.back();
                 step->name = param("NAME", "STEP-" + std::to_string(m.steps.size()));
@@ -795,6 +799,7 @@ class AbaqusInpReader final : public IModelReader {
         result.report.parsed = true;
         if (!m.plastic.empty()) m.schema = 5;
         if (has_dload) m.schema = 7;
+        if (m.finite_geometry) m.schema=8;
         return result;
     }
 };

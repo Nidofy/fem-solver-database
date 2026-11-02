@@ -554,6 +554,16 @@ template <class T> class CpuExplicit {
                 T(.5)*(grad[2][0]+grad[0][2])};
             plastic_trial_[j] = plan_.plastic_laws[point.law].trial(eps, plastic_trial_[j].history);
         }
+        for(std::size_t e=0;e<finite_energy_.size();++e) {
+            if(!s.element_active.read()(e)) continue;
+            auto tet=plan_.views();
+            auto point=physics::finite_tet(e,tet.gradients,tet.volume(e),tet.lambda(e),tet.mu(e),finite_mass_[e],
+                [&](unsigned b,unsigned i) {
+                    auto n=tet.nodes(e,b);
+                    return fixed(n,i) || !active(n) ? u(n,i) : T(u(n,i)+dt*(v(n,i)+dt*acceleration(n,i)));
+                });
+            if(s.dt*s.dt*point.max_frequency_squared>=4) throw std::domain_error("NLGEOM trial stiffness exceeds selected increment");
+        }
         commit_plastic(state);
         parallel_for(u.count, policy_, [=](std::size_t n) {
             for (unsigned c = 0; c < 3; ++c) {

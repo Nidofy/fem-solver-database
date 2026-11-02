@@ -194,9 +194,10 @@ struct ModelIR {
     ModelExtensions extensions;
     std::vector<IRPlastic> plastic;
     double penalty_stiffness = 0;
+    bool finite_geometry = false;
     template <class F> void visit(F f) {
         f(schema);
-        if (schema != 1 && schema != 2 && schema != 3 && schema != 4 && schema != 5 && schema != 6 && schema != 7)
+        if (schema != 1 && schema != 2 && schema != 3 && schema != 4 && schema != 5 && schema != 6 && schema != 7 && schema != 8)
             throw std::runtime_error("unsupported ModelIR schema");
         f(units, assembly, mode, parts, instances, sets, materials, sections, surfaces, amplitudes,
           initial_boundaries, steps, opaque);
@@ -211,6 +212,8 @@ struct ModelIR {
         else if (!plastic.empty()) throw std::runtime_error("plasticity requires ModelIR schema 5");
         if (schema >= 6) f(penalty_stiffness);
         else if (penalty_stiffness != 0) throw std::runtime_error("penalty stiffness requires ModelIR schema 6");
+        if(schema>=8) f(finite_geometry);
+        else if(finite_geometry) throw std::runtime_error("finite geometry requires schema 8");
     }
 };
 struct SourceEntry {
