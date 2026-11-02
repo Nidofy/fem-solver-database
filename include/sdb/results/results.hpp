@@ -1084,6 +1084,7 @@ class NativeResultStorage final : public IResultStorage {
     std::optional<FrameInfo> last_;
     std::uint64_t limit_;
     bool failed_ = false;
+    std::size_t compression_workers_=1;
     std::unique_ptr<indexed_detail::File> indexed_;
 
   public:
@@ -1091,7 +1092,7 @@ class NativeResultStorage final : public IResultStorage {
                         bool recover = false, std::uint64_t limit = native::default_limit,
                         std::function<void()> append_preflight = {}, bool indexed = false,
                         ResultFormat format = ResultFormat::Auto,
-                        std::optional<CompressionSettings> compression = std::nullopt)
+                        std::optional<CompressionSettings> compression = std::nullopt, std::size_t compression_workers = 1)
         : path_(std::filesystem::absolute(path).lexically_normal()), lease_(path_), model_(std::move(model)), limit_(limit) {
         if (upper(path.extension().string()) == ".H5" || upper(path.extension().string()) == ".HDF5")
             throw std::invalid_argument("native backend requires a non-HDF5 suffix (.sdbres)");
@@ -1101,6 +1102,11 @@ class NativeResultStorage final : public IResultStorage {
             throw std::invalid_argument("unknown result format");
         auto requested = format == ResultFormat::Auto ? (indexed ? ResultFormat::Indexed2 : ResultFormat::Native1) : format;
         if (compression) compression->validate();
+        if (!compression_workers || compression_workers>64 ||
+            (compression_workers>1 && ((!append && requested!=ResultFormat::CompressedIndexed4) ||
+             compression_workers>limit_/(compressed_detail::admission_reserve+compression::hard_raw_limit))))
+            throw std::invalid_argument("parallel compression requires indexed4 and sufficient workspace budget");
+        compression_workers_=compression_workers;
         if (!append && compression && compression->enabled() && requested != ResultFormat::CompressedIndexed4)
             throw std::invalid_argument("compression requires indexed4");
         if (!append && requested != ResultFormat::TypedIndexed3 && requested != ResultFormat::CompressedIndexed4 && (!model_.samples.empty() || !model_.bases.empty()))
@@ -1112,6 +1118,8 @@ class NativeResultStorage final : public IResultStorage {
             if (format != ResultFormat::Auto && existing.format() != format)
                 throw std::runtime_error("result append requested format mismatch");
             const bool typed = existing.format() == ResultFormat::TypedIndexed3 || existing.format() == ResultFormat::CompressedIndexed4;
+            if (compression_workers_>1 && existing.format()!=ResultFormat::CompressedIndexed4)
+                throw std::invalid_argument("parallel compression requires indexed4");
             if (compression) {
                 if (existing.format() != ResultFormat::CompressedIndexed4 && compression->enabled())
                     throw std::invalid_argument("compression cannot append to an older format");
@@ -1160,7 +1168,7 @@ class NativeResultStorage final : public IResultStorage {
         try {
             durability::fault(durability::FaultPoint::ResultWrite, path_);
             if (indexed_)
-                indexed_->append(out_, frame);
+                indexed_->append(out_, frame, compression_workers_);
             else {
                 auto bytes = native::pack(frame, limit_);
                 native::record(out_, 1, bytes);
@@ -1204,7 +1212,9 @@ class NativeResultStorage final : public IResultStorage {
             indexed_->typed() ? ResultFormat::TypedIndexed3 : ResultFormat::Indexed2;
     }
     std::uint64_t admission_overhead() const override {
-        return indexed_ && indexed_->compressed() ? compressed_detail::admission_reserve : 0;
+        if (!indexed_ || !indexed_->compressed()) return 0;
+        if (compression_workers_==1) return compressed_detail::admission_reserve;
+        return compression_workers_*(compressed_detail::admission_reserve+compression::hard_raw_limit);
     }
     std::optional<FrameInfo> last() const override { return last_; }
 };

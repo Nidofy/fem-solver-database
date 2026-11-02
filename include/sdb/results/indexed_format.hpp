@@ -3,6 +3,8 @@
 #include "../io/mapped_input.hpp"
 #include <random>
 #include <numeric>
+#include <future>
+#include <deque>
 #include <memory>
 #include "typed_format.hpp"
 #include "compressed_format.hpp"
@@ -501,13 +503,34 @@ class File {
         validate_frame(result, model, std::nullopt);
         return result;
     }
-    void append(std::ostream &out, const ResultFrame &frame) {
+    void append(std::ostream &out, const ResultFrame &frame, std::size_t workers = 1) {
         Directory d;
         d.info = frame.info;
         d.binding = frame.binding;
         for (auto &field : frame.fields) {
             FieldDirectory fd;
             fd.descriptor = field.descriptor;
+            // Workers own their raw blocks. The sole writer resolves futures FIFO,
+            // assigns offsets, and only publishes the footer after all have joined.
+            std::deque<std::pair<Block,std::future<native::Bytes>>> pending;
+            auto emit_front = [&] {
+                auto &[block,future] = pending.front();
+                block.ref = emit(out,2,future.get());
+                fd.blocks.push_back(block);
+                pending.pop_front();
+            };
+            auto submit = [&](Block block, native::Bytes raw) {
+                if(workers==1) {
+                    block.ref=emit_block(out,field.descriptor.name,raw);
+                    fd.blocks.push_back(block);
+                } else {
+                    const auto options=compression_.for_field(field.descriptor.name);
+                    pending.emplace_back(block,std::async(std::launch::async,
+                        [bytes=std::move(raw),options] {return compressed_detail::encode(bytes,options);}));
+                    if(pending.size()==workers) emit_front();
+                }
+            };
+            auto drain = [&]{while(!pending.empty()) emit_front();};
             if (field.typed) {
                 if (!typed_) throw std::invalid_argument("typed field requires indexed3");
                 const auto &p = *field.typed;
@@ -527,13 +550,13 @@ class File {
                         if (count == 1) throw std::length_error("one typed row exceeds compressed block limit");
                         count = std::max<std::size_t>(1, count / 2);
                     }
-                    auto ref = emit_block(out, field.descriptor.name, native::pack(block, limit_));
                     Block b{block.addresses.front().entity, block.addresses.back().entity,
-                        static_cast<std::uint32_t>(count), ref};
+                        static_cast<std::uint32_t>(count), {}};
                     b.first_address = block.addresses.front(); b.last_address = block.addresses.back();
-                    fd.blocks.push_back(b);
+                    submit(b,native::pack(block,limit_));
                     start += count;
                 }
+                drain();
                 d.fields.push_back(std::move(fd));
                 continue;
             }
@@ -551,11 +574,10 @@ class File {
                     block.second.insert(block.second.end(), field.values.begin() + i * w,
                                         field.values.begin() + (i + 1) * w);
                 }
-                const auto block_bytes = native::pack(block, 32768);
-                auto ref = emit_block(out, field.descriptor.name, block_bytes);
-                fd.blocks.push_back(
-                    {block.first.front(), block.first.back(), static_cast<std::uint32_t>(count), ref});
+                submit({block.first.front(),block.first.back(),static_cast<std::uint32_t>(count),{}},
+                       native::pack(block,32768));
             }
+            drain();
             d.fields.push_back(std::move(fd));
         }
         Footer f;

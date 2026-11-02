@@ -60,6 +60,15 @@ int main(int argc,char **argv) {
           auto receipt=async.barrier(durability::Level::FileSync);
           check(receipt.last && receipt.last->id==0 && receipt.bytes==fs::file_size(compressed),"bad durable receipt");
           async.close(); }
+        const auto parallel=root/"parallel4.sdbres", serial=root/"serial4.sdbres";
+        fs::copy_file(compressed,parallel,fs::copy_options::overwrite_existing);
+        fs::copy_file(compressed,serial,fs::copy_options::overwrite_existing);
+        { NativeResultStorage single(serial,m,true); single.append(frame(m,1)); }
+        { NativeResultStorage many(parallel,m,true,false,native::default_limit,{},false,ResultFormat::Auto,policy,3);
+          check(many.admission_overhead()>=3*compression::hard_workspace_limit,"parallel codec scratch not charged");
+          many.append(frame(m,1)); }
+        check(bytes(parallel)==bytes(serial),"parallel block order or wire bytes changed");
+        rejects([&]{NativeResultStorage bad(parallel,m,true,false,1024,{},false,ResultFormat::Auto,policy,3);});
         ResultReader reader(compressed); check(reader.format()==ResultFormat::CompressedIndexed4,"format detection");
         same(ResultReader(legacy).frame(0),reader.frame(0));
         const auto before=reader.read_stats();
