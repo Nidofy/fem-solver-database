@@ -1,0 +1,37 @@
+name: CPU performance regression
+on: pull_request
+permissions:
+  contents: read
+jobs:
+  paired:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: candidate
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: baseline
+      - name: Build both revisions with the same compiler
+        run: |
+          for rev in baseline candidate; do
+            g++ -std=c++20 -O2 -fopenmp -I"$rev/include" "$rev/benchmarks/benchmark.cpp" -o "$rev/bench"
+          done
+      - name: Interleave trials on this runner
+        env:
+          OMP_NUM_THREADS: '2'
+          OMP_DYNAMIC: 'FALSE'
+        run: |
+          for pair in 'baseline candidate' 'candidate baseline' 'baseline candidate' 'candidate baseline' 'baseline candidate'; do
+            for rev in $pair; do
+              "./$rev/bench" 100000 10 omp >> "$rev.jsonl"
+            done
+          done
+          python3 candidate/tools/perf_gate.py baseline.jsonl candidate.jsonl
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: paired-cpu-samples
+          path: '*.jsonl'
