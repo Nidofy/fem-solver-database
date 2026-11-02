@@ -2,6 +2,7 @@
 #include "state.hpp"
 #include "hex8.hpp"
 #include "j2.hpp"
+#include "tet_batch.hpp"
 #include <chrono>
 
 namespace sdb {
@@ -239,14 +240,16 @@ template <class T> class CpuExplicit {
     TetPlan<T> plan_;
     CpuPolicy policy_;
     Assembly assembly_;
+    std::optional<TetBatch8<T>> batch_;
     std::uint64_t force_evaluations_ = 0, output_force_evaluations_ = 0;
     std::optional<ForceSnapshot<T>> output_;
     std::vector<J2Trial<T>> plastic_trial_;
 
   public:
     CpuExplicit(const MeshDB<T> &mesh, StateDB<T> &state, CpuPolicy policy = CpuPolicy::Serial,
-                Assembly assembly = Assembly::Deterministic, ExplicitControls controls = {})
+                Assembly assembly = Assembly::Deterministic, ExplicitControls controls = {}, TetKernel kernel = TetKernel::Scalar)
         : plan_(mesh, state, true, std::move(controls), policy), policy_(policy), assembly_(assembly), plastic_trial_(plan_.plastic_points.size()) {
+        if (kernel == TetKernel::Batch8) batch_.emplace(plan_);
 #ifndef _OPENMP
         if (policy == CpuPolicy::OpenMP)
             throw std::runtime_error("OpenMP not compiled");
@@ -312,7 +315,8 @@ template <class T> class CpuExplicit {
         auto tet = plan_.views();
         auto is_tet = plan_.is_tet.data();
         auto ip_offsets = plan_.ip_offsets.data();
-        parallel_for(tet.nodes.count, policy_, [=](std::size_t e) {
+        if (batch_) batch_->evaluate(policy_,plan_.ip_offsets,u,active,local,stress,strain);
+        else parallel_for(tet.nodes.count, policy_, [=](std::size_t e) {
             if (!is_tet[e])
                 return;
             if (active(e))

@@ -45,7 +45,7 @@ template <class F> double timed(F &&fn) {
     fn();
     return std::chrono::duration<double, std::milli>(Clock::now() - t).count();
 }
-template <class T> void benchmark(std::size_t n, std::size_t repetitions, sdb::CpuPolicy policy) {
+template <class T> void benchmark(std::size_t n, std::size_t repetitions, sdb::CpuPolicy policy, sdb::TetKernel kernel) {
     using namespace sdb;
     auto begin = Clock::now();
     Field<T, 3> x(n), v(n);
@@ -144,7 +144,7 @@ template <class T> void benchmark(std::size_t n, std::size_t repetitions, sdb::C
     double finalize_ms = std::chrono::duration<double,std::milli>(Clock::now()-setup_start).count();
     StateDB<T> state(mesh);
     setup_start = Clock::now();
-    CpuExplicit<T> solver(mesh, state, policy);
+    CpuExplicit<T> solver(mesh, state, policy, Assembly::Deterministic,{},kernel);
     double plan_ms = std::chrono::duration<double,std::milli>(Clock::now()-setup_start).count();
     auto displacement = state.data().displacement.write();
     for (std::size_t i = 0; i < mesh.nodes(); ++i)
@@ -188,7 +188,7 @@ template <class T> void benchmark(std::size_t n, std::size_t repetitions, sdb::C
 #else
     std::cout << 1;
 #endif
-    std::cout << ",\"finalize_ms\":" << finalize_ms << ",\"tet_plan_ms\":" << plan_ms << ",\"mesh_fingerprint\":\"" << mesh.fingerprint() << "\",\"node_view_ms\":" << view_ms << ",\"node_raw_ms\":" << raw_ms << ",\"ip_ms\":" << ip_ms
+    std::cout << ",\"tet_kernel\":\"" << (kernel==sdb::TetKernel::Batch8?"batch8":"scalar") << "\",\"finalize_ms\":" << finalize_ms << ",\"tet_plan_ms\":" << plan_ms << ",\"mesh_fingerprint\":\"" << mesh.fingerprint() << "\",\"node_view_ms\":" << view_ms << ",\"node_raw_ms\":" << raw_ms << ",\"ip_ms\":" << ip_ms
               << ",\"material_group_ms\":" << group_ms << ",\"candidate_ms\":" << contact_ms
               << ",\"candidate_batch_ms\":" << contact_batch_ms << ",\"gather_scatter_ms\":" << gather_scatter
               << ",\"explicit_steps_ms\":" << explicit_ms
@@ -233,16 +233,17 @@ int main(int argc, char **argv) {
         auto n = argc > 1 ? std::stoull(argv[1]) : 100000;
         auto repeats = argc > 2 ? std::stoull(argv[2]) : 20;
         bool omp = argc > 3 && std::string(argv[3]) == "omp";
-        if (argc > 4) {
-            if (!omp || argc != 5 || std::string(argv[4]) != "first-touch")
-                throw std::invalid_argument("expected omp first-touch");
-            sdb::parallel_first_touch = true;
+        auto kernel = sdb::TetKernel::Scalar;
+        for (int i=4;i<argc;++i) {
+            if (std::string(argv[i])=="first-touch" && omp) sdb::parallel_first_touch=true;
+            else if (std::string(argv[i])=="batch8") kernel=sdb::TetKernel::Batch8;
+            else throw std::invalid_argument("expected first-touch or batch8");
         }
         if (n < 4 || n >= sdb::invalid_index || repeats == 0)
             throw std::invalid_argument("usage: sdb_benchmark nodes>=4 repetitions [omp]");
         auto policy = omp ? sdb::CpuPolicy::OpenMP : sdb::CpuPolicy::Serial;
-        benchmark<float>(n, repeats, policy);
-        benchmark<double>(n, repeats, policy);
+        benchmark<float>(n, repeats, policy,kernel);
+        benchmark<double>(n, repeats, policy,kernel);
         return 0;
     } catch (const std::exception &e) {
         std::cerr << e.what() << '\n';

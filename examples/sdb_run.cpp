@@ -96,7 +96,10 @@ template <class T> int run(const Args &a) {
                      : ModelCompiler{}.compile<T>(ReaderRegistry{}.read(a.at("--input")).model);
     if (a.contains("--save-model"))
         ModelStore::save(a.at("--save-model"), model);
-    CpuRun<T> cpu(model,explicit_controls(a,model));
+    const auto mode = a.contains("--tet-kernel") ? a.at("--tet-kernel") : "scalar";
+    if (mode!="scalar" && mode!="batch8") throw std::invalid_argument("expected scalar or batch8");
+    CpuRun<T> cpu(model,explicit_controls(a,model),a.contains("--omp")?CpuPolicy::OpenMP:CpuPolicy::Serial,
+                  mode=="batch8"?TetKernel::Batch8:TetKernel::Scalar);
     if (cpu.controls().options.enabled()) {
         const auto &plan = cpu.controls();
         auto e = plan.controlling_element;
@@ -175,13 +178,13 @@ template <class T> int run(const Args &a) {
 int main(int argc, char **argv) {
     try {
         Args a;
-        const std::set<std::string> flags{"--refined-tet-dt","--indexed", "--typed-indexed", "--typed", "--append", "--recover-tail", "--inspect", "--verify"};
+        const std::set<std::string> flags{"--omp","--refined-tet-dt","--indexed", "--typed-indexed", "--typed", "--append", "--recover-tail", "--inspect", "--verify"};
         const std::set<std::string> value_options{
             "--async-mib", "--ip",     "--input",      "--model",   "--save-model", "--backend",
             "--precision", "--output", "--checkpoint", "--restart", "--stop-after", "--buffer-mib",
             "--read",      "--field",  "--region",     "--time",    "--entity",     "--component",
             "--vtk",       "--xdmf",   "--convert-v2", "--durability", "--compression", "--compression-level",
-            "--compression-fields", "--convert-result","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction",
+            "--compression-fields", "--convert-result","--tet-kernel","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction",
             "--bulk-linear","--bulk-quadratic","--max-compression-rate"};
         for (int i = 1; i < argc; ++i) {
             std::string key = argv[i];
@@ -200,7 +203,7 @@ int main(int argc, char **argv) {
             (a.contains("--compression") || a.contains("--compression-level") || a.contains("--compression-fields")))
             throw std::invalid_argument("compression options when reading require --convert-result");
         if (a.contains("--read") || a.contains("--inspect")) {
-            for (auto key : {"--refined-tet-dt","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction","--bulk-linear",
+            for (auto key : {"--omp","--tet-kernel","--refined-tet-dt","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction","--bulk-linear",
                              "--bulk-quadratic","--max-compression-rate"})
                 if (a.contains(key)) throw std::invalid_argument("explicit controls require a simulation");
         }
