@@ -92,7 +92,7 @@ template <class T> struct Evaluation {
 template <class T>
 Evaluation<T> evaluate_general(Database<T> &db, const MeshDB<T> &mesh, const Model<T> &model,
                                const GeometryDB<T> &geometry, Analysis analysis, Execution execution,
-                               const DofMap *dofs) {
+                               const DofMap *dofs, std::optional<detail::BVH<T>>* surface_tree = nullptr) {
     if (!db.in_trial())
         throw std::logic_error("general contact evaluation requires trial");
     db.invalidate_trial();
@@ -109,7 +109,7 @@ Evaluation<T> evaluate_general(Database<T> &db, const MeshDB<T> &mesh, const Mod
             options.minimum_opposition = settings.minimum_opposition;
             options.candidate_capacity = static_cast<std::size_t>(settings.candidate_capacity);
             options.execution = execution;
-            surface = detect_domain(mesh, model, geometry, options);
+            surface = detect_domain(mesh, model, geometry, options, surface_tree);
             result.witnesses = surface.witnesses();
             result.surface_statistics = surface.statistics;
         }
@@ -203,6 +203,7 @@ template <class T> class GeneralContact {
     DofMap dofs_;
     std::vector<Vec<T>> accepted_positions_;
     std::optional<CoupledTrial<T>> trial_;
+    std::optional<detail::BVH<T>> surface_tree_;
     std::uint64_t evaluated_epoch_ = 0;
     std::vector<Vec<T>> coordinates(const StateDB<T> &state) const {
         auto view = state.current_view(mesh_);
@@ -220,6 +221,49 @@ template <class T> class GeneralContact {
     const Model<T> &model() const { return model_; }
     const Database<T> &database() const { return contact_; }
     const DofMap &dofs() const { return dofs_; }
+    // Earliest positive-side crossing of a stationary triangular target on
+    // straight nodal paths. The caller can retry with dt*fraction before commit.
+    // Moving targets and quads still use discrete detection.
+    std::optional<T> static_triangle_step_fraction(std::span<const Vec<T>> predicted) const {
+        if (predicted.size()!=mesh_.nodes()) throw std::invalid_argument("predicted coordinate count");
+        for (const auto& x : predicted) for (T v : x) finite(v);
+        const auto& faces=model_.facets();
+        std::vector<detail::Box<T>> boxes;
+        std::vector<Index> targets;
+        for (Index f=0; f<faces.size(); ++f) {
+            const auto& face=faces[f];
+            if (face.count!=3) continue;
+            detail::Box<T> box;
+            bool stationary=true;
+            for (unsigned j=0;j<3;++j) {
+                auto n=face.nodes[j];
+                stationary &= predicted[n]==accepted_positions_[n];
+                box.add(predicted[n]);
+            }
+            if (stationary) { targets.push_back(f); boxes.push_back(box); }
+        }
+        detail::BVH<T> tree(boxes);
+        std::optional<T> earliest;
+        for (Index n=0; n<mesh_.nodes(); ++n) {
+            if (predicted[n]==accepted_positions_[n] || model_.node_faces()[n].empty()) continue;
+            detail::Box<T> path; path.add(predicted[n]); path.add(accepted_positions_[n]);
+            tree.visit_boxes([&](const auto& b) {
+                for(unsigned c=0;c<3;++c)
+                    if (b.upper[c]<path.lower[c] || b.lower[c]>path.upper[c]) return false;
+                return true;
+            },[&](Index i) {
+                auto f=targets[i];
+                bool eligible=false;
+                for (auto s : model_.node_faces()[n]) if (model_.resolve(s,f)) {eligible=true;break;}
+                if (!eligible) return;
+                auto tri=facet_coordinates<T>(predicted,faces[f]);
+                if (project(accepted_positions_[n],tri,3).gap<=0) return;
+                auto t=sweep_static_triangle(accepted_positions_[n],predicted[n],tri);
+                if (t && (!earliest || *t<*earliest)) earliest=t;
+            });
+        }
+        return earliest;
+    }
     void begin_increment() {
         if (trial_)
             throw std::logic_error("nested general contact increment");
@@ -240,7 +284,7 @@ template <class T> class GeneralContact {
         auto x = coordinates(state_);
         geometry_.update(mesh_, x, accepted_positions_);
         auto result = evaluate_general(contact_, mesh_, model_, geometry_, analysis, execution,
-                                       analysis == Analysis::Implicit ? &dofs_ : nullptr);
+                                       analysis == Analysis::Implicit ? &dofs_ : nullptr, &surface_tree_);
         trial_->apply_force(result.frame);
         evaluated_epoch_ = contact_.epoch();
         return result;

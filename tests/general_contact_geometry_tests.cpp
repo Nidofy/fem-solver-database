@@ -113,6 +113,22 @@ MeshDB<double> blocks() {
     }
     return b.finalize();
 }
+void static_target_limit() {
+    ModelBuilder<double> b;
+    b.add_material({1,1,{1,100,.2},0}); b.add_part(1);
+    b.add_node(1,{0,0,0}); b.add_node(2,{1,0,0}); b.add_node(3,{0,1,0}); b.add_node(4,{0,0,1});
+    b.add_node(5,{.2,.2,-.2}); b.add_node(6,{.4,.2,-.2}); b.add_node(7,{.2,.4,-.2}); b.add_node(8,{.2,.2,-.1});
+    b.add_element(1,Topology::Tet4,{1,2,3,4},1,1); b.add_element(2,Topology::Tet4,{5,6,7,8},1,1);
+    auto mesh=b.finalize(); StateDB<double> state(mesh);
+    gc::Definition<double> def; def.mesh=mesh.fingerprint(); def.properties={{1,100,0,0}}; def.rules={{1,0,0,1,0}};
+    gc::GeneralContact<double> module(mesh,state,def);
+    std::vector<gc::Vec<double>> end(mesh.nodes());
+    for(Index n=0;n<mesh.nodes();++n) for(unsigned j=0;j<3;++j) end[n][j]=mesh.reference()(n,j);
+    check(!module.static_triangle_step_fraction(end),"stationary CCD");
+    for(Index n=4;n<8;++n) end[n][2]+=.3;
+    auto t=module.static_triangle_step_fraction(end);
+    check(t && close_value(*t,1./3),"domain earliest static triangle crossing");
+}
 void domain_and_transport() {
     auto mesh = blocks();
     gc::Definition<double> def;
@@ -127,7 +143,10 @@ void domain_and_transport() {
     geometry.update(mesh, current, old);
     gc::DomainOptions<double> options;
     options.search_band = .2;
-    auto batch = gc::detect_domain(mesh, model, geometry, options);
+    std::optional<gc::detail::BVH<double>> cache;
+    gc::GeometryDB<double> separated(mesh);
+    (void)gc::detect_domain(mesh,model,separated,options,&cache);
+    auto batch = gc::detect_domain(mesh, model, geometry, options, &cache);
     check(batch.points.size() == 8, "whole domain balanced two-block contact count");
     gc::Database<double> db({mesh.fingerprint(), model.fingerprint(), 0, 0, 0});
     DofMap dofs(mesh);
@@ -532,6 +551,7 @@ int main(int argc, char **argv) {
         scratch = argc > 1 ? std::filesystem::path(argv[1]) : std::filesystem::path("geometry-scratch");
         std::filesystem::create_directories(scratch);
         geometry_derivatives();
+        static_target_limit();
         domain_and_transport();
         edges_and_ccd();
         friction_jacobian();

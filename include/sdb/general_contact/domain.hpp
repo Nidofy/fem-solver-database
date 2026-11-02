@@ -61,7 +61,7 @@ template <class T> T facet_area(const std::array<Vec<T>, 4> &x, unsigned count) 
 // from Model; no hand-selected probe list or property argument is required.
 template <class T>
 SurfaceBatch<T> detect_domain(const MeshDB<T> &mesh, const Model<T> &model, const GeometryDB<T> &geometry,
-                              DomainOptions<T> options = {}) {
+                              DomainOptions<T> options = {}, std::optional<detail::BVH<T>>* cache = nullptr) {
     if (mesh.fingerprint() != model.definition().mesh || geometry.model_id() != mesh.fingerprint())
         throw std::invalid_argument("contact domain model mismatch");
     finite(options.search_band);
@@ -91,7 +91,11 @@ SurfaceBatch<T> detect_domain(const MeshDB<T> &mesh, const Model<T> &model, cons
         if (areas[i] <= 0)
             throw std::invalid_argument("invalid reference contact area");
     }
-    detail::BVH<T> bvh(boxes);
+    std::optional<detail::BVH<T>> local;
+    auto& tree = cache ? *cache : local;
+    if (tree) tree->refit(boxes);
+    else tree.emplace(boxes);
+    const auto& bvh = *tree;
     struct Candidate {
         Index node, face;
         Assignment assignment;
@@ -103,24 +107,17 @@ SurfaceBatch<T> detect_domain(const MeshDB<T> &mesh, const Model<T> &model, cons
     batch.configuration = model.fingerprint();
     batch.geometry_revision = geometry.revision();
     batch.geometry_owner = geometry.identity();
-    // Policy is deliberately outside parallel kernels: conflicting assignments throw here.
-    std::vector<Index> hits;
-    hits.reserve(faces.size());
-    for (Index n = 0; n < mesh.nodes(); ++n) {
-        if (model.node_faces()[n].empty())
-            continue;
-        ++batch.statistics.queries;
-        hits.clear();
-        bvh.query(positions[n], options.search_band, [&](Index f) { hits.push_back(f); });
-        std::sort(hits.begin(), hits.end());
-        for (Index target : hits) {
-            ++batch.statistics.box_candidates;
+    // Count before allocation; a dense domain never publishes partial candidates.
+    auto visit = [&](Index n, auto emit, std::size_t& hits) {
+        if (model.node_faces()[n].empty()) return;
+        bvh.query(positions[n], options.search_band, [&](Index target) {
+            ++hits;
             std::map<Id, std::pair<Id, T>> contributions;
             bool incident = false;
             for (unsigned j = 0; j < faces[target].count; ++j)
                 incident = incident || faces[target].nodes[j] == n;
             if (incident)
-                continue;
+                return;
             for (Index source : model.node_faces()[n]) {
                 auto assignment = model.resolve(source, target);
                 if (!assignment || dot(normals[source], normals[target]) >= -options.minimum_opposition)
@@ -129,13 +126,34 @@ SurfaceBatch<T> detect_domain(const MeshDB<T> &mesh, const Model<T> &model, cons
                 entry.first = assignment->property;
                 entry.second += T(.5) * areas[source] / T(faces[source].count);
             }
-            for (auto [rule, value] : contributions) {
-                if (candidates.size() >= options.candidate_capacity)
-                    throw std::length_error("domain contact capacity exceeded");
-                candidates.push_back({n, target, {rule, value.first}, value.second});
-            }
-        }
+            for (auto [rule,value] : contributions)
+                emit(Candidate{n,target,{rule,value.first},value.second});
+        });
+    };
+    std::vector<std::size_t> offsets(mesh.nodes()+1), hits(mesh.nodes());
+    std::vector<std::exception_ptr> failures(mesh.nodes());
+    auto pass = [&](bool fill) {
+        detail::for_each(mesh.nodes(),options.execution,[&](std::size_t n) {
+            try {
+                std::size_t index = fill ? offsets[n] : 0, count = 0;
+                visit(static_cast<Index>(n),[&](Candidate candidate) {
+                    if (fill) candidates[index] = candidate;
+                    index = sum(index,1);
+                },count);
+                if (!fill) { offsets[n+1]=index; hits[n]=count; }
+            } catch (...) { failures[n]=std::current_exception(); }
+        });
+        for (const auto& failure : failures) if (failure) std::rethrow_exception(failure);
+    };
+    pass(false);
+    for (std::size_t n=0; n<mesh.nodes(); ++n) {
+        offsets[n+1]=sum(offsets[n+1], offsets[n]);
+        if (offsets[n+1]>options.candidate_capacity) throw std::length_error("domain contact capacity exceeded");
+        batch.statistics.box_candidates=sum(batch.statistics.box_candidates,hits[n]);
+        batch.statistics.queries+=!model.node_faces()[n].empty();
     }
+    candidates.resize(offsets.back());
+    pass(true);
     std::vector<SurfacePoint<T>> rows(candidates.size());
     std::vector<std::uint8_t> valid(candidates.size());
     std::vector<std::exception_ptr> errors(candidates.size());

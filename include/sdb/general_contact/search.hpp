@@ -59,14 +59,14 @@ template <class T> class BVH {
     };
     std::vector<Node> tree_;
     std::vector<Index> order_;
-    std::span<const Box<T>> boxes_;
-    Index build(std::size_t begin, std::size_t end) {
+    std::vector<std::uint8_t> dirty_;
+    Index build(std::span<const Box<T>> boxes, std::size_t begin, std::size_t end) {
         const Index index = index_of(tree_.size());
         tree_.push_back({});
         Box<T> box;
         for (auto i = begin; i < end; ++i) {
-            box.add(boxes_[order_[i]].lower);
-            box.add(boxes_[order_[i]].upper);
+            box.add(boxes[order_[i]].lower);
+            box.add(boxes[order_[i]].upper);
         }
         tree_[index].box = box;
         if (end - begin == 1) {
@@ -80,26 +80,48 @@ template <class T> class BVH {
         const auto mid = begin + (end - begin) / 2;
         std::nth_element(order_.begin() + begin, order_.begin() + mid, order_.begin() + end,
                          [&](Index a, Index b) {
-                             const T ca = boxes_[a].lower[axis] / 2 + boxes_[a].upper[axis] / 2,
-                                     cb = boxes_[b].lower[axis] / 2 + boxes_[b].upper[axis] / 2;
+                             const T ca = boxes[a].lower[axis] / 2 + boxes[a].upper[axis] / 2,
+                                     cb = boxes[b].lower[axis] / 2 + boxes[b].upper[axis] / 2;
                              return ca == cb ? a < b : ca < cb;
                          });
-        const Index left = build(begin, mid), right = build(mid, end);
+        const Index left = build(boxes, begin, mid), right = build(boxes, mid, end);
         tree_[index].left = left;
         tree_[index].right = right;
         return index;
     }
 
   public:
-    explicit BVH(std::span<const Box<T>> boxes) : boxes_(boxes) {
+    explicit BVH(std::span<const Box<T>> boxes) {
         index_of(product(boxes.size(), 2));
         order_.resize(boxes.size());
         std::iota(order_.begin(), order_.end(), Index(0));
         tree_.reserve(product(boxes.size(), 2));
         if (!boxes.empty())
-            build(0, boxes.size());
+            build(boxes, 0, boxes.size());
+        dirty_.resize(tree_.size());
     }
-    template <class F> void query(const Vec<T> &point, T band, F fn) const noexcept {
+    void refit(std::span<const Box<T>> boxes) {
+        if (boxes.size() != order_.size()) throw std::invalid_argument("BVH face count changed");
+        // Children follow parents in the build order, including after arbitrary motion.
+        for (std::size_t i = tree_.size(); i-- > 0;) {
+            auto& n = tree_[i];
+            if (n.face != invalid_index) {
+                const auto& leaf = boxes[n.face];
+                dirty_[i] = leaf.lower != n.box.lower || leaf.upper != n.box.upper;
+                if (dirty_[i]) n.box = leaf;
+            } else {
+                dirty_[i] = dirty_[n.left] || dirty_[n.right];
+                if (!dirty_[i]) continue;
+                n.box = tree_[n.left].box;
+                n.box.add(tree_[n.right].box.lower);
+                n.box.add(tree_[n.right].box.upper);
+            }
+        }
+    }
+    template <class F> void query(const Vec<T> &point, T band, F fn) const {
+        visit_boxes([&](const Box<T>& b){return b.overlaps_point(point,band);},fn);
+    }
+    template<class Predicate, class F> void visit_boxes(Predicate overlaps, F fn) const {
         if (tree_.empty())
             return;
         // Balanced median tree, fewer than 2^32 nodes => depth < 33.
@@ -108,7 +130,7 @@ template <class T> class BVH {
         stack[0] = 0;
         while (size) {
             const auto &n = tree_[stack[--size]];
-            if (!n.box.overlaps_point(point, band))
+            if (!overlaps(n.box))
                 continue;
             if (n.face != invalid_index)
                 fn(n.face);
