@@ -20,3 +20,7 @@ add_test(NAME section_elements COMMAND sdb_section_elements_tests ${CMAKE_CURREN
 add_executable(sdb_surface_coupling_tests tests/surface_coupling_tests.cpp)
 target_link_libraries(sdb_surface_coupling_tests PRIVATE sdb_lifecycle)
 add_test(NAME surface_coupling COMMAND sdb_surface_coupling_tests ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus/section_distributing.inp ${CMAKE_CURRENT_BINARY_DIR}/surface-coupling-scratch)
+
+add_executable(sdb_objective_rate_tests tests/objective_rate_tests.cpp)
+target_link_libraries(sdb_objective_rate_tests PRIVATE solver_database_v2)
+add_test(NAME objective_rate COMMAND sdb_objective_rate_tests)
