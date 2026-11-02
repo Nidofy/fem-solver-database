@@ -23,3 +23,8 @@ Verification: general_contact_geometry_tests checks separated-to-contact refit,
 serial/OpenMP equality, rollback/restore and a two-tetrahedron crossing at 1/3.
 No production model or CUDA run. Benchmarking strongly deforming industrial
 domains is pending.
+
+Local isolated benchmark (benchmarks/bvh_refit.cpp, GCC 15.2 -O2): 32,768
+distinct face boxes and 12 updates, changing roughly 1% per update. Total refit
+was 6.00 ms vs 121.74 ms fresh build. Queries matched the fresh tree and the
+known face ID. These are broadphase timings excluding contact force evaluation.
