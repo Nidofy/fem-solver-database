@@ -8,3 +8,6 @@ add_test(NAME mechanical_publishers COMMAND sdb_mechanical_publisher_tests "${CM
 add_executable(sdb_energy_audit_tests tests/energy_audit_tests.cpp)
 target_link_libraries(sdb_energy_audit_tests PRIVATE sdb_lifecycle)
 add_test(NAME energy_audit COMMAND sdb_energy_audit_tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus" "${CMAKE_CURRENT_BINARY_DIR}/energy-audit")
+add_executable(sdb_section_recovery_tests tests/section_recovery_tests.cpp)
+target_link_libraries(sdb_section_recovery_tests PRIVATE sdb_lifecycle)
+add_test(NAME section_recovery COMMAND sdb_section_recovery_tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus" "${CMAKE_CURRENT_BINARY_DIR}/section-recovery")

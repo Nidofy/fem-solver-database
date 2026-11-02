@@ -803,7 +803,7 @@ class AbaqusInpReader final : public IModelReader {
                         if (name.empty())
                             continue;
                         bool ok = b.key == "NODE OUTPUT"
-                                      ? (name == "U" || name == "V" || name == "A" || name == "RF")
+                                      ? (name == "U" || name == "UR" || name == "V" || name == "A" || name == "RF")
                                       : (b.key == "ELEMENT OUTPUT" ? (name == "S" || name == "E" || name == "PEEQ")
                                                                    : (name == "ALLKE" || name == "ALLSE" || name == "ALLAE" || name == "ALLIE" || name == "ALLWK" || name == "ETOTAL" || name == "ALLVD"));
                         if (!ok)

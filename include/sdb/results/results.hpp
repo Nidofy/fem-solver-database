@@ -1040,7 +1040,7 @@ class ResultQuery {
         const std::string &region="",bool history_request=false,double time_begin=0,
         double time_end=std::numeric_limits<double>::max(),unsigned point=1) {
         if(!region.empty())
-            (void)reader.region(upper(field)=="U" || upper(field)=="V" || upper(field)=="A" || upper(field)=="RF",region);
+            (void)reader.region(upper(field)=="U" || upper(field)=="UR" || upper(field)=="V" || upper(field)=="A" || upper(field)=="RF",region);
         auto [first,last]=reader.time_interval(time_begin,time_end);
         std::size_t emitted=0;
         for(auto i=first;i<last;++i) {

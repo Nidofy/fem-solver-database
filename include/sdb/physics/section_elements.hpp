@@ -10,6 +10,8 @@ inline Vec3 unit(Vec3 a){double l=magnitude(a);if(!(l>0)||!std::isfinite(l))thro
 class SectionElement {
     using Row=std::array<double,24>;
     std::array<Vec3,3> axes_;
+    double length_=0,width_=0,depth_=0,young_=0,poisson_=0;
+    unsigned point_count_=0;
     void mode(double stiffness,const Row& local){
         Row g{};
         for(unsigned a=0;a<count;++a)for(unsigned kind=0;kind<2;++kind)
@@ -22,6 +24,47 @@ class SectionElement {
     std::array<Index,4> nodes{};
     std::array<Row,24> K{};
     double nodal_mass=0, rotary_mass=0;
+    unsigned sample_count() const noexcept {return point_count_;}
+    lifecycle::Rotation recovery_basis() const {
+        lifecycle::Rotation r{};
+        for(unsigned i=0;i<3;++i) for(unsigned j=0;j<3;++j) r[3*i+j]=axes_[j][i];
+        return r;
+    }
+    // RECT beam: four (y,z) corners, y sign varies fastest. Shell: equally
+    // spaced through-thickness samples at the in-plane centre, bottom first.
+    template<class T> std::vector<T> recover(const StateDB<T>& state, bool stress) const {
+        std::array<Vec3,4> u{},r{};
+        auto disp=state.data().displacement.read(),angle=state.data().rotation->angle.read();
+        for(unsigned a=0;a<count;++a) for(unsigned i=0;i<3;++i) for(unsigned j=0;j<3;++j) {
+            u[a][i]+=axes_[i][j]*disp(nodes[a],j);
+            r[a][i]+=axes_[i][j]*angle(nodes[a],j);
+        }
+        std::vector<T> values;
+        if(count==2) {
+            for(unsigned q=0;q<4;++q) {
+                double y=(q&1 ? .5 : -.5)*width_, z=(q&2 ? .5 : -.5)*depth_;
+                double ex=(u[1][0]-u[0][0]+z*(r[1][1]-r[0][1])-y*(r[1][2]-r[0][2]))/length_;
+                values.push_back(T(stress ? young_*ex : ex));
+            }
+        } else {
+            constexpr int sx[]={-1,1,1,-1},sy[]={-1,-1,1,1};
+            for(unsigned q=0;q<point_count_;++q) {
+                double z=depth_*(double(q)/(point_count_-1)-.5);
+                double ex=0,ey=0,gxy=0;
+                for(unsigned a=0;a<4;++a) {
+                    double dx=sx[a]/(2*length_),dy=sy[a]/(2*width_);
+                    double ux=u[a][0]+z*r[a][1],uy=u[a][1]-z*r[a][0];
+                    ex+=dx*ux; ey+=dy*uy; gxy+=dy*ux+dx*uy;
+                }
+                if(stress) {
+                    double c=young_/(1-poisson_*poisson_);
+                    values.insert(values.end(),{T(c*(ex+poisson_*ey)),T(c*(ey+poisson_*ex)),
+                                                T(young_*gxy/(2*(1+poisson_)))});
+                } else values.insert(values.end(),{T(ex),T(ey),T(.5*gxy)});
+            }
+        }
+        return values;
+    }
     double squared_frequency_bound() const {
         double bound=0;for(unsigned i=0;i<count*6;++i) {
             double r=0;for(unsigned j=0;j<count*6;++j)r+=std::abs(K[i][j]);
@@ -45,6 +88,7 @@ class SectionElement {
         if(descriptor.token=="B31" && count==2 && section.kind=="BEAM SECTION/RECT") {
             if(p.size()!=5 || !(p[0]>0 && p[1]>0))throw std::invalid_argument("B31 RECT needs two dimensions and an orientation vector");
             axes_[2]=unit(cross(axes_[0],{p[2],p[3],p[4]}));axes_[1]=cross(axes_[2],axes_[0]);
+            length_=L; width_=p[0]; depth_=p[1]; point_count_=4; young_=E; poisson_=nu;
             double A=p[0]*p[1],Iy=A*p[1]*p[1]/12,Iz=A*p[0]*p[0]/12;
             double w=std::max(p[0],p[1]),h=std::min(p[0],p[1]);
             double J=w*h*h*h*(1./3-.21*h/w*(1-std::pow(h/w,4)/12)); // rectangular torsion approximation
@@ -63,6 +107,7 @@ class SectionElement {
             double tol=64*std::numeric_limits<T>::epsilon();
             if(std::abs(dot(axes_[0],unit(side)))>tol || magnitude(diagonal)>tol*std::max(L,H))
                 throw std::invalid_argument("S4R reference kernel requires a planar rectangle");
+            length_=L; width_=H; depth_=p[0]; point_count_=descriptor.section_points; young_=E; poisson_=nu;
             double t=p[0],area=L*H;nodal_mass=rho*t*area/4;rotary_mass=nodal_mass*t*t/12;
             constexpr int sx[]={-1,1,1,-1},sy[]={-1,-1,1,1};
             Row ex{},ey{},xy{},kx{},ky{},kxy{},xz{},yz{},drill{};
@@ -79,6 +124,17 @@ class SectionElement {
             };
             plane(ex,ey,xy,area*t);plane(kx,ky,kxy,area*t*t*t/12);
             mode(area*t*G*5/6,xz);mode(area*t*G*5/6,yz); mode(.01*area*t*G,drill);
+            // Opposite-edge midpoint transverse shears define the two linear
+            // variations omitted by the center point. Their squared integral is A/3.
+            Row xz_variation{}, yz_variation{};
+            for(unsigned a=0;a<4;++a){
+                xz_variation[6*a+2]=sx[a]*sy[a]/(2*L);
+                xz_variation[6*a+4]=sy[a]/4.;
+                yz_variation[6*a+2]=sx[a]*sy[a]/(2*H);
+                yz_variation[6*a+3]=-sx[a]/4.;
+            }
+            mode(area*t*G*5/18,xz_variation);
+            mode(area*t*G*5/18,yz_variation);
             // Affine-orthogonal checkerboard modes. Drilling rotation differences
             // also constrain the three zero-energy variations of nodal drill.
             for(unsigned d=0;d<5;++d){
@@ -92,14 +148,3 @@ class SectionElement {
     }
 };
 }
-            // Opposite-edge midpoint transverse shears define the two linear
-            // variations omitted by the center point. Their squared integral is A/3.
-            Row xz_variation{}, yz_variation{};
-            for(unsigned a=0;a<4;++a){
-                xz_variation[6*a+2]=sx[a]*sy[a]/(2*L);
-                xz_variation[6*a+4]=sy[a]/4.;
-                yz_variation[6*a+2]=sx[a]*sy[a]/(2*H);
-                yz_variation[6*a+3]=-sx[a]/4.;
-            }
-            mode(area*t*G*5/18,xz_variation);
-            mode(area*t*G*5/18,yz_variation);

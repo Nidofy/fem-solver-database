@@ -28,6 +28,20 @@ ResultField section_point_field(const CompiledModel<T>& model,FieldDescriptor de
     return make_typed_field<V>(std::move(descriptor),std::move(addresses),{values.begin(),values.end()});
 }
 
+// Publish one recovered local section in its catalogued basis.
+template<class T>
+ResultField section_point_field(const ResultModel& model,Index e,FieldDescriptor d,std::vector<T> values,
+                                std::uint64_t basis,const std::string& region,bool history) {
+    std::vector<ResultAddress> addresses;
+    for(const auto &point:model.samples.at(e)) {
+        ResultAddress a; a.entity=Id(e)+1; a.integration_point=point.integration_point;
+        a.section_point=point.section_point; a.layer=point.layer;
+        validate_result_address(a,d,model); addresses.push_back(a);
+    }
+    auto f=make_typed_field<T>(std::move(d),std::move(addresses),std::move(values),{},region,history);
+    f.typed->basis_id=basis;
+    return f;
+}
 // Domain generation stays stable across time increments. Contact's internal
 // transaction/borrow epoch is not a persistent result identity.
 template<class T>

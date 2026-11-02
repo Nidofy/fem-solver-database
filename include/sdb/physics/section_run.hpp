@@ -1,6 +1,7 @@
 #pragma once
 #include "../lifecycle.hpp"
 #include "section_elements.hpp"
+#include "../results/mechanical_publishers.hpp"
 
 namespace sdb::physics {
 template<class T> class SectionRun {
@@ -12,6 +13,8 @@ template<class T> class SectionRun {
     std::optional<PenaltyConstraints> penalty_;
     std::uint64_t increments_=0,configuration_=0;
     double dt_=0;
+    std::optional<lifecycle::ResultModel> recovery_model_;
+    static std::uint64_t basis_id(Index e) {return (std::uint64_t(1)<<63)+e;}
     void evaluate(){
         const auto& step=model_.analysis.steps[0];auto &s=state_.data();auto& r=*s.rotation;
         forces_.fill(0);s.internal_force.fill(0);s.external_force.fill(0);r.torque.fill(0);
@@ -49,8 +52,9 @@ template<class T> class SectionRun {
         for (const auto &step : model.outputs)
             for (const auto &request : step)
                 for (const auto &name : request.variables)
-                    if(name!="U" && name!="UR")
-                        throw std::invalid_argument("section backend publishes U/UR only; requested output unavailable: "+name);
+                    if(name=="S" || name=="E") recovery_model_.emplace();
+                    else if(name!="U" && name!="UR")
+                        throw std::invalid_argument("section backend supports U/UR and section S/E only: "+name);
         const auto& def=model.definition;
         auto other=def.foundation;auto extensions=def.extensions;
         if(def.penalty_stiffness>0){other.equations.clear();other.rigids.clear();extensions.couplings.clear();
@@ -88,6 +92,20 @@ template<class T> class SectionRun {
         if(!(dt_>0) || (step.direct && std::abs(step.period/count-step.increment)>step.increment*1e-7))
             throw std::invalid_argument("invalid section direct increment");
         configuration_=semantic_hash(std::make_pair(std::string("section/small-strain/v1"),dt_));
+        if(recovery_model_) {
+            auto &out=*recovery_model_;out=lifecycle::ResultModel::from(model_,configuration_);
+            out.samples.assign(elements_.size(),{});
+            for(Index e=0;e<elements_.size();++e) {
+                out.bases.push_back({basis_id(e),elements_[e].recovery_basis()});
+                for(unsigned q=1;q<=elements_[e].sample_count();++q)
+                    out.samples[e].push_back({1,1,q,model.mesh.element(e).material});
+            }
+        }
+    }
+    std::uint64_t increments() const noexcept { return increments_; }
+    bool recovery_enabled() const noexcept {return recovery_model_.has_value();}
+    lifecycle::ResultModel result_model() const {
+        return recovery_model_ ? *recovery_model_ : lifecycle::ResultModel::from(model_,configuration_);
     }
     std::uint64_t configuration() const noexcept {return configuration_;}
     const StateDB<T>& state() const{return state_;}
@@ -112,13 +130,40 @@ template<class T> class SectionRun {
     lifecycle::ResultFrame snapshot() const{
         const auto& s=state_.data();lifecycle::ResultFrame frame;
         frame.info={s.step,0,s.step,model_.mesh.fingerprint(),s.time,s.time,sizeof(T),8};
-        for(bool rotational:{false,true}){
-            lifecycle::ResultField field;field.descriptor.name=rotational?"UR":"U";
-            field.descriptor.components={"X","Y","Z"};field.descriptor.provenance="section linear six-DOF";
-            auto v=rotational?s.rotation->angle.read():s.displacement.read();
-            for(Index n=0;n<model_.mesh.nodes();++n){field.ids.push_back(Id(n)+1);for(unsigned d=0;d<3;++d)field.values.push_back(v(n,d));}
-            frame.fields.push_back(std::move(field));
-        }
+        if(recovery_model_) lifecycle::bind_result_frame(frame,*recovery_model_);
+        const auto &requests=model_.outputs.at(0);
+        auto publish=[&](const std::string& name,const std::string& region,bool history) {
+            const bool nodal=name=="U" || name=="UR";
+            std::vector<Index> all;
+            if(region.empty()) {all.resize(nodal?model_.mesh.nodes():elements_.size());std::iota(all.begin(),all.end(),Index(0));}
+            const auto &ids=region.empty()?all:model_.region(nodal,region);
+            if(nodal) {
+                lifecycle::ResultField f; f.descriptor.name=name; f.descriptor.region=region; f.descriptor.history=history;
+                f.descriptor.components={"X","Y","Z"};f.descriptor.provenance="section linear six-DOF";
+                auto v=name=="UR"?s.rotation->angle.read():s.displacement.read();
+                for(auto n:ids){f.ids.push_back(Id(n)+1);for(unsigned d=0;d<3;++d)f.values.push_back(v(n,d));}
+                frame.fields.push_back(std::move(f));return;
+            }
+            for(auto e:ids) {
+                if(!s.element_active.read()(e)) continue;
+                const auto &el=elements_[e];
+                FieldDescriptor d;d.name=name;d.scalar=scalar_type<T>();d.location=FieldLocation::SectionPoint;
+                d.basis="SECTION LOCAL"; d.components=el.count==2?std::vector<std::string>{"11"}:
+                                         std::vector<std::string>{"11","22","12"};
+                d.shape={static_cast<std::uint32_t>(d.components.size())};
+                if(name=="E" && el.count==4)d.shear=ShearConvention::Tensor;
+                auto f=lifecycle::section_point_field(*recovery_model_,e,d,el.recover(state_,name=="S"),
+                                                     basis_id(e),region,history);
+                f.typed->schema_id=el.count==2?"sdb.b31.rect.axial":"sdb.s4r.inplane";
+                f.descriptor.provenance=el.count==2?"RECT corner axial fiber":"Centre IP plane-stress layer recovery";
+                frame.fields.push_back(std::move(f));
+            }
+        };
+        if(requests.empty()) {publish("U","",false);publish("UR","",false);}
+        std::set<std::tuple<std::string,std::string,bool>> emitted;
+        for(const auto& r:requests) if(lifecycle::OutputScheduler::due(r,s.step,increments_))
+            for(const auto& name:r.variables) if(emitted.emplace(name,r.region,r.history).second)
+                publish(name,r.region,r.history);
         return frame;
     }
     void save(const std::filesystem::path& path){

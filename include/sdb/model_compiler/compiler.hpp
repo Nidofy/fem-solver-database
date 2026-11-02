@@ -723,11 +723,14 @@ class ModelCompiler {
                 if (o.variables.empty() || o.intervals > 100000000)
                     fail(o.source, "invalid output selection/schedule");
                 for (auto &v : o.variables)
-                    if (v != "U" && v != "V" && v != "A" && v != "RF" && v != "S" && v != "E" &&
+                    if (v=="UR" && std::none_of(descriptions.begin(),descriptions.end(),[](const auto &d){
+                            return d.formulation==Formulation::Beam || d.formulation==Formulation::Shell;}))
+                        fail(o.source,"UR requires rotational section nodes");
+                    else if (v != "UR" && v != "U" && v != "V" && v != "A" && v != "RF" && v != "S" && v != "E" &&
                         v != "PEEQ" && v != "ALLKE" && v != "ALLSE" && v != "ALLAE" && v != "ALLIE" && v != "ALLWK" && v != "ETOTAL" && v != "ALLVD")
                         fail(o.source, "unsupported output variable: " + v);
                 if (!o.region.empty()) {
-                    bool node = o.variables.front() == "U" || o.variables.front() == "V" ||
+                    bool node = o.variables.front() == "UR" || o.variables.front() == "U" || o.variables.front() == "V" ||
                                 o.variables.front() == "A" || o.variables.front() == "RF";
                     auto key = (node ? "N:" : "E:") + o.region;
                     if (!regions.contains(key))
