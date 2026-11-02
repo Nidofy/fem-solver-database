@@ -1,3 +1,6 @@
 if(Python3_Interpreter_FOUND)
   add_test(NAME analytic_reference_suite COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tools/reference_suite.py $<TARGET_FILE:sdb_run> ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus)
 endif()
+add_executable(sdb_manufactured_bar tests/manufactured_bar.cpp)
+target_link_libraries(sdb_manufactured_bar PRIVATE solver_database_v2)
+add_test(NAME manufactured_bar_convergence COMMAND sdb_manufactured_bar)
