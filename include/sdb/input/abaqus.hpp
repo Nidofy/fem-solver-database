@@ -240,7 +240,7 @@ class AbaqusInpReader final : public IModelReader {
             result.report.diagnostics.push_back({b.at, why, true});
         };
         for (auto &b : blocks) {
-            if(pending_coupling && b.key!="KINEMATIC") fail(b.at,"COUPLING must immediately precede supported KINEMATIC");
+            if(pending_coupling && b.key!="KINEMATIC" && b.key!="DISTRIBUTING") fail(b.at,"COUPLING must immediately precede KINEMATIC or DISTRIBUTING");
             if ((b.key == "OUTPUT" || b.key == "END STEP") && output_pending)
                 fail(b.at, "OUTPUT must be followed by explicit variable requests (including FREQUENCY=0)");
             auto param = [&](const std::string &key, const std::string &fallback = "") {
@@ -435,15 +435,31 @@ class AbaqusInpReader final : public IModelReader {
                 IRCoupling c; c.id=ConstraintId(next_constraint++); c.name=required("CONSTRAINT NAME");
                 c.reference=source_key(required("REF NODE"),b.at); c.surface=required("SURFACE"); c.source=b.at;
                 c.dof_mask=0; m.extensions.couplings.push_back(c); pending_coupling=m.extensions.couplings.size()-1; m.schema=4;
+            } else if (b.key == "DISTRIBUTING") {
+                params({"WEIGHTING METHOD","COUPLING"});
+                if(!pending_coupling) fail(b.at,"DISTRIBUTING without COUPLING");
+                if(param("WEIGHTING METHOD","UNIFORM")!="UNIFORM" || param("COUPLING","CONTINUUM")!="CONTINUUM")
+                    fail(b.at,"only uniform continuum distributing coupling is supported");
+                auto& c=m.extensions.couplings.at(*pending_coupling);
+                c.kind=CouplingKind::SurfaceDistributing;
+                if(!b.data.empty()) {
+                    const auto& l=one();auto f=fields(l);count(f,1,2,l.at);
+                    auto first=label(f[0],l.at),last=f.size()==1 || f[1].empty()?first:label(f[1],l.at);
+                    if(first>last || last>6)fail(l.at,"invalid distributing DOF range");
+                    c.dof_mask=7; // All translations participate, even when the card selects rotations.
+                    for(auto d=first;d<=last;++d)c.dof_mask|=static_cast<std::uint8_t>(1u<<(d-1));
+                }
+                // No data line means all available reference DOFs; resolve after model numbering.
+                pending_coupling.reset();
             } else if (b.key == "KINEMATIC") {
                 params({});
                 if(!pending_coupling) fail(b.at,"KINEMATIC without COUPLING");
                 auto &c=m.extensions.couplings.at(*pending_coupling);
-                if(b.data.empty()) fail(b.at,"KINEMATIC subset requires explicit translational DOFs");
+                if(b.data.empty()) fail(b.at,"KINEMATIC subset requires explicit DOFs");
                 for(const auto &l:b.data) {
                     auto f=fields(l); count(f,1,2,l.at);
                     auto first=label(f[0],l.at),last=f.size()==1 || f[1].empty()?first:label(f[1],l.at);
-                    if(first>last || last>3) fail(l.at,"KINEMATIC input subset supports DOFs 1..3");
+                    if(first>last || last>6) fail(l.at,"KINEMATIC input subset supports DOFs 1..6");
                     for(auto d=first;d<=last;++d) {auto bit=static_cast<std::uint8_t>(1u<<(d-1));if(c.dof_mask&bit) fail(l.at,"duplicate KINEMATIC DOF");c.dof_mask|=bit;}
                 }
                 pending_coupling.reset();
@@ -843,7 +859,7 @@ class AbaqusInpReader final : public IModelReader {
         }
         if (in_part || in_assembly || in_instance || step)
             fail({path.string(), 1, 1}, "unclosed PART/ASSEMBLY/INSTANCE/STEP");
-        if(pending_coupling) fail(m.extensions.couplings.at(*pending_coupling).source,"COUPLING missing KINEMATIC");
+        if(pending_coupling) fail(m.extensions.couplings.at(*pending_coupling).source,"COUPLING missing KINEMATIC or DISTRIBUTING");
         auto qualify=[&](SourceKey &key,const Source &at) {
             if(key.instance.empty()) return;
             auto i=std::find_if(m.instances.begin(),m.instances.end(),[&](auto &v){return v.name==key.instance;});

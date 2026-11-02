@@ -250,8 +250,51 @@ template<class T,class Resolve> void resolve_foundation(const ModelIR &ir,Compil
         out.activations.push_back({a.id,std::move(ids)});
     }
 }
+// Integrate N_a dA on reference faces, accumulating shared vertices across facets.
+template<class T> std::map<NodeId,double> surface_tributaries(const MeshDB<T>& mesh,
+                                                              SurfaceId surface,const Source& at) {
+    std::map<NodeId,double> result;
+    std::set<std::vector<Index>> seen;
+    auto x=mesh.reference();
+    for(const auto& face:mesh.surfaces().at(surface.value()).faces) {
+        auto e=mesh.element_index(face.element);
+        auto ns=mesh.connectivity(e);
+        auto local=topology_face_nodes(mesh.element(e).topology,face.local,FaceOrdering::Kernel,face.side);
+        std::vector<Index> nodes;
+        for(auto a:local)nodes.push_back(ns[a]);
+        auto sorted=nodes;std::sort(sorted.begin(),sorted.end());
+        if(!seen.insert(std::move(sorted)).second) fail(at,"duplicate distributing facet");
+        auto add=[&](const std::array<double,3>& a,const std::array<double,3>& b,const double* shape) {
+            double area=std::hypot(a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]);
+            if(!(area>0) || !std::isfinite(area)) fail(at,"degenerate distributing facet");
+            for(std::size_t i=0;i<nodes.size();++i)result[NodeId(nodes[i])]+=shape[i]*area;
+        };
+        if(nodes.size()==3) {
+            std::array<double,3> a{},b{};
+            for(unsigned d=0;d<3;++d){
+                a[d]=double(x(nodes[1],d))-x(nodes[0],d);b[d]=double(x(nodes[2],d))-x(nodes[0],d);
+            }
+            constexpr double shape[]={1./6,1./6,1./6};add(a,b,shape);
+        }else if(nodes.size()==4){
+            constexpr int sx[]={-1,1,1,-1}, sy[]={-1,-1,1,1};
+            for(unsigned q=0;q<4;++q) {
+                double r=sx[q]/std::sqrt(3.),s=sy[q]/std::sqrt(3.),shape[4];
+                std::array<double,3> a{},b{};
+                for(unsigned i=0;i<4;++i) {
+                    shape[i]=(1+r*sx[i])*(1+s*sy[i])/4;
+                    for(unsigned d=0;d<3;++d){
+                        double dx=double(x(nodes[i],d))-x(nodes[0],d);
+                        a[d]+=dx*sx[i]*(1+s*sy[i])/4;b[d]+=dx*sy[i]*(1+r*sx[i])/4;
+                    }
+                }
+                add(a,b,shape);
+            }
+        }else fail(at,"distributing requires a triangle or quad area facet");
+    }
+    return result;
+}
 template<class T,class ScopedResolve> void resolve_extensions(const ModelIR &ir,CompiledFoundation &out,
-    const SourceMap &sources,const std::vector<std::uint8_t> &node_dofs,ScopedResolve scoped_resolve) {
+    const SourceMap &sources,const std::vector<std::uint8_t> &node_dofs,const MeshDB<T>& mesh,ScopedResolve scoped_resolve) {
     const auto &x=ir.extensions;
     if(x.topology_numbering_version!=topology_numbering_version) throw std::invalid_argument("unknown topology numbering version");
     x.sample_axis.validate(); out.extensions=x; out.step_count=ir.steps.size(); out.element_count=sources.elements.size();
@@ -260,9 +303,14 @@ template<class T,class ScopedResolve> void resolve_extensions(const ModelIR &ir,
     for(auto &e:ir.foundation.ties) constraints.insert(e.id);
     for(auto &e:ir.foundation.rigids) constraints.insert(e.id);
     std::set<std::string> names;
-    for(const auto &c:x.couplings) {
+    for(auto &c:out.extensions.couplings) {
+        const bool from_surface = c.kind==CouplingKind::SurfaceDistributing;
+        if(from_surface && !c.dof_mask) {
+            auto reference=sources.node_id(c.reference);
+            c.dof_mask=static_cast<std::uint8_t>((1u<<node_dofs.at(reference.value()))-1);
+        }
         if(!c.id.valid() || c.name.empty() || !constraints.insert(c.id).second || !names.insert(c.name).second ||
-           c.kind>CouplingKind::Distributing || !c.dof_mask || c.dof_mask>63 || c.nodes.empty()==c.surface.empty()) fail(c.source,"invalid/duplicate coupling contract");
+           c.kind>CouplingKind::SurfaceDistributing || !c.dof_mask || c.dof_mask>63 || c.nodes.empty()==c.surface.empty()) fail(c.source,"invalid/duplicate coupling contract");
         (void)out.coordinate(c.coordinate);
         ResolvedCoupling r{c.id,sources.node_id(c.reference),{}, {}};
         if(!c.nodes.empty()) for(auto n:scoped_resolve(true,"",c.nodes,c.source)) r.nodes.push_back(NodeId(n));
@@ -272,12 +320,18 @@ template<class T,class ScopedResolve> void resolve_extensions(const ModelIR &ir,
         if(r.nodes.empty() || std::find(r.nodes.begin(),r.nodes.end(),r.reference)!=r.nodes.end()) fail(c.source,"empty coupling or reference in dependent region");
         for(unsigned d=0;d<6;++d) if(c.dof_mask&(1u<<d)) {
             if(d>=node_dofs.at(r.reference.value())) fail(c.source,"coupling reference DOF unavailable");
-            for(auto n:r.nodes) if(d>=node_dofs.at(n.value())) fail(c.source,"coupling dependent DOF unavailable");
+            for(auto n:r.nodes) if(!from_surface && d>=node_dofs.at(n.value())) fail(c.source,"coupling dependent DOF unavailable");
         }
         if(c.kind==CouplingKind::Kinematic) {
             if(!c.weights.empty()) fail(c.source,"kinematic coupling cannot carry distributing weights");
         } else {
             std::map<NodeId,double> weights; double peak=0;
+            if(from_surface) {
+                if(c.surface.empty() || !c.weights.empty() || (c.dof_mask&7)!=7)
+                    fail(c.source,"invalid surface distributing weights or DOFs");
+                weights=surface_tributaries(mesh,out.surface_ids.at(c.surface),c.source);
+                for(const auto& [node,w]:weights) peak=std::max(peak,w);
+            }
             for(const auto &w:c.weights) {
                 foundation_real<T>(w.weight,c.source);
                 auto n=sources.node_id(w.node);

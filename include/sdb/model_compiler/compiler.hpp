@@ -762,8 +762,8 @@ class ModelCompiler {
             for(const auto &[name,c]:contexts) if(c.part->name==scope) {auto more=resolve(node,target,name,at);ids.insert(ids.end(),more.begin(),more.end());}
             std::sort(ids.begin(),ids.end());ids.erase(std::unique(ids.begin(),ids.end()),ids.end()); return ids;
         };
-        resolve_extensions<T>(ir,foundation,source,node_dofs,scoped_resolve);
         auto mesh = b.finalize(policy);
+        resolve_extensions<T>(ir,foundation,source,node_dofs,mesh,scoped_resolve);
         CompiledModel<T> result(std::move(ir), std::move(mesh));
         result.sources = std::move(source);
         result.foundation = std::move(foundation);

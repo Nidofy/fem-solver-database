@@ -28,3 +28,29 @@ uses unequal weights and an off-centroid reference to check resultant force,
 net torque and rigid-motion invariance. Surface ties and local bases remain
 outside this consumer. A penalty
 permits a finite gap. Scaling an equation changes its penalty stiffness.
+
+## Native element-surface distributing input
+
+A COUPLING may be followed directly by DISTRIBUTING with COUPLING=CONTINUUM
+and WEIGHTING METHOD=UNIFORM (both defaults). Reference-node labels may be
+instance-qualified. The surface must consist of distinct triangular or
+quadrilateral area facets. On the undeformed mesh the compiler integrates the
+nodal shape functions against face area, sums at shared vertices, and normalizes
+to unit total. Triangles use area/3; quads use four-point bilinear quadrature.
+This retains the effect of differently sized facets. An SDK-defined distributing
+coupling with explicit weights keeps its original meaning.
+
+With no data record, all available reference DOFs participate. An explicit
+range always includes translation and may add rotations. Continuum coupling
+uses the translations of the surface nodes to carry the reference moment.
+KINEMATIC accepts explicit ranges within 1..6 when the nodes have those DOFs.
+Influence-radius filtering, radial taper weighting and structural distributing
+couplings that involve cloud rotations remain unsupported.
+
+section_distributing.inp combines facet areas 1 and 2 with a separate beam
+reference point. Tests recover the six normalized tributary weights, check the
+moment from an eccentric rigid fit, verify rigid-arm kinematics and compare
+split/continuous section trajectories. A duplicate facet, including an opposite
+side of the same facet, is diagnosed before evaluation.
+
+[Coupling DOF and weight conventions](https://docs.software.vt.edu/abaqusv2025/English/SIMACAECSTRefMap/simacst-c-coupling.htm)

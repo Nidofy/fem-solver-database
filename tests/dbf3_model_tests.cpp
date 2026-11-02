@@ -147,8 +147,8 @@ void parser(const std::filesystem::path &directory) {
         std::istringstream stream(changed);rejects([&]{auto ir=AbaqusInpReader{}.read(stream,directory/"negative.inp",{}).model;ModelCompiler{}.compile<double>(ir);},diagnostic);
     };
     bad("REF NODE=A.5","REF NODE=MISSING","node sets");
-    bad("*KINEMATIC","*DISTRIBUTING","KINEMATIC");
-    bad("1,3\n*END ASSEMBLY","1,6\n*END ASSEMBLY","DOFs 1..3");
+    bad("*KINEMATIC","*DISTRIBUTING,WEIGHTING METHOD=LINEAR","uniform continuum");
+    bad("1,3\n*END ASSEMBLY","1,6\n*END ASSEMBLY","DOF unavailable");
     bad("*DSLOAD,OP=MOD","*DSLOAD,OP=NEW","OP=MOD");
     bad("A.FACE,P,4","A.FACE,PNU,4","pressure P");
     bad("TYPE=VELOCITY","TYPE=STRESS","VELOCITY");

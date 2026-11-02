@@ -16,3 +16,7 @@ target_link_libraries(sdb_section_run PRIVATE sdb_lifecycle)
 add_executable(sdb_section_elements_tests tests/section_elements_tests.cpp)
 target_link_libraries(sdb_section_elements_tests PRIVATE sdb_lifecycle)
 add_test(NAME section_elements COMMAND sdb_section_elements_tests ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus ${CMAKE_CURRENT_BINARY_DIR}/section-elements-scratch)
+
+add_executable(sdb_surface_coupling_tests tests/surface_coupling_tests.cpp)
+target_link_libraries(sdb_surface_coupling_tests PRIVATE sdb_lifecycle)
+add_test(NAME surface_coupling COMMAND sdb_surface_coupling_tests ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus/section_distributing.inp ${CMAKE_CURRENT_BINARY_DIR}/surface-coupling-scratch)

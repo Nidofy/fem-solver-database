@@ -29,7 +29,7 @@ class PenaltyConstraints {
             rows_.push_back(std::move(row));
         }
         auto coupling=[&](NodeId ref,const std::vector<NodeId>& nodes,unsigned mask,
-                          const std::vector<double>& weights) {
+                          const std::vector<double>& weights,bool surface_fit=false) {
             if (!mask || mask>63) throw std::invalid_argument("invalid rigid DOF mask");
             auto x=model.mesh.reference();using Vec=std::array<double,3>;
             using lifecycle::distributed::cross;using lifecycle::distributed::dot;
@@ -55,7 +55,7 @@ class PenaltyConstraints {
                 Row row{0,{{ref.value(),d,1}}};
                 Vec target{}, axis{};axis[d%3]=1;
                 if(d>=3)target=axis;
-                else if(rotary) {target=cross(axis,centroid);}
+                else if(rotary || surface_fit) {target=cross(axis,centroid);}
                 Vec dual{};
                 if(dot(target,target)>0) {
                     // Weighted rigid fit about the centroid: I omega = sum w r x u.
@@ -92,7 +92,7 @@ class PenaltyConstraints {
         for(const auto& c:f.extensions.couplings) {
             if (c.coordinate.value()!=0) throw std::invalid_argument("local coupling basis unsupported");
             const auto& r=f.coupling(c.id);
-            coupling(r.reference,r.nodes,c.dof_mask,r.weights);
+            coupling(r.reference,r.nodes,c.dof_mask,r.weights,c.kind==lifecycle::CouplingKind::SurfaceDistributing);
         }
     }
     std::size_t rows() const noexcept { return rows_.size(); }

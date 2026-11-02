@@ -1,0 +1,40 @@
+*Heading
+Two unequal-area shell facets coupled to an eccentric six-DOF beam tip
+*Node
+1,0,0,0
+2,1,0,0
+3,1,1,0
+4,0,1,0
+5,3,0,0
+6,3,1,0
+7,0,0,1
+8,0,0,2
+*Element,type=S4R,elset=PLATES
+1,1,2,3,4
+2,2,5,6,3
+*Element,type=B31,elset=BEAM
+3,7,8
+*Material,name=EL
+*Density
+1
+*Elastic
+100,.25
+*Shell Section,elset=PLATES,material=EL
+.2
+*Beam Section,elset=BEAM,material=EL,section=RECT
+.2,.1
+1,0,0
+*Surface,name=SPATCH,type=ELEMENT
+PLATES,SPOS
+*Coupling,constraint name=PATCH,ref node=7,surface=SPATCH
+*Distributing,weighting method=UNIFORM,coupling=CONTINUUM
+*Boundary
+1,1,6
+4,1,6
+8,1,6
+*Step,name=LOAD,nlgeom=NO
+*Dynamic,explicit,direct user control
+.0001,.01
+*Cload
+7,6,.02
+*End Step
