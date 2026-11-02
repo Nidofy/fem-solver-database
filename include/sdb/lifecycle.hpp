@@ -163,6 +163,10 @@ template <class T> class CpuRun {
             plans_.push_back({n, dt, start});
             start += double(n) * dt;
         }
+        for (const auto &step : model.outputs) for (const auto &request : step)
+            for (const auto &name : request.variables) {
+                if (name=="ALLWK" || name=="ETOTAL" || name=="ALLVD") state_.data().external_work=0.;
+            }
         native::Writer w;
         if(model.definition.finite_geometry) native::encode(w,std::string("finite-tet4/neo-hookean-v1"));
         if (penalty_) native::encode(w, std::string("explicit-penalty-v1"));
@@ -228,6 +232,17 @@ template <class T> class CpuRun {
             next_step();
         loads();
         cpu_.step(state_);
+        if (state_.data().external_work) {
+            // The integrator used these start-of-increment forces. Updated
+            // half-step velocity times dt is the accepted displacement increment.
+            auto v=state_.data().velocity.read(), f=state_.data().external_force.read(),
+                 contact=state_.data().contact_force.read();
+            double work=0;
+            for (std::size_t n=0;n<v.count;++n) for(unsigned c=0;c<3;++c)
+                work += (double(f(n,c))+contact(n,c))*v(n,c)*state_.data().dt;
+            *state_.data().external_work += work;
+            state_.data().bulk_dissipation += cpu_.bulk_power()*state_.data().dt;
+        }
         ++increment_;
         state_.data().time = plans_[step_].start + double(increment_) * plans_[step_].dt;
         loads();
@@ -259,6 +274,7 @@ template <class T> class CpuRun {
         if (state_.in_trial()) throw std::logic_error("restore requires committed state");
         StateDB<T> restored(model_.mesh, state_.data().rotation.has_value());
         restored.copy_registered_layout(state_);
+        restored.data().external_work=state_.data().external_work;
         restored.data().explicit_controls = controls().identity;
         auto info = RestartDB::load(path, model_, restored, config_);
         if (info.step >= plans_.size() || info.increment > plans_[info.step].increments)
@@ -287,7 +303,7 @@ template <class T> class CpuRun {
     }
     // Explicit v2 conversion is tied to the chosen compiled model; v2 itself had no analysis identity.
     void import_v2(const std::filesystem::path &path) {
-        if (controls().options.enabled()) throw std::logic_error("v2 checkpoint lacks explicit controls identity");
+        if (controls().options.enabled() || state_.data().external_work) throw std::logic_error("v2 lacks explicit controls/work identity");
         if (state_.in_trial()) throw std::logic_error("import requires committed state");
         if (const auto *registered = state_.registered_fields())
             for (const auto &entry : registered->entries())

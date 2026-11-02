@@ -52,6 +52,18 @@ template <class T> class J2Law {
 
   public:
     explicit J2Law(const Material<T> &m) : parameters(m.parameters) { validate_j2(m); }
+    // Integral of tabulated yield stress over accumulated equivalent plastic strain.
+    double plastic_work(double eq) const {
+        if(!(eq>=0) || !std::isfinite(eq)) throw std::invalid_argument("invalid accumulated plastic strain");
+        double work=0;
+        for(std::size_t i=3;i+3<parameters.size();i+=2) {
+            double x=parameters[i+1], end=parameters[i+3];
+            double width=std::clamp(eq-x,0.,end-x);
+            work+=width*(parameters[i]+.5*(double(parameters[i+2])-parameters[i])*width/(end-x));
+            if(eq<=end) return work;
+        }
+        return work+std::max(0.,eq-parameters.back())*parameters[parameters.size()-2];
+    }
     J2Trial<T> trial(const std::array<T, 6> &strain, const std::array<T, 7> &committed) const {
         const double E = parameters[1], nu = parameters[2], mu = E / (2 * (1 + nu));
         const double bulk = E / (3 * (1 - 2 * nu));

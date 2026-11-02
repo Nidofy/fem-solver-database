@@ -29,6 +29,9 @@ template <class T> struct StateData {
     double time = 0, dt = 0;
     // Runtime binding; lifecycle restart persists the configuration hash.
     std::shared_ptr<const ExplicitControls> explicit_controls;
+    // Present only when a run requests cumulative work or total-energy audit.
+    std::optional<double> external_work;
+    double bulk_dissipation=0;
     template <class F> void fields(F &&f) {
         f(displacement);
         f(velocity);

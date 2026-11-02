@@ -265,6 +265,7 @@ template <class T> class CpuExplicit {
             compare(f,local,e); compare(s,stress,plan_.ip_offsets[e]); compare(eps,strain,plan_.ip_offsets[e]);
         }
     }
+    double bulk_power_=0;
     std::uint64_t force_evaluations_ = 0, output_force_evaluations_ = 0;
     std::optional<ForceSnapshot<T>> output_;
     std::vector<J2Trial<T>> plastic_trial_;
@@ -297,6 +298,7 @@ template <class T> class CpuExplicit {
     const TetPlan<T> &plan() const { return plan_; }
     const auto &plastic_trials() const noexcept { return plastic_trial_; }
     // Completed element+assembly passes; observable for output-scheduling contracts.
+    double bulk_power() const noexcept { return bulk_power_; }
     std::uint64_t force_evaluations() const noexcept { return force_evaluations_; }
     // Step-level homogeneous translation mask. No parser or result dependency.
     void set_constraints(std::span<const Constraint> constraints, StateDB<T> &state) {
@@ -409,6 +411,7 @@ template <class T> class CpuExplicit {
                 hex->force(h, u, hex_local, stress, strain, active(hex->elements[h]) != 0);
             });
         }
+        bulk_power_ = 0;
         const auto &controls = plan_.controls;
         if (controls.options.bulk_linear || controls.options.bulk_quadratic) {
             const auto v = s.velocity.read();
@@ -417,7 +420,7 @@ template <class T> class CpuExplicit {
             const auto active_nodes = s.node_active.read();
             for (std::size_t e=0; e<tet.nodes.count; ++e)
                 if (is_tet[e] && active(e))
-                    add_bulk_force(controls.elements[e],cap,tet.nodes,tet.gradients,v,fixed,active_nodes,local,e,e,tet.volume(e));
+                    bulk_power_+=add_bulk_force(controls.elements[e],cap,tet.nodes,tet.gradients,v,fixed,active_nodes,local,e,e,tet.volume(e));
             if (plan_.hex) {
                 const auto h = plan_.hex->views();
                 auto local_hex = plan_.hex->local_force.write();
@@ -427,7 +430,7 @@ template <class T> class CpuExplicit {
                     unsigned points = h.weights(8*j+1)==0 ? 1 : 8;
                     for (unsigned q=0;q<points;++q) {
                         auto p = 8*j+q;
-                        add_bulk_force(controls.elements[e],cap,h.nodes,h.gradients,v,fixed,active_nodes,local_hex,j,p,h.weights(p));
+                        bulk_power_+=add_bulk_force(controls.elements[e],cap,h.nodes,h.gradients,v,fixed,active_nodes,local_hex,j,p,h.weights(p));
                     }
                 }
             }

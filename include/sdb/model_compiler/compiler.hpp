@@ -723,7 +723,7 @@ class ModelCompiler {
                     fail(o.source, "invalid output selection/schedule");
                 for (auto &v : o.variables)
                     if (v != "U" && v != "V" && v != "A" && v != "RF" && v != "S" && v != "E" &&
-                        v != "PEEQ" && v != "ALLKE" && v != "ALLSE" && v != "ALLAE")
+                        v != "PEEQ" && v != "ALLKE" && v != "ALLSE" && v != "ALLAE" && v != "ALLIE" && v != "ALLWK" && v != "ETOTAL" && v != "ALLVD")
                         fail(o.source, "unsupported output variable: " + v);
                 if (!o.region.empty()) {
                     bool node = o.variables.front() == "U" || o.variables.front() == "V" ||

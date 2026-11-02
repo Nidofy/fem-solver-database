@@ -441,7 +441,7 @@ class ResultPublisher {
             if (OutputScheduler::due(r, info.increment, increments)) {
                 due.push_back(&r);
                 for (auto &name : r.variables)
-                    if (name != "U" && name != "ALLAE")
+                    if (name != "U" && name != "ALLAE" && name != "ALLWK")
                         needs_forces = true;
             }
         const ForceSnapshot<T> *derived = needs_forces ? &cpu.output_forces(state) : nullptr;
@@ -488,7 +488,7 @@ class ResultPublisher {
                         d.provenance = "CPU small-strain solids; current displacement material trial";
                     if(model.definition.finite_geometry) d.provenance="Finite TET4; Cauchy stress and Euler-Almansi strain in spatial basis";
                     bool nodal = name == "U" || name == "V" || name == "A" || name == "RF";
-                    bool global = name == "ALLKE" || name == "ALLSE" || name == "ALLAE";
+                    bool global = name == "ALLKE" || name == "ALLSE" || name == "ALLAE" || name == "ALLIE" || name == "ALLWK" || name == "ETOTAL" || name=="ALLVD";
                     d.location =
                         global ? Location::Global : (nodal ? Location::Node : Location::IntegrationPoint);
                     d.components =
@@ -533,24 +533,35 @@ class ResultPublisher {
                         field.ids.push_back(global ? 0 : Id(i) + 1);
                         if (global) {
                             double energy = 0;
-                            if (name == "ALLKE") {
+                            if (name == "ALLKE" || name == "ETOTAL") {
                                 for (Index n = 0; n < model.mesh.nodes(); ++n)
                                     for (unsigned c = 0; c < 3; ++c) {
                                         auto speed = velocity(n, c);
                                         energy += .5 * double(s.mass.read()(n)) * speed * speed;
                                     }
-                            } else if (name == "ALLAE") {
+                            }
+                            if (name=="ALLWK" || name=="ETOTAL") {
+                                if(!s.external_work) throw std::logic_error("energy audit not initialized");
+                                energy += name=="ALLWK" ? *s.external_work : -*s.external_work;
+                            }
+                            if (name=="ALLVD" || name=="ETOTAL") energy+=s.bulk_dissipation;
+                            if (name == "ALLAE" || name=="ALLIE" || name=="ETOTAL") {
                                 if (cpu.plan().hex)
-                                    energy = cpu.plan().hex->artificial_energy(u, s.element_active.read());
-                            } else {
+                                    energy += cpu.plan().hex->artificial_energy(u, s.element_active.read());
+                            }
+                            if(name=="ALLSE" || name=="ALLIE" || name=="ETOTAL") {
                                 std::size_t plastic = 0;
                                 const auto &plan = cpu.plan();
                                 for (std::size_t e = 0; e < s.stress.size(); ++e) {
                                     if(!cpu.finite_energy().empty()) { energy+=cpu.finite_energy()[e]; continue; }
                                     if (plastic < plan.plastic_points.size() &&
                                         e == plan.ip_offsets[plan.plastic_points[plastic].element]) {
-                                        energy += plan.integration_weight.read()(e) *
-                                                  cpu.plastic_trials()[plastic++].elastic_energy;
+                                        const auto &point=plan.plastic_points[plastic];
+                                        const auto &trial=cpu.plastic_trials()[plastic++];
+                                        double density=trial.elastic_energy;
+                                        if (name!="ALLSE" && s.element_active.read()(point.element))
+                                            density+=plan.plastic_laws[point.law].plastic_work(trial.history[6]);
+                                        energy += plan.integration_weight.read()(e)*density;
                                         continue;
                                     }
                                     for (unsigned c = 0; c < 6; ++c)

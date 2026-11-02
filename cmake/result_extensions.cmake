@@ -5,3 +5,6 @@ add_test(NAME mapped_result_contract COMMAND sdb_mapped_result_tests
 add_executable(sdb_mechanical_publisher_tests tests/mechanical_publisher_tests.cpp)
 target_link_libraries(sdb_mechanical_publisher_tests PRIVATE sdb_lifecycle)
 add_test(NAME mechanical_publishers COMMAND sdb_mechanical_publisher_tests "${CMAKE_CURRENT_BINARY_DIR}/mechanical-publish")
+add_executable(sdb_energy_audit_tests tests/energy_audit_tests.cpp)
+target_link_libraries(sdb_energy_audit_tests PRIVATE sdb_lifecycle)
+add_test(NAME energy_audit COMMAND sdb_energy_audit_tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus" "${CMAKE_CURRENT_BINARY_DIR}/energy-audit")

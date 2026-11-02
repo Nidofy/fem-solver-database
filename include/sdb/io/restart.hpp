@@ -10,10 +10,12 @@ struct RestartInfo {
     std::uint64_t mesh = 0, definition = 0, configuration = 0, step = 0, increment = 0, total_increment = 0;
     double time = 0, dt = 0;
     std::uint64_t controls_hash = 0;
+    double external_work = 0, bulk_dissipation = 0;
     template <class F> void visit(F f) {
         f(state_schema, model_schema, solver_version, precision, mesh, definition, configuration, step,
           increment, total_increment, time, dt);
-        if (solver_version==2) f(controls_hash);
+        if (solver_version==2 || solver_version==4) f(controls_hash);
+        if (solver_version==3 || solver_version==4) f(external_work,bulk_dissipation);
     }
 };
 class RestartDB {
@@ -33,6 +35,12 @@ class RestartDB {
         info.state_schema = extensions ? 5 : (state.data().rotation ? 4 : 3);
         const auto& controls = state.data().explicit_controls;
         info.solver_version = controls ? 2 : 1;
+        if (state.data().external_work) {
+            info.solver_version += 2;
+            info.external_work = *state.data().external_work;
+            info.bulk_dissipation=state.data().bulk_dissipation;
+            if (!std::isfinite(info.bulk_dissipation) || info.bulk_dissipation<0 || !std::isfinite(info.external_work)) throw std::runtime_error("nonfinite restart external work");
+        }
         if (controls) info.controls_hash = native::hash(native::pack(*controls));
         info.precision = sizeof(T);
         info.model_schema = model.definition.schema;
@@ -92,7 +100,8 @@ class RestartDB {
         auto info = native::unpack<RestartInfo>(native::record(in, 0, 4096));
         const bool extensions = state.registered_fields() && !state.registered_fields()->empty();
         const auto& controls = state.data().explicit_controls;
-        if (info.solver_version != (controls ? 2u : 1u) ||
+        if (info.solver_version != (controls ? 2u : 1u)+(state.data().external_work ? 2u : 0u) ||
+            !std::isfinite(info.external_work) || !std::isfinite(info.bulk_dissipation) || info.bulk_dissipation<0 ||
             (controls && info.controls_hash != native::hash(native::pack(*controls))))
             throw std::runtime_error("restart explicit controls mismatch");
         if (info.state_schema != (extensions ? 5u : (state.data().rotation ? 4u : 3u)) || info.model_schema != model.definition.schema ||
@@ -111,6 +120,8 @@ class RestartDB {
         next.copy_registered_layout(state);
         auto &data = next.data();
         data.explicit_controls = controls;
+        if (state.data().external_work) data.external_work = info.external_work;
+        data.bulk_dissipation=info.bulk_dissipation;
         data.step = info.total_increment;
         data.time = info.time;
         data.dt = info.dt;

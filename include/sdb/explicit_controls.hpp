@@ -125,7 +125,7 @@ template <class T> T tet_row_sum_step(std::size_t e, View<T, 12> gradients, T la
 }
 
 template <class T, std::size_t N>
-void add_bulk_force(const ElementControl &data, double compression_limit, View<const Index, N> nodes,
+double add_bulk_force(const ElementControl &data, double compression_limit, View<const Index, N> nodes,
                     View<const T, 3 * N> grad, View<const T, 3> velocity, View<const std::uint8_t, 3> fixed,
                     View<const std::uint8_t> active_nodes, View<T, 3 * N> local, std::size_t element,
                     std::size_t point, T weight) {
@@ -145,5 +145,6 @@ void add_bulk_force(const ElementControl &data, double compression_limit, View<c
             if (!std::isfinite(force))
                 throw std::domain_error("nonfinite viscous force");
         }
+    return double(weight)*pressure*rate;
 }
 } // namespace sdb
