@@ -43,26 +43,31 @@ enum class Dof : std::uint8_t { X, Y, Z, RX, RY, RZ };
 
 // Canonical cold-metadata identity; not authentication. Length-delimit containers
 // and strings, encode arithmetic in LE. No object representation/padding hashes.
-template <class X> std::uint64_t semantic_hash(const X &object) {
+class SemanticHasher {
     std::uint64_t h = 14695981039346656037ull;
-    auto integer = [&](std::uint64_t v) {
+    void integer(std::uint64_t v) {
         for (unsigned k = 0; k < 8; ++k) { h ^= (v >> (8 * k)) & 255; h *= 1099511628211ull; }
-    };
-    auto visit = [&](auto &&self, const auto &x) -> void {
+    }
+  public:
+    template<class X> void append(const X& x) {
         using V = std::remove_cvref_t<decltype(x)>;
         if constexpr (std::is_enum_v<V> || std::is_integral_v<V>) integer(static_cast<std::uint64_t>(x));
         else if constexpr (std::is_floating_point_v<V>) integer(std::bit_cast<std::uint64_t>(double(x)));
         else if constexpr (std::is_same_v<V, std::string>) {
             integer(x.size()); for (unsigned char c : x) integer(c);
         } else if constexpr (requires { x.first; x.second; }) {
-            self(self, x.first); self(self, x.second);
+            append(x.first); append(x.second);
         } else if constexpr (requires { x.visit([](const auto &...) {}); })
-            x.visit([&](const auto &...v) { (self(self, v), ...); });
+            x.visit([&](const auto &...v) { (append(v), ...); });
         else if constexpr (requires(V &v) { v.visit([](auto &...) {}); })
-            const_cast<V &>(x).visit([&](const auto &...v) { (self(self, v), ...); });
-        else { integer(x.size()); for (const auto &v : x) self(self, v); }
-    };
-    visit(visit, object);
-    return h;
+            const_cast<V &>(x).visit([&](const auto &...v) { (append(v), ...); });
+        else { integer(x.size()); for (const auto &v : x) append(v); }
+    }
+    std::uint64_t value() const { return h; }
+};
+template<class X> std::uint64_t semantic_hash(const X& object) {
+    SemanticHasher hash;
+    hash.append(object);
+    return hash.value();
 }
 } // namespace sdb
