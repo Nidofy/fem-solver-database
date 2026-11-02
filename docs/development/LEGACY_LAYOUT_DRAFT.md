@@ -11,3 +11,22 @@ nominal size 2 use sizeof(int), and DOUBLE uses sizeof(double) even when the ASC
 size disagrees. STR includes a trailing terminator slot. NODE_DATA depends on an
 external structure layout. Count mismatches carry reduced confidence on every
 field of that subfile. Native capture and round-trip qualification remain pending.
+
+## Synthetic record probe
+
+tests/legacy_db_synthetic.py builds a one-subfile .db per supported family,
+using layout metadata from the ASC inventory. Its writer independently lays
+out a 250-byte main header, a 128-byte Win64 _fhead, the case and key arrays,
+field ends/types and a second index page. It reads case 2/key 102, and tests
+missing cases/pages/keys, deleted keys, truncation and out-of-range addresses.
+Use tools/legacy_db_reader.py FILE INVENTORY EXTENSION CASE KEY for inspection.
+String bytes are returned as hex to preserve padding and encoding.
+
+The reader assumes little endian, default x64 packing, six i32 date/time fields
+and signed 64-bit offsets. It handles indexed (fixed_size=0), constant-length
+records. Block allocation, VARLOC records and NODE_DATA layout require separate
+fixtures. Sources: old/cacdb/header.cpp (main and subfile headers),
+index.cpp::get_key (two-level case index, signed record addresses),
+schema.cpp::sch_prepare_fldend, and include/cfmDbase.h::_fhead.
+These tests use independent synthetic bytes. They do not certify the production
+ABI, foreign endian files or actual plugin data. Local probe budget is 64 MiB.
