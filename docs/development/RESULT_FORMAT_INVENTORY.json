@@ -1,0 +1,429 @@
+{
+  "status": "STATIC_WRITER_CALL_SITES_UNQUALIFIED",
+  "sources": {
+    "old/cacuser/fmpfzw.cpp": "7880cfe3173bb106d9624c46bf63c508fc3c052efa1aeef28b9ff34f9a9e1eef",
+    "old/cacuser/ZwResultComponent.cpp": "924b8f080556749e47a33ba5d8f7006f7cb41b2f5cd530ffd34f74d797002a54"
+  },
+  "component_dispatch": [
+    {
+      "factory": "_GetDisplacementComp",
+      "variant": "DISPLACEMENT_ID",
+      "line": 344
+    },
+    {
+      "factory": "_GetRforceComp",
+      "variant": "",
+      "line": 348
+    },
+    {
+      "factory": "_GetNodalStressComp",
+      "variant": "",
+      "line": 352
+    },
+    {
+      "factory": "_GetNodalStrainsComp",
+      "variant": "",
+      "line": 356
+    },
+    {
+      "factory": "_GetElementComp",
+      "variant": "",
+      "line": 358
+    },
+    {
+      "factory": "_GetElementComp",
+      "variant": "ZwElementComponent::Scalar_Result",
+      "line": 361
+    },
+    {
+      "factory": "_GetDisplacementComp",
+      "variant": "DISPLACEMENT_ID",
+      "line": 376
+    },
+    {
+      "factory": "_GetRforceComp",
+      "variant": "",
+      "line": 385
+    },
+    {
+      "factory": "_GetElementComp",
+      "variant": "ZwElementComponent::Scalar_Result",
+      "line": 389
+    },
+    {
+      "factory": "_GetElementComp",
+      "variant": "",
+      "line": 391
+    },
+    {
+      "factory": "_GetTemperaturesComp",
+      "variant": "",
+      "line": 412
+    },
+    {
+      "factory": "_GeCforceComp",
+      "variant": "",
+      "line": 424
+    },
+    {
+      "factory": "_GetDisplacementComp",
+      "variant": "DISPLACEMENT_ID",
+      "line": 449
+    },
+    {
+      "factory": "_GetDisplacementComp",
+      "variant": "VELOCITY_ID",
+      "line": 456
+    },
+    {
+      "factory": "_GetDisplacementComp",
+      "variant": "ACCELERATION_ID",
+      "line": 460
+    },
+    {
+      "factory": "_GetDisplacementComp",
+      "variant": "KINETIC_ENERGY_ID",
+      "line": 464
+    },
+    {
+      "factory": "_GetRforceComp",
+      "variant": "",
+      "line": 469
+    },
+    {
+      "factory": "_GetNodalStressComp",
+      "variant": "",
+      "line": 473
+    },
+    {
+      "factory": "_GetNodalStrainsComp",
+      "variant": "",
+      "line": 477
+    },
+    {
+      "factory": "_GetElementComp",
+      "variant": "",
+      "line": 479
+    },
+    {
+      "factory": "_GetElementComp",
+      "variant": "ZwElementComponent::Scalar_Result",
+      "line": 482
+    },
+    {
+      "factory": "_GetElementComp",
+      "variant": "",
+      "line": 493
+    },
+    {
+      "factory": "_GetNodalStressComp",
+      "variant": "",
+      "line": 500
+    },
+    {
+      "factory": "_GetDisplacementComp",
+      "variant": "DISPLACEMENT_ID",
+      "line": 529
+    },
+    {
+      "factory": "_GetDisplacementComp",
+      "variant": "VELOCITY_ID",
+      "line": 533
+    },
+    {
+      "factory": "_GetDisplacementComp",
+      "variant": "ACCELERATION_ID",
+      "line": 537
+    },
+    {
+      "factory": "_GetRforceComp",
+      "variant": "",
+      "line": 541
+    },
+    {
+      "factory": "_GetNodalStressComp",
+      "variant": "",
+      "line": 545
+    },
+    {
+      "factory": "_GetNodalStrainsComp",
+      "variant": "",
+      "line": 549
+    },
+    {
+      "factory": "_GetElementComp",
+      "variant": "",
+      "line": 551
+    },
+    {
+      "factory": "_GetElementComp",
+      "variant": "ZwElementComponent::Scalar_Result",
+      "line": 555
+    },
+    {
+      "factory": "_GetDisplacementComp",
+      "variant": "DISPLACEMENT_ID",
+      "line": 583
+    },
+    {
+      "factory": "_GetDisplacementComp",
+      "variant": "VELOCITY_ID",
+      "line": 587
+    },
+    {
+      "factory": "_GetDisplacementComp",
+      "variant": "ACCELERATION_ID",
+      "line": 591
+    },
+    {
+      "factory": "_GetRforceComp",
+      "variant": "",
+      "line": 595
+    },
+    {
+      "factory": "_GetNodalStressComp",
+      "variant": "",
+      "line": 599
+    },
+    {
+      "factory": "_GetNodalStrainsComp",
+      "variant": "",
+      "line": 603
+    },
+    {
+      "factory": "_GetElementComp",
+      "variant": "",
+      "line": 605
+    },
+    {
+      "factory": "_GetElementComp",
+      "variant": "ZwElementComponent::Scalar_Result",
+      "line": 608
+    }
+  ],
+  "writer_calls": [
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 228,
+      "method": "ZwExportResult::OpenOutputFile",
+      "operation": "OpenFile",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 233,
+      "method": "ZwExportResult::OpenOutputFile",
+      "operation": "OpenFile",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 492,
+      "method": "ZwExportResult::_GetComponents",
+      "operation": "WriteAttribute",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 751,
+      "method": "ZwExportResult::Export",
+      "operation": "WriteAttribute",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 907,
+      "method": "ZwExportResult::_WriteResultSet",
+      "operation": "WriteData",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 945,
+      "method": "ZwExportResult::_WriteFreqItem",
+      "operation": "WriteAttribute",
+      "literals": [
+        "mode"
+      ]
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 952,
+      "method": "ZwExportResult::_WriteFreqItem",
+      "operation": "WriteAttribute",
+      "literals": [
+        "frequency"
+      ]
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 956,
+      "method": "ZwExportResult::_WriteFreqItem",
+      "operation": "WriteAttribute",
+      "literals": [
+        "EMPF"
+      ]
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 979,
+      "method": "ZwExportResult::_WriteResultSubcaseStepHeader",
+      "operation": "WriteAttribute",
+      "literals": [
+        "subcase"
+      ]
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 985,
+      "method": "ZwExportResult::_WriteResultSubcaseStepHeader",
+      "operation": "WriteAttribute",
+      "literals": [
+        "step"
+      ]
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1002,
+      "method": "ZwExportResult::_WriteResultSubStep",
+      "operation": "WriteData",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1044,
+      "method": "ZwExportResult::_WriteResultSubStep",
+      "operation": "WriteAttribute",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1050,
+      "method": "ZwExportResult::_WriteResultSubStep",
+      "operation": "WriteAttribute",
+      "literals": [
+        "frequency"
+      ]
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1055,
+      "method": "ZwExportResult::_WriteResultSubStep",
+      "operation": "WriteAttribute",
+      "literals": [
+        "eigen"
+      ]
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1061,
+      "method": "ZwExportResult::_WriteResultSubStep",
+      "operation": "WriteAttribute",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1062,
+      "method": "ZwExportResult::_WriteResultSubStep",
+      "operation": "WriteAttribute",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1066,
+      "method": "ZwExportResult::_WriteResultSubStep",
+      "operation": "WriteAttribute",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1067,
+      "method": "ZwExportResult::_WriteResultSubStep",
+      "operation": "WriteAttribute",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1073,
+      "method": "ZwExportResult::_WriteResultSubStep",
+      "operation": "WriteAttribute",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1074,
+      "method": "ZwExportResult::_WriteResultSubStep",
+      "operation": "WriteAttribute",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1078,
+      "method": "ZwExportResult::_WriteResultSubStep",
+      "operation": "WriteAttribute",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1079,
+      "method": "ZwExportResult::_WriteResultSubStep",
+      "operation": "WriteAttribute",
+      "literals": []
+    },
+    {
+      "file": "old/cacuser/fmpfzw.cpp",
+      "line": 1681,
+      "method": "ZwExportResultAsync::_FirstWriting",
+      "operation": "WriteAttribute",
+      "literals": [
+        "analysis type"
+      ]
+    },
+    {
+      "file": "old/cacuser/ZwResultComponent.cpp",
+      "line": 1533,
+      "method": "ZwNodalComponent::_WriteData",
+      "operation": "WriteAttribute",
+      "literals": [
+        "location"
+      ]
+    },
+    {
+      "file": "old/cacuser/ZwResultComponent.cpp",
+      "line": 3379,
+      "method": "ZwElementComponent::_WriteShellResults",
+      "operation": "WriteAttribute",
+      "literals": [
+        "layerID"
+      ]
+    },
+    {
+      "file": "old/cacuser/ZwResultComponent.cpp",
+      "line": 3381,
+      "method": "ZwElementComponent::_WriteShellResults",
+      "operation": "WriteAttribute",
+      "literals": [
+        "location"
+      ]
+    },
+    {
+      "file": "old/cacuser/ZwResultComponent.cpp",
+      "line": 3558,
+      "method": "ZwElementComponent::_WriteShellResults",
+      "operation": "WriteAttribute",
+      "literals": [
+        "layerID",
+        "default"
+      ]
+    },
+    {
+      "file": "old/cacuser/ZwResultComponent.cpp",
+      "line": 3562,
+      "method": "ZwElementComponent::_WriteShellResults",
+      "operation": "WriteAttribute",
+      "literals": [
+        "location"
+      ]
+    }
+  ]
+}
