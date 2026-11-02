@@ -34,9 +34,11 @@ template <class F> double timed(F f) {
 }
 int main(int argc, char **argv) {
     try {
-        if (argc != 4)
+        if (argc != 4 && argc != 5)
             throw std::runtime_error(
-                "usage: sdb_lifecycle_benchmark node-count memory-budget-MiB output-directory");
+                "usage: sdb_lifecycle_benchmark node-count memory-budget-MiB output-directory [omp]");
+        if(argc == 5 && std::string(argv[4]) != "omp") throw std::invalid_argument("expected omp");
+        auto policy = argc == 5 ? CpuPolicy::OpenMP : CpuPolicy::Serial;
         auto requested = std::stoull(argv[1]), budget = std::stoull(argv[2]) * 1024 * 1024;
         std::filesystem::path dir = argv[3];
         std::filesystem::create_directories(dir);
@@ -78,13 +80,9 @@ int main(int argc, char **argv) {
         step.outputs.push_back({false, 10, 0, "", {"U"}, {"generated", 1, 1}});
         ir.steps.push_back(step);
         auto start = std::chrono::steady_clock::now();
-        auto model = ModelCompiler{}.compile<double>(std::move(ir));
+        auto model = ModelCompiler{}.compile<double>(std::move(ir),policy);
         double compile_ms =
             std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
-        // CpuRun exposes no policy parameter: it constructs CpuExplicit with the
-        // default CpuPolicy::Serial, so every timing below is serial execution
-        // regardless of OMP_NUM_THREADS. Reported explicitly (B01-A-001/O-002):
-        // no parallel-efficiency conclusion may be drawn from this benchmark.
         // Setup phases kept distinct (B01-A-004): compile_ms above covers IR
         // compilation only; run_setup_ms covers StateDB+TetPlan+plan build of
         // the instance actually used below — emplace constructs inside the
@@ -93,7 +91,7 @@ int main(int argc, char **argv) {
         // timed construction+destruction of a discarded instance);
         // initialize_ms covers the first force pass + half-step velocity setup.
         std::optional<CpuRun<double>> run_storage;
-        double run_setup_ms = timed([&] { run_storage.emplace(model); });
+        double run_setup_ms = timed([&] { run_storage.emplace(model,ExplicitControls{},policy); });
         CpuRun<double> &run = *run_storage;
         double initialize_ms = timed([&] { run.initialize(); });
         auto enforce = [&] {
@@ -149,8 +147,7 @@ int main(int argc, char **argv) {
         double restore_ms = timed([&] { run.restore(restart); });
         enforce();
         const char *omp_env = std::getenv("OMP_NUM_THREADS");
-        std::cout << std::setprecision(9) << "{\"execution_policy\":\"serial\""
-                  << ",\"execution_policy_note\":\"CpuRun default; lifecycle API has no OpenMP selection\""
+        std::cout << std::setprecision(9) << "{\"execution_policy\":\"" << (policy==CpuPolicy::OpenMP ? "openmp" : "serial") << "\""
 #ifdef _OPENMP
                   << ",\"omp_compiled\":1"
                   << ",\"omp_max_threads\":" << omp_get_max_threads()

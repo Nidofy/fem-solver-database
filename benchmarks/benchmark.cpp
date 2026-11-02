@@ -139,9 +139,13 @@ template <class T> void benchmark(std::size_t n, std::size_t repetitions, sdb::C
         builder.add_node(b + 2, {0, 0, 1});
         builder.add_element(e, Topology::Tet4, {0, b, b + 1, b + 2}, 1, 1);
     }
-    auto mesh = builder.finalize();
+    auto setup_start = Clock::now();
+    auto mesh = builder.finalize(policy);
+    double finalize_ms = std::chrono::duration<double,std::milli>(Clock::now()-setup_start).count();
     StateDB<T> state(mesh);
+    setup_start = Clock::now();
     CpuExplicit<T> solver(mesh, state, policy);
+    double plan_ms = std::chrono::duration<double,std::milli>(Clock::now()-setup_start).count();
     auto displacement = state.data().displacement.write();
     for (std::size_t i = 0; i < mesh.nodes(); ++i)
         for (unsigned c = 0; c < 3; ++c)
@@ -184,7 +188,7 @@ template <class T> void benchmark(std::size_t n, std::size_t repetitions, sdb::C
 #else
     std::cout << 1;
 #endif
-    std::cout << ",\"node_view_ms\":" << view_ms << ",\"node_raw_ms\":" << raw_ms << ",\"ip_ms\":" << ip_ms
+    std::cout << ",\"finalize_ms\":" << finalize_ms << ",\"tet_plan_ms\":" << plan_ms << ",\"mesh_fingerprint\":\"" << mesh.fingerprint() << "\",\"node_view_ms\":" << view_ms << ",\"node_raw_ms\":" << raw_ms << ",\"ip_ms\":" << ip_ms
               << ",\"material_group_ms\":" << group_ms << ",\"candidate_ms\":" << contact_ms
               << ",\"candidate_batch_ms\":" << contact_batch_ms << ",\"gather_scatter_ms\":" << gather_scatter
               << ",\"explicit_steps_ms\":" << explicit_ms

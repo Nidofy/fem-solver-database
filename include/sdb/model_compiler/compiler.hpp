@@ -166,7 +166,7 @@ template <class T> struct CompiledModel {
 };
 class ModelCompiler {
   public:
-    template <class T> CompiledModel<T> compile(ModelIR ir) const {
+    template <class T> CompiledModel<T> compile(ModelIR ir, CpuPolicy policy = CpuPolicy::Serial) const {
         if (ir.schema != 1 && ir.schema != 2 && ir.schema != 3 && ir.schema != 4 && ir.schema != 5)
             throw std::runtime_error("unsupported ModelIR schema");
         if (ir.schema == 1 && !ir.history_bindings.empty())
@@ -734,7 +734,7 @@ class ModelCompiler {
             std::sort(ids.begin(),ids.end());ids.erase(std::unique(ids.begin(),ids.end()),ids.end()); return ids;
         };
         resolve_extensions<T>(ir,foundation,source,node_dofs,scoped_resolve);
-        auto mesh = b.finalize();
+        auto mesh = b.finalize(policy);
         CompiledModel<T> result(std::move(ir), std::move(mesh));
         result.sources = std::move(source);
         result.foundation = std::move(foundation);

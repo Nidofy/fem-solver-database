@@ -97,8 +97,8 @@ template <class T> class CpuRun {
     }
 
   public:
-    explicit CpuRun(const CompiledModel<T> &model, ExplicitControls controls = {})
-        : model_(model), state_(validated(model).mesh), cpu_(model.mesh, state_, CpuPolicy::Serial, Assembly::Deterministic, controls) {
+    explicit CpuRun(const CompiledModel<T> &model, ExplicitControls controls = {}, CpuPolicy policy = CpuPolicy::Serial)
+        : model_(model), state_(validated(model).mesh), cpu_(model.mesh, state_, policy, Assembly::Deterministic, controls) {
         model.require_cpu();
         double start = 0;
         for (auto &s : model.analysis.steps) {
@@ -127,6 +127,7 @@ template <class T> class CpuRun {
         if (cpu_.plan().hex && cpu_.plan().hex->hourglass_stiffness.size())
             native::encode(w, std::string("c3d8r/uniform-strain/elastic-hourglass-v1"));
         if (!cpu_.plan().plastic_points.empty()) native::encode(w, std::string("j2/tet4/radial-return-v1"));
+        if (policy == CpuPolicy::OpenMP) native::encode(w,std::string("openmp/deterministic-v1"));
         if (controls.enabled()) {
             native::encode(w,std::string("fixed-mass/bulk/element-bound-v1"));
             native::encode(w,controls);

@@ -1,5 +1,7 @@
 #pragma once
 #include "field.hpp"
+#include "cpu_policy.hpp"
+#include <future>
 #include "schema.hpp"
 #include "types.hpp"
 #include "topology.hpp"
@@ -382,13 +384,18 @@ template <class T> class ModelBuilder {
         building();
         surfaces_.push_back({id, std::move(faces)});
     }
-    MeshDB<T> finalize() {
+    MeshDB<T> finalize(CpuPolicy policy = CpuPolicy::Serial) {
         building();
         MeshDB<T> m;
         index_of(nodes_.size());
         index_of(elements_.size());
         if (nodes_.empty())
             throw std::invalid_argument("empty model");
+        m.node_ids_.reserve(nodes_.size());
+        m.node_map_.reserve(nodes_.size());
+        m.dofs_.reserve(nodes_.size());
+        m.elements_.reserve(elements_.size());
+        m.element_map_.reserve(elements_.size());
         m.reference_.resize(nodes_.size());
         auto x = m.reference_.write();
         for (const auto &n : nodes_) {
@@ -442,16 +449,6 @@ template <class T> class ModelBuilder {
             }
             groups[{e.topology, material, e.ips}].push_back(i);
         }
-        for (auto &[key, es] : groups) {
-            auto [top, mat, ips] = key;
-            ElementBatch batch{top, mat, ips, std::move(es), {}};
-            const auto n = batch.elements.size();
-            batch.connectivity.resize(product(n, arity(top)));
-            for (std::size_t k = 0; k < n; ++k)
-                for (unsigned c = 0; c < arity(top); ++c)
-                    batch.connectivity[c * n + k] = m.connectivity(batch.elements[k])[c];
-            m.batches_.push_back(std::move(batch));
-        }
         std::unordered_set<Id> ids;
         for (const auto &[id, ns] : node_sets_) {
             if (!ids.insert(id).second)
@@ -497,7 +494,23 @@ template <class T> class ModelBuilder {
                     throw std::invalid_argument("invalid/duplicate state sample point");
             m.sample_points_.emplace(e, points);
         }
-        m.fingerprint_ = m.compute_fingerprint();
+        // Hash reads canonical mesh arrays only, independently of batch packing.
+        // Preserve the original FNV stream so historical identities remain valid.
+        std::future<std::uint64_t> fingerprint;
+        if (policy == CpuPolicy::OpenMP && m.elements() >= 4096)
+            fingerprint = std::async(std::launch::async,[&m]{return m.compute_fingerprint();});
+        for (auto &[key, es] : groups) {
+            auto [top, mat, ips] = key;
+            ElementBatch batch{top, mat, ips, std::move(es), {}};
+            const auto n = batch.elements.size();
+            batch.connectivity.resize(product(n, arity(top)));
+            parallel_for(n, policy, [&](std::size_t k) {
+                for (unsigned c = 0; c < arity(top); ++c)
+                    batch.connectivity[c * n + k] = m.connectivity(batch.elements[k])[c];
+            });
+            m.batches_.push_back(std::move(batch));
+        }
+        m.fingerprint_ = fingerprint.valid() ? fingerprint.get() : m.compute_fingerprint();
         finalized_ = true;
         return m;
     }

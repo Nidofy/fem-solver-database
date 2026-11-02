@@ -5,23 +5,7 @@
 #include <chrono>
 
 namespace sdb {
-enum class CpuPolicy { Serial, OpenMP };
 enum class Assembly { Deterministic, Atomic };
-template <class F> void parallel_for(std::size_t count, CpuPolicy policy, F &&fn) {
-#ifndef _OPENMP
-    if (policy == CpuPolicy::OpenMP)
-        throw std::runtime_error("OpenMP backend not compiled");
-#else
-    if (policy == CpuPolicy::OpenMP) {
-#pragma omp parallel for schedule(static)
-        for (std::int64_t i = 0; i < static_cast<std::int64_t>(count); ++i)
-            fn(static_cast<std::size_t>(i));
-        return;
-    }
-#endif
-    for (std::size_t i = 0; i < count; ++i)
-        fn(i);
-}
 template <class T> struct TetViews {
     View<const Index, 4> nodes;
     View<const T, 12> gradients;
@@ -82,7 +66,7 @@ template <class T> class TetPlan {
     ExplicitControlPlan controls;
     T stable_step = std::numeric_limits<T>::max();
     std::uint64_t model_id;
-    explicit TetPlan(const MeshDB<T> &mesh, StateDB<T> &state, bool allow_hex = false, ExplicitControls options = {})
+    explicit TetPlan(const MeshDB<T> &mesh, StateDB<T> &state, bool allow_hex = false, ExplicitControls options = {}, CpuPolicy policy = CpuPolicy::Serial)
         : nodes(mesh.elements()), gradients(mesh.elements()), volume(mesh.elements()),
           lambda(mesh.elements()), mu(mesh.elements()), local_force(mesh.elements()), fixed(mesh.nodes()),
           controls(std::move(options),mesh.elements()), model_id(mesh.fingerprint()) {
@@ -119,6 +103,7 @@ template <class T> class TetPlan {
         adjacency_offsets.resize(mesh.nodes() + 1, 0);
         std::map<Index,std::size_t> law_ids;
         const auto x = mesh.reference();
+        auto ip_weight = integration_weight.write();
         for (Index e = 0; e < mesh.elements(); ++e) {
             const auto &el = mesh.element(e);
             const auto &mat = mesh.materials()[el.material];
@@ -134,6 +119,10 @@ template <class T> class TetPlan {
             } else if (el.topology != Topology::Tet4 || el.integration_points != 1 || mat.model != 1 ||
                        !mat.history_schema.empty())
                 throw std::invalid_argument("TET4 linear-elastic one-IP kernel required");
+        }
+        parallel_for(mesh.elements(),policy,[&](std::size_t e) {
+            if (!is_tet[e]) return;
+            const auto &mat = mesh.materials()[mesh.element(e).material];
             auto ns = mesh.connectivity(e);
             T a[3], b[3], c[3], cross_bc[3], cross_ca[3], cross_ab[3];
             for (int j = 0; j < 3; ++j) {
@@ -151,9 +140,9 @@ template <class T> class TetPlan {
             for (int j = 0; j < 3; ++j)
                 det += a[j] * cross_bc[j];
             if (!(det > 0) || !std::isfinite(det))
-                throw std::invalid_argument("invalid TET Jacobian");
+                return; // validated in index order after the parallel geometry pass
             vol(e) = det / 6;
-            integration_weight.write()(ip_offsets[e]) = vol(e);
+            ip_weight(ip_offsets[e]) = vol(e);
             const auto rho = mat.parameters[0], E = mat.parameters[1], nu = mat.parameters[2];
             la(e) = E * nu / ((1 + nu) * (1 - 2 * nu));
             shear(e) = E / (2 * (1 + nu));
@@ -171,12 +160,20 @@ template <class T> class TetPlan {
                 maxnorm = std::max(maxnorm, norm);
                 conn(e, k) = ns[k];
 
-                ++adjacency_offsets[ns[k] + 1];
+
             }
             // Conservative bound from ||B|| and lumped mass; caller still chooses dt below bound.
             dt(e) = T(.25) / (std::sqrt(maxnorm) * std::sqrt((la(e) + 2 * shear(e)) / rho));
             if (controls.options.refined_tet_dt)
                 dt(e) = tet_row_sum_step(e, grad, la(e), shear(e), rho);
+        });
+        // Shared-node sums and control diagnostics retain their canonical element order.
+        for (Index e=0; e<mesh.elements(); ++e) {
+            if (!is_tet[e]) continue;
+            if (!(vol(e)>0)) throw std::invalid_argument("invalid TET Jacobian");
+            const auto ns=mesh.connectivity(e);
+            const T rho=mesh.materials()[mesh.element(e).material].parameters[0];
+            for(auto n:ns) ++adjacency_offsets[n+1];
             T scale = controls.configure(e,vol(e),rho,la(e),shear(e),dt(e));
             for (unsigned k=0; k<4; ++k)
                 mass(ns[k]) += (rho * vol(e) / 4)*scale;
@@ -249,7 +246,7 @@ template <class T> class CpuExplicit {
   public:
     CpuExplicit(const MeshDB<T> &mesh, StateDB<T> &state, CpuPolicy policy = CpuPolicy::Serial,
                 Assembly assembly = Assembly::Deterministic, ExplicitControls controls = {})
-        : plan_(mesh, state, true, std::move(controls)), policy_(policy), assembly_(assembly), plastic_trial_(plan_.plastic_points.size()) {
+        : plan_(mesh, state, true, std::move(controls), policy), policy_(policy), assembly_(assembly), plastic_trial_(plan_.plastic_points.size()) {
 #ifndef _OPENMP
         if (policy == CpuPolicy::OpenMP)
             throw std::runtime_error("OpenMP not compiled");
