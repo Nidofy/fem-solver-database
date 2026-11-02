@@ -105,7 +105,8 @@ class PenaltyConstraints {
     template<class T> Result<T> evaluate(const StateDB<T>& s) const {
         if(s.model_id()!=model_) throw std::invalid_argument("penalty model mismatch");
         s.validate_shape();
-        auto u=s.data().displacement.read(), mass=s.data().mass.read();
+        auto u=s.data().displacement.read();
+        auto mass=s.data().mass.read();
         Result<T> out{Field<T,3>(u.count),Field<T,3>(u.count)};
         Field<double,6> sums(u.count);
         auto f=out.restoring_force.write();auto m=out.restoring_moment.write();auto k=sums.write();

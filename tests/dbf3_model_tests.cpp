@@ -131,7 +131,8 @@ template<class T> void contracts(const std::filesystem::path &scratch) {
         if(schema>=2) emit(legacy.history_bindings);
         if(schema>=3) emit(legacy.foundation);
         check(w.bytes==native::pack(legacy),"schema1/2/3 frozen bytes");
-        auto bytes=w.bytes;bytes[0]=9;rejects([&]{native::unpack<ModelIR>(bytes);},"schema");
+        // Reserve an out-of-range version for this rejection test; schema 9 is now valid.
+        auto bytes=w.bytes;bytes[0]=255;rejects([&]{native::unpack<ModelIR>(bytes);},"schema");
     }
 }
 void parser(const std::filesystem::path &directory) {
