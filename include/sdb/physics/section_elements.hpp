@@ -92,3 +92,14 @@ class SectionElement {
     }
 };
 }
+            // Opposite-edge midpoint transverse shears define the two linear
+            // variations omitted by the center point. Their squared integral is A/3.
+            Row xz_variation{}, yz_variation{};
+            for(unsigned a=0;a<4;++a){
+                xz_variation[6*a+2]=sx[a]*sy[a]/(2*L);
+                xz_variation[6*a+4]=sy[a]/4.;
+                yz_variation[6*a+2]=sx[a]*sy[a]/(2*H);
+                yz_variation[6*a+3]=-sx[a]/4.;
+            }
+            mode(area*t*G*5/18,xz_variation);
+            mode(area*t*G*5/18,yz_variation);

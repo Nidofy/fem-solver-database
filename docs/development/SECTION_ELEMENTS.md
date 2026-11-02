@@ -12,7 +12,8 @@ dimensions and an explicit first transverse direction. It includes axial,
 torsional, two bending and two shear terms, 5/6 shear factor, approximate
 Saint-Venant rectangular torsion and isotropically lumped polar rotary inertia.
 S4R is a flat rectangular Mindlin shell with center-point plane-stress membrane,
-bending and transverse shear stiffness. Checkerboard penalties stabilize
+bending stiffness. Opposite-edge midpoint transverse shears supply the center
+and linear shear terms with integrated weights A and A/3. Checkerboard penalties stabilize
 unresolved modes; drill stiffness penalizes spin relative to surface curl
 and variation of nodal drill. These are standalone coefficient choices.
 The implementation rejects warped/nonrectangular shells, alternate profiles,

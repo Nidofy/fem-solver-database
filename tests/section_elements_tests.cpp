@@ -38,6 +38,11 @@ template<class T>void test(const std::filesystem::path& dir,const std::filesyste
         oracle(.5*100*std::pow(.1,3)/12);
         std::fill(q,q+24,0.);for(unsigned a=0;a<4;++a)q[6*a+2]=x(el.nodes[a],0);
         oracle(.5*(5./6)*50*.1);
+        // theta_x=x-.5, theta_y=y-.5 has zero curvature, zero center shear and
+        // zero checkerboard amplitude. Edge shear must resist this nonrigid mode.
+        std::fill(q,q+24,0.);
+        for(unsigned a=0;a<4;++a){q[6*a+3]=x(el.nodes[a],0)-.5;q[6*a+4]=x(el.nodes[a],1)-.5;}
+        oracle(.5*(5./6)*50*.1/6);
     }
     for(unsigned i=0;i<330;++i)run.advance();run.save(scratch/"section.rst");ModelStore::save(scratch/"section.model",model);
     auto m=ModelStore::load<T>(scratch/"section.model");SectionRun<T> split(m);split.restore(scratch/"section.rst");
