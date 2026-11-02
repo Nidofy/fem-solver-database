@@ -1,5 +1,6 @@
 # Static source layout draft
 
+[LEGACY_LAYOUT_DRAFT.json](LEGACY_LAYOUT_DRAFT.json) contains all 2047 source-key drafts.
 Run tools/legacy_layout_draft.py with DBF6_LEGACY_INVENTORY.json and
 DBF7_MAPPING_TEMPLATE.json to emit the enriched 2047-key mapping template.
 The generated draft keeps disposition and qualification intact. Destination
