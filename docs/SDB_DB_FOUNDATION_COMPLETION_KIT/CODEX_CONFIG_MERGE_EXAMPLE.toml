@@ -1,0 +1,11 @@
+# Configuration example only; merge with the existing project configuration.
+# Do not overwrite credentials, provider, permissions, sandbox or existing roles.
+# Confirm that the local Codex version and account support these model names/keys.
+model = "gpt-6-astra"
+model_reasoning_effort = "high"
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 3
+default_subagent_model = "gpt-6.1-sol"
+default_subagent_reasoning_effort = "high"
