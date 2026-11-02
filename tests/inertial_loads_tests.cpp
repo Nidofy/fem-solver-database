@@ -28,15 +28,23 @@ template<class T> void run(const std::filesystem::path& inp,const std::filesyste
         for(unsigned d=0;d<3;++d)wet[d]+=area[d]*w;
     });
     expect(std::abs(wet[0])+std::abs(wet[2])+std::abs(wet[1]-1)<1e-12,"partial hydrostatic immersion");
+    auto incompatible=m.definition;incompatible.finite_geometry=true;
+    bool rejected=false;
+    try{ModelCompiler{}.compile<T>(incompatible);}catch(const std::exception&){rejected=true;}
+    expect(rejected,"inertial NLGEOM combination must be rejected");
     auto gyro=m.definition;
     gyro.steps.resize(1);gyro.steps[0].period=.02;
     gyro.foundation.face_loads.clear();
     std::erase_if(gyro.foundation.body_loads,[](const auto& l){return l.kind!=BodyLoadKind::Coriolis || l.definition.step.value()!=0;});
+    gyro.steps[0].outputs.push_back({false,1,0,"",{"ALLWK","ALLKE","ALLIE","ETOTAL"},{}});
     auto g=ModelCompiler{}.compile<T>(gyro);CpuRun<T> free(g);
     for(Index n=0;n<g.mesh.nodes();++n)free.state().data().velocity.write()(n,0)=1;
     free.initialize();const auto initial=free.state().data().velocity.read();
     double speed=std::hypot(initial(0,0),initial(0,1));
     while(free.advance()){}
+    auto frame=free.snapshot();bool saw_work=false;
+    for(const auto& f:frame.fields) if(f.descriptor.name=="ALLWK") {saw_work=true;expect(f.values.at(0)==0,"gyro work audit");}
+    expect(saw_work,"missing gyro work audit");
     auto v=free.state().data().velocity.read();
     expect(std::abs(std::hypot(v(0,0),v(0,1))-speed)<(sizeof(T)==4?3e-6:1e-12),"Coriolis kinetic energy");
 }

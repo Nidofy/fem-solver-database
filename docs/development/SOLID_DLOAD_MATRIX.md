@@ -14,7 +14,7 @@
 CENT/ROTA fields use consistent body quadrature (degree-two tetra rule and
 2x2x2 brick rule). The axis is fixed in the reference frame. For CORIO the
 per-node 3x3 skew operator is integrated at the centered velocity via a Cayley
-solve restricted to free DOFs. This preserves kinetic energy of free rigid
+solve restricted to free DOFs. ALLWK excludes the gyroscopic term because it does zero centered work. This preserves kinetic energy of free rigid
 translation in a pure Coriolis field. Simultaneous artificial bulk viscosity is
 rejected until a coupled velocity treatment is validated. HPn clips integration
 intervals at the waterline before face quadrature. On a general bilinear warped
@@ -34,4 +34,4 @@ state or external data. The parser rejects unknown load types.
 [Hydrostatic pressure conventions](https://docs.software.vt.edu/abaqusv2025/English/SIMACAEPRCRefMap/simaprc-c-loaddistributed.htm)
 
 CTest inertial_load_contracts checks both precisions, signed resultants,
-partial immersion, pure Coriolis energy, OP=NEW and exact split restart.
+partial immersion, projected traction, pure Coriolis energy/ALLWK, OP=NEW and exact split restart. Merged energy_audit and finite_tet tests also passed on Windows GCC 15.2. Rotation/HP with NLGEOM is explicitly rejected.

@@ -104,7 +104,11 @@ template <class T> class CpuRun {
         LoadEvaluator::apply(model_.analysis, step_, double(increment_) * plans_[step_].dt,
                              state_.data().time, state_);
         follower_loads(state_,step_,double(increment_)*plans_[step_].dt,state_.data().time);
-        if (penalty_ && state_.data().external_work) applied_without_penalty_=state_.data().external_force;
+        // Penalty forces store recoverable energy. A centered gyroscopic force
+        // does zero work; using it against end-half-step velocity would add spurious ALLWK.
+        if (state_.data().external_work && (penalty_ || !model_.analysis.steps[step_].coriolis.empty()))
+            applied_without_penalty_=state_.data().external_force;
+        else applied_without_penalty_.reset();
         apply_penalty(state_);
         coriolis_loads(state_,step_,double(increment_)*plans_[step_].dt,full_velocity);
     }
@@ -128,7 +132,8 @@ template <class T> class CpuRun {
         initialized_ = true;
     }
     void next_step() {
-        if (!(controls().options.bulk_linear || controls().options.bulk_quadratic)) {
+        if (!(controls().options.bulk_linear || controls().options.bulk_quadratic) &&
+            model_.analysis.steps[step_].coriolis.empty() && model_.analysis.steps[step_+1].coriolis.empty()) {
             rephase();
             return;
         }
