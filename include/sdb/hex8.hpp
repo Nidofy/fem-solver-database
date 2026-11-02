@@ -1,5 +1,6 @@
 #pragma once
 #include "state.hpp"
+#include "explicit_controls.hpp"
 namespace sdb {
 template <class T> struct HexViews {
     View<const Index, 8> nodes;
@@ -87,7 +88,7 @@ template <class T> class HexPlan {
     Field<T> hourglass_stiffness;
     T stable_step = std::numeric_limits<T>::max();
     HexPlan(const MeshDB<T> &mesh, const StateDB<T> &state, Field<T> &mass_field, Field<T> &dt_field,
-            Field<T> &volumes, Field<T> &point_weights) {
+            Field<T> &volumes, Field<T> &point_weights, ExplicitControlPlan* controls = nullptr) {
         if (mesh.requires_storage_only())
             throw std::invalid_argument("model contracts require storage-only execution");
         for (Index e = 0; e < mesh.elements(); ++e)
@@ -237,7 +238,7 @@ template <class T> class HexPlan {
             for (unsigned a = 0; a < 8; ++a) {
                 if (!(lumped[a] > 0) || !std::isfinite(lumped[a]))
                     throw std::invalid_argument("invalid HEX8 mass");
-                mass(ns[a]) += lumped[a];
+
                 for (unsigned i = 0; i < 3; ++i) {
                     T row = 0;
                     for (unsigned j = 0; j < 24; ++j)
@@ -248,6 +249,9 @@ template <class T> class HexPlan {
             if (!(bound > 0) || !std::isfinite(bound))
                 throw std::invalid_argument("invalid HEX8 stiffness bound");
             dt(e) = T(1.9) / std::sqrt(bound);
+            T scale = controls ? controls->configure(e, volume(e), rho, la, shear, dt(e)) : T(1);
+            for (unsigned a=0; a<8; ++a)
+                mass(ns[a]) += lumped[a]*scale;
             stable_step = std::min(stable_step, dt(e));
         }
         for (std::size_t n = 1; n < adjacency_offsets.size(); ++n)

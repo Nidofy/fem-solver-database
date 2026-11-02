@@ -60,6 +60,31 @@ std::uint64_t mib(const std::string &text) {
         throw std::length_error("memory budget overflow or zero");
     return n * 1024 * 1024;
 }
+template<class T> ExplicitControls explicit_controls(const Args& args,const CompiledModel<T>& model) {
+    ExplicitControls controls;
+    auto number = [&](const char* name, double fallback) {
+        if (!args.contains(name)) return fallback;
+        const auto &text = args.at(name);
+        std::size_t used=0;
+        auto value = std::stod(text,&used);
+        if (used != text.size() || !std::isfinite(value)) throw std::invalid_argument(name);
+        return value;
+    };
+    controls.refined_tet_dt = args.contains("--refined-tet-dt");
+    controls.mass_factor = number("--mass-factor",1);
+    controls.max_added_mass_fraction = number("--max-added-mass-fraction",controls.max_added_mass_fraction);
+    controls.target_element_dt = number("--mass-target-dt",0);
+    controls.bulk_linear = number("--bulk-linear",0);
+    controls.bulk_quadratic = number("--bulk-quadratic",0);
+    controls.max_compression_rate = number("--max-compression-rate",0);
+    if (args.contains("--mass-elset")) {
+        controls.mass_elements = model.region(false,args.at("--mass-elset"));
+        if (controls.mass_elements.empty()) throw std::invalid_argument("empty mass scaling ELSET");
+    }
+    controls.validate(model.mesh.elements());
+    return controls;
+}
+
 template <class T> int run(const Args &a) {
     const auto durability_level = requested_durability(a);
     const auto durability_name = a.contains("--durability") ? a.at("--durability") : "file";
@@ -71,7 +96,17 @@ template <class T> int run(const Args &a) {
                      : ModelCompiler{}.compile<T>(ReaderRegistry{}.read(a.at("--input")).model);
     if (a.contains("--save-model"))
         ModelStore::save(a.at("--save-model"), model);
-    CpuRun<T> cpu(model);
+    CpuRun<T> cpu(model,explicit_controls(a,model));
+    if (cpu.controls().options.enabled()) {
+        const auto &plan = cpu.controls();
+        auto e = plan.controlling_element;
+        const auto &key = model.sources.elements.at(e).key;
+        std::cout << std::setprecision(17) << "physical_mass=" << plan.physical_mass
+                  << " added_mass=" << plan.added_mass << " controlling_instance=" << key.instance
+                  << " controlling_element=" << key.label << " element_mass_factor=" << plan.elements[e].scale
+                  << " element_undamped_dt=" << plan.elements[e].undamped_dt
+                  << " stable_dt=" << cpu.state().data().stable_dt.read()(e) << '\n';
+    }
     if (a.contains("--restart"))
         cpu.restore(a.at("--restart"));
     else if (a.contains("--convert-v2"))
@@ -140,13 +175,14 @@ template <class T> int run(const Args &a) {
 int main(int argc, char **argv) {
     try {
         Args a;
-        const std::set<std::string> flags{"--indexed", "--typed-indexed", "--typed", "--append", "--recover-tail", "--inspect", "--verify"};
+        const std::set<std::string> flags{"--refined-tet-dt","--indexed", "--typed-indexed", "--typed", "--append", "--recover-tail", "--inspect", "--verify"};
         const std::set<std::string> value_options{
             "--async-mib", "--ip",     "--input",      "--model",   "--save-model", "--backend",
             "--precision", "--output", "--checkpoint", "--restart", "--stop-after", "--buffer-mib",
             "--read",      "--field",  "--region",     "--time",    "--entity",     "--component",
             "--vtk",       "--xdmf",   "--convert-v2", "--durability", "--compression", "--compression-level",
-            "--compression-fields", "--convert-result"};
+            "--compression-fields", "--convert-result","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction",
+            "--bulk-linear","--bulk-quadratic","--max-compression-rate"};
         for (int i = 1; i < argc; ++i) {
             std::string key = argv[i];
             if (flags.contains(key)) {
@@ -163,6 +199,11 @@ int main(int argc, char **argv) {
         if (a.contains("--read") && !a.contains("--convert-result") &&
             (a.contains("--compression") || a.contains("--compression-level") || a.contains("--compression-fields")))
             throw std::invalid_argument("compression options when reading require --convert-result");
+        if (a.contains("--read") || a.contains("--inspect")) {
+            for (auto key : {"--refined-tet-dt","--mass-factor","--mass-target-dt","--mass-elset","--max-added-mass-fraction","--bulk-linear",
+                             "--bulk-quadratic","--max-compression-rate"})
+                if (a.contains(key)) throw std::invalid_argument("explicit controls require a simulation");
+        }
         if (a.contains("--read")) {
             auto limit = a.contains("--buffer-mib") ? mib(a.at("--buffer-mib")) : native::default_limit;
             ResultReader r(a.at("--read"), false, limit);

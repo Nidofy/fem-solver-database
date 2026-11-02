@@ -111,6 +111,9 @@ template <class T> class ReferenceConsumer {
           tet_material_{BorrowedField<T>(plan.lambda), BorrowedField<T>(plan.mu)},
           tet_shape_{BorrowedField<T, 12>(plan.gradients), BorrowedField<T>(plan.volume)},
           model_id_(plan.model_id), nodes_(plan.fixed.size()), points_(state.data().stress.size()) {
+        plan.controls.require_binding(state.data().explicit_controls);
+        if (plan.controls.options.bulk_linear || plan.controls.options.bulk_quadratic)
+            throw std::invalid_argument("reference consumer cannot evaluate bulk viscosity");
         if (!plan.plastic_points.empty()) throw std::invalid_argument("elastic reference consumer cannot evaluate J2");
         if (state.model_id() != model_id_) throw std::invalid_argument("consumer model mismatch");
         state.validate_shape();

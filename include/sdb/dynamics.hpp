@@ -79,12 +79,13 @@ template <class T> class TetPlan {
     Field<std::uint8_t, 3> fixed;
     AlignedVector<std::size_t> adjacency_offsets;
     AlignedVector<std::uint64_t> adjacency; // packed 4*element+local-node
+    ExplicitControlPlan controls;
     T stable_step = std::numeric_limits<T>::max();
     std::uint64_t model_id;
-    explicit TetPlan(const MeshDB<T> &mesh, StateDB<T> &state, bool allow_hex = false)
+    explicit TetPlan(const MeshDB<T> &mesh, StateDB<T> &state, bool allow_hex = false, ExplicitControls options = {})
         : nodes(mesh.elements()), gradients(mesh.elements()), volume(mesh.elements()),
           lambda(mesh.elements()), mu(mesh.elements()), local_force(mesh.elements()), fixed(mesh.nodes()),
-          model_id(mesh.fingerprint()) {
+          controls(std::move(options),mesh.elements()), model_id(mesh.fingerprint()) {
         if (mesh.requires_storage_only())
             throw std::invalid_argument("model contracts require storage-only execution");
         if (state.model_id() != model_id)
@@ -105,7 +106,7 @@ template <class T> class TetPlan {
             has_hex = has_hex || mesh.element(e).topology == Topology::Hex8;
         if (has_hex && allow_hex) {
             hex = std::make_unique<HexPlan<T>>(mesh, state, computed_mass, computed_dt, volume,
-                                               integration_weight);
+                                               integration_weight, &controls);
             stable_step = hex->stable_step;
         }
         auto mass = computed_mass.write();
@@ -169,20 +170,42 @@ template <class T> class TetPlan {
                     norm += grad(e, 3 * k + j) * grad(e, 3 * k + j);
                 maxnorm = std::max(maxnorm, norm);
                 conn(e, k) = ns[k];
-                mass(ns[k]) += rho * vol(e) / 4;
+
                 ++adjacency_offsets[ns[k] + 1];
             }
             // Conservative bound from ||B|| and lumped mass; caller still chooses dt below bound.
             dt(e) = T(.25) / (std::sqrt(maxnorm) * std::sqrt((la(e) + 2 * shear(e)) / rho));
+            if (controls.options.refined_tet_dt)
+                dt(e) = tet_row_sum_step(e, grad, la(e), shear(e), rho);
+            T scale = controls.configure(e,vol(e),rho,la(e),shear(e),dt(e));
+            for (unsigned k=0; k<4; ++k)
+                mass(ns[k]) += (rho * vol(e) / 4)*scale;
             stable_step = std::min(stable_step, dt(e));
         }
         for (Index e = 0; e < mesh.elements(); ++e)
             if (!(dt(e) > 0) || !std::isfinite(dt(e)))
                 throw std::invalid_argument("invalid element stability bound");
+        if (controls.options.enabled()) {
+            if (controls.added_mass / controls.physical_mass > controls.options.max_added_mass_fraction)
+                throw std::invalid_argument("added mass exceeds configured fraction of physical mass");
+            for (Index e=0; e<mesh.elements(); ++e)
+                if (dt(e)==stable_step) { controls.controlling_element=e; break; }
+        }
         for (Index n = 0; n < mesh.nodes(); ++n)
             if (!std::isfinite(mass(n)) || mass(n) < 0 || (mass(n) > 0 && !std::isfinite(T(1) / mass(n))))
                 throw std::invalid_argument("nonfinite or unrepresentable lumped mass/inverse");
+        if (s.dt != 0 || s.step != 0) controls.require_binding(s.explicit_controls);
+        if ((s.dt != 0 || s.step != 0) && controls.identity) {
+            for (Index n=0; n<mesh.nodes(); ++n)
+                if (s.mass.read()(n)!=mass(n) ||
+                    s.inverse_mass.read()(n)!=(mass(n)>0 ? T(1)/mass(n) : T(0)))
+                    throw std::invalid_argument("existing mass differs from explicit plan");
+            for (Index e=0; e<mesh.elements(); ++e)
+                if (s.stable_dt.read()(e)!=dt(e))
+                    throw std::invalid_argument("existing element step differs from explicit plan");
+        }
         if (s.dt == 0 && s.step == 0) {
+            s.explicit_controls = controls.identity;
             s.mass = std::move(computed_mass);
             s.stable_dt = std::move(computed_dt);
             s.inverse_mass.fill(0);
@@ -225,8 +248,8 @@ template <class T> class CpuExplicit {
 
   public:
     CpuExplicit(const MeshDB<T> &mesh, StateDB<T> &state, CpuPolicy policy = CpuPolicy::Serial,
-                Assembly assembly = Assembly::Deterministic)
-        : plan_(mesh, state, true), policy_(policy), assembly_(assembly), plastic_trial_(plan_.plastic_points.size()) {
+                Assembly assembly = Assembly::Deterministic, ExplicitControls controls = {})
+        : plan_(mesh, state, true, std::move(controls)), policy_(policy), assembly_(assembly), plastic_trial_(plan_.plastic_points.size()) {
 #ifndef _OPENMP
         if (policy == CpuPolicy::OpenMP)
             throw std::runtime_error("OpenMP not compiled");
@@ -280,6 +303,7 @@ template <class T> class CpuExplicit {
                   Field<T, 6> &target_strain) {
         if (state.model_id() != plan_.model_id)
             throw std::invalid_argument("state model mismatch");
+        plan_.controls.require_binding(state.data().explicit_controls);
         state.validate_shape();
         if (state.data().displacement.size() != plan_.fixed.size())
             throw std::logic_error("node field shape changed");
@@ -331,6 +355,29 @@ template <class T> class CpuExplicit {
             parallel_for(hex->elements.size(), policy_, [=](std::size_t h) {
                 hex->force(h, u, hex_local, stress, strain, active(hex->elements[h]) != 0);
             });
+        }
+        const auto &controls = plan_.controls;
+        if (controls.options.bulk_linear || controls.options.bulk_quadratic) {
+            const auto v = s.velocity.read();
+            const auto cap = controls.options.max_compression_rate;
+            const auto fixed = plan_.fixed.read();
+            const auto active_nodes = s.node_active.read();
+            for (std::size_t e=0; e<tet.nodes.count; ++e)
+                if (is_tet[e] && active(e))
+                    add_bulk_force(controls.elements[e],cap,tet.nodes,tet.gradients,v,fixed,active_nodes,local,e,e,tet.volume(e));
+            if (plan_.hex) {
+                const auto h = plan_.hex->views();
+                auto local_hex = plan_.hex->local_force.write();
+                for (std::size_t j=0; j<h.nodes.count; ++j) {
+                    auto e = plan_.hex->elements[j];
+                    if (!active(e)) continue;
+                    unsigned points = h.weights(8*j+1)==0 ? 1 : 8;
+                    for (unsigned q=0;q<points;++q) {
+                        auto p = 8*j+q;
+                        add_bulk_force(controls.elements[e],cap,h.nodes,h.gradients,v,fixed,active_nodes,local_hex,j,p,h.weights(p));
+                    }
+                }
+            }
         }
         auto force = target_force.write();
         if (assembly_ == Assembly::Deterministic) {
@@ -387,6 +434,7 @@ template <class T> class CpuExplicit {
         if (!(dt > 0) || !std::isfinite(dt) || dt > plan_.stable_step)
             throw std::invalid_argument("invalid/unstable time step");
         auto &s = state.data();
+        plan_.controls.require_binding(s.explicit_controls);
         if (s.step || s.time || s.dt)
             throw std::logic_error("state already initialized");
         auto fixed = plan_.fixed.read();

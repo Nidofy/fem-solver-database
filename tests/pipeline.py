@@ -171,4 +171,17 @@ print("HEX8/J2 float/double/legacy/indexed/async/restart/export process matrix P
 assert "CPU" in invoke("--input", Path(fixture).with_name("stored_types.inp"),
                         "--output", scratch / "unsupported.sdbres", fail=True)
 assert "unknown option" in invoke("--typo", fail=True)
+# Controls are runtime inputs. Linked append must supply the same controls.
+flags = ["--refined-tet-dt","--mass-factor","2","--mass-elset","SOLID",
+         "--bulk-linear","0.06","--bulk-quadratic","0.5","--max-compression-rate","0.25"]
+full = scratch/"controlled-full.sdbres"
+split = scratch/"controlled-split.sdbres"
+rst = scratch/"controlled.sdbrst"
+for path in (full,split): path.unlink(missing_ok=True)
+out = invoke("--input",fixture,"--output",full,*flags)
+assert "added_mass=" in out and "controlling_element=" in out
+invoke("--input",fixture,"--output",split,"--checkpoint",rst,"--stop-after","741",*flags)
+invoke("--input",fixture,"--output",split,"--restart",rst,"--append",fail=True)
+invoke("--input",fixture,"--output",split,"--restart",rst,"--append",*flags)
+assert full.read_bytes()==split.read_bytes()
 print("pipeline PASS")

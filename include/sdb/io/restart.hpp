@@ -1,5 +1,6 @@
 #pragma once
 #include "model_store.hpp"
+#include "../explicit_controls.hpp"
 
 namespace sdb::lifecycle {
 inline constexpr std::uint64_t restart_magic = 0x33545352424453ull;
@@ -8,9 +9,11 @@ struct RestartInfo {
     std::uint8_t precision = 8;
     std::uint64_t mesh = 0, definition = 0, configuration = 0, step = 0, increment = 0, total_increment = 0;
     double time = 0, dt = 0;
+    std::uint64_t controls_hash = 0;
     template <class F> void visit(F f) {
         f(state_schema, model_schema, solver_version, precision, mesh, definition, configuration, step,
           increment, total_increment, time, dt);
+        if (solver_version==2) f(controls_hash);
     }
 };
 class RestartDB {
@@ -28,6 +31,9 @@ class RestartDB {
         // requires all six rotation fields after the existing fourteen fields.
         const bool extensions = state.registered_fields() && !state.registered_fields()->empty();
         info.state_schema = extensions ? 5 : (state.data().rotation ? 4 : 3);
+        const auto& controls = state.data().explicit_controls;
+        info.solver_version = controls ? 2 : 1;
+        if (controls) info.controls_hash = native::hash(native::pack(*controls));
         info.precision = sizeof(T);
         info.model_schema = model.definition.schema;
         info.mesh = model.mesh.fingerprint();
@@ -85,7 +91,11 @@ class RestartDB {
         native::prefix(in, restart_magic);
         auto info = native::unpack<RestartInfo>(native::record(in, 0, 4096));
         const bool extensions = state.registered_fields() && !state.registered_fields()->empty();
-        if (info.state_schema != (extensions ? 5u : (state.data().rotation ? 4u : 3u)) || info.model_schema != model.definition.schema || info.solver_version != 1 ||
+        const auto& controls = state.data().explicit_controls;
+        if (info.solver_version != (controls ? 2u : 1u) ||
+            (controls && info.controls_hash != native::hash(native::pack(*controls))))
+            throw std::runtime_error("restart explicit controls mismatch");
+        if (info.state_schema != (extensions ? 5u : (state.data().rotation ? 4u : 3u)) || info.model_schema != model.definition.schema ||
             info.precision != sizeof(T) || info.mesh != model.mesh.fingerprint() ||
             info.definition != ModelStore::identity(model) || info.configuration != configuration ||
             !std::isfinite(info.time) || !std::isfinite(info.dt) || info.time < 0 || info.dt <= 0)
@@ -100,6 +110,7 @@ class RestartDB {
         StateDB<T> next(model.mesh, state.data().rotation.has_value());
         next.copy_registered_layout(state);
         auto &data = next.data();
+        data.explicit_controls = controls;
         data.step = info.total_increment;
         data.time = info.time;
         data.dt = info.dt;

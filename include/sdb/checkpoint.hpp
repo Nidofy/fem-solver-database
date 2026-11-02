@@ -300,6 +300,7 @@ void save_checkpoint(const std::filesystem::path &path, const MeshDB<T> &mesh, c
     using namespace checkpoint_detail;
     if (state.in_trial() || (contact && contact->in_trial()))
         throw std::logic_error("checkpoint requires committed phase");
+    if (state.data().explicit_controls) throw std::logic_error("use a configuration-bound lifecycle restart");
     if (state.model_id() != mesh.fingerprint())
         throw std::invalid_argument("checkpoint model mismatch");
     state.validate_shape();

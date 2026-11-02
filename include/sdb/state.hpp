@@ -15,6 +15,7 @@ template <class T> struct RotationState {
     explicit RotationState(std::size_t n)
         : angle(n), velocity(n), acceleration(n), inertia(n), inverse_inertia(n), torque(n) {}
 };
+struct ExplicitControls;
 template <class T> struct StateData {
     Field<T, 3> displacement, velocity, acceleration, internal_force, external_force, contact_force;
     Field<T> mass, inverse_mass, stable_dt;
@@ -26,6 +27,8 @@ template <class T> struct StateData {
     std::optional<RegisteredState> registered;
     std::uint64_t step = 0;
     double time = 0, dt = 0;
+    // Runtime binding; lifecycle restart persists the configuration hash.
+    std::shared_ptr<const ExplicitControls> explicit_controls;
     template <class F> void fields(F &&f) {
         f(displacement);
         f(velocity);

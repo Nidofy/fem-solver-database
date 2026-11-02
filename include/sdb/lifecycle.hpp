@@ -46,6 +46,28 @@ template <class T> class CpuRun {
         initialized_ = true;
     }
     void next_step() {
+        if (!(controls().options.bulk_linear || controls().options.bulk_quadratic)) {
+            rephase();
+            return;
+        }
+        // A velocity-dependent evaluation can fail on either side of a mask
+        // change. Preserve the last accepted state including its old half-step.
+        const auto previous_step = step_, previous_increment = increment_;
+        auto previous_state = state_.data();
+        std::vector<Constraint> constraints;
+        for (const auto &a : model_.analysis.steps[step_].boundaries)
+            constraints.push_back({a.node,a.component,a.value});
+        try {
+            rephase();
+        } catch (...) {
+            state_.data() = std::move(previous_state);
+            step_ = previous_step;
+            increment_ = previous_increment;
+            cpu_.set_constraints(constraints,state_);
+            throw;
+        }
+    }
+    void rephase() {
         // Rephase half-step velocity around the same physical time when dt/load/mask changes.
         cpu_.forces(state_);
         auto &s = state_.data();
@@ -75,8 +97,8 @@ template <class T> class CpuRun {
     }
 
   public:
-    explicit CpuRun(const CompiledModel<T> &model)
-        : model_(model), state_(validated(model).mesh), cpu_(model.mesh, state_) {
+    explicit CpuRun(const CompiledModel<T> &model, ExplicitControls controls = {})
+        : model_(model), state_(validated(model).mesh), cpu_(model.mesh, state_, CpuPolicy::Serial, Assembly::Deterministic, controls) {
         model.require_cpu();
         double start = 0;
         for (auto &s : model.analysis.steps) {
@@ -105,6 +127,10 @@ template <class T> class CpuRun {
         if (cpu_.plan().hex && cpu_.plan().hex->hourglass_stiffness.size())
             native::encode(w, std::string("c3d8r/uniform-strain/elastic-hourglass-v1"));
         if (!cpu_.plan().plastic_points.empty()) native::encode(w, std::string("j2/tet4/radial-return-v1"));
+        if (controls.enabled()) {
+            native::encode(w,std::string("fixed-mass/bulk/element-bound-v1"));
+            native::encode(w,controls);
+        }
         native::encode(w, plans_);
         native::encode(w, std::uint8_t(sizeof(T)));
         // Only runs affected by the corrected propagated step-time amplitude
@@ -123,6 +149,7 @@ template <class T> class CpuRun {
     StateDB<T> &state() { return state_; }
     const StateDB<T> &state() const { return state_; }
     const CompiledModel<T> &model() const { return model_; }
+    const ExplicitControlPlan& controls() const { return cpu_.plan().controls; }
     const auto &plans() const { return plans_; }
     std::uint64_t configuration() const { return config_; }
     std::uint64_t step_index() const { return step_; }
@@ -180,6 +207,7 @@ template <class T> class CpuRun {
         if (state_.in_trial()) throw std::logic_error("restore requires committed state");
         StateDB<T> restored(model_.mesh, state_.data().rotation.has_value());
         restored.copy_registered_layout(state_);
+        restored.data().explicit_controls = controls().identity;
         auto info = RestartDB::load(path, model_, restored, config_);
         if (info.step >= plans_.size() || info.increment > plans_[info.step].increments)
             throw std::runtime_error("restart cursor out of range");
@@ -192,10 +220,22 @@ template <class T> class CpuRun {
         for (auto &a : model_.analysis.steps[info.step].boundaries)
             if (restored.data().displacement.read()(a.node, a.component) != T(0))
                 throw std::runtime_error("restart violates homogeneous boundary");
+        if (controls().identity) {
+            const auto &expected = state_.data();
+            const auto &saved = restored.data();
+            for (Index n=0; n<model_.mesh.nodes(); ++n)
+                if (saved.mass.read()(n)!=expected.mass.read()(n) ||
+                    saved.inverse_mass.read()(n)!=expected.inverse_mass.read()(n))
+                    throw std::runtime_error("restart mass differs from configured mass");
+            for (Index e=0; e<model_.mesh.elements(); ++e)
+                if (saved.stable_dt.read()(e)!=expected.stable_dt.read()(e))
+                    throw std::runtime_error("restart stability bound differs from configured bound");
+        }
         publish_restored(restored, info.step, info.increment);
     }
     // Explicit v2 conversion is tied to the chosen compiled model; v2 itself had no analysis identity.
     void import_v2(const std::filesystem::path &path) {
+        if (controls().options.enabled()) throw std::logic_error("v2 checkpoint lacks explicit controls identity");
         if (state_.in_trial()) throw std::logic_error("import requires committed state");
         if (const auto *registered = state_.registered_fields())
             for (const auto &entry : registered->entries())

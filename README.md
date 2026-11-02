@@ -147,6 +147,8 @@ The [C3D8 contract](docs/development/astra_lifecycle_result/C3D8.md) and
 mass, stability, integration-point output and numerical verification.
 C3D4 also supports [small-strain J2 plasticity](docs/development/J2_C3D4.md)
 with tabulated isotropic hardening, PEEQ output and committed restart history.
+The CPU lifecycle also supports optional [mass scaling, bulk viscosity and
+element stability controls](docs/development/EXPLICIT_CONTROLS.md).
 
 Read [`docs/LAYOUT_AND_SYNC.md`](docs/LAYOUT_AND_SYNC.md) before borrowing views.
 # Lifecycle extension (2.1)

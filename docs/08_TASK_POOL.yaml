@@ -352,7 +352,8 @@ tasks:
   - id: R6.05
     title: Mass scaling, bulk viscosity and stability controls
     depends_on: [R6.03]
-    status: PLANNED
+    status: IN_PROGRESS
+    evidence: docs/development/EXPLICIT_CONTROLS.md
     batch_hint: B09
     risk: high_numerical
     exit: Explicit error-energy budgets; never trade stability for apparent speed.
