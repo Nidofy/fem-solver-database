@@ -1,0 +1,38 @@
+*Heading
+Rectangular two-node elastic beam, axial tip load
+*Node
+1,0,0,0
+2,1,0,0
+*Element,type=B31,elset=SECTION
+1,1,2
+*Material,name=MAT
+*Density
+1
+*Elastic
+100,0
+*Beam Section,material=MAT,elset=SECTION,section=RECT
+.2,.1
+0,0,1
+*Amplitude,name=RAMP
+0,0,.001,1
+*Boundary
+1,1,6
+*Step,name=LOAD,nlgeom=NO
+*Dynamic,Explicit,Direct User Control
+.0001,.001
+*Dload,amplitude=RAMP
+SECTION,PX,1
+SECTION,P1,2
+SECTION,P2,3
+SECTION,GRAV,10,1,0,0
+SECTION,BZ,5
+*Output,field,frequency=1
+*Element Output
+S,E
+*End Step
+*Step,name=REPLACE,nlgeom=NO
+*Dynamic,Explicit,Direct User Control
+.00005,.001
+*Dload,op=NEW
+SECTION,PY,4
+*End Step

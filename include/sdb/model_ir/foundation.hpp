@@ -157,14 +157,14 @@ struct IRFaceLoad {
     std::array<double,2> levels{};
     template<class F> void visit(F f) { f(definition,kind,pressure,traction); if(kind==FaceLoadKind::Hydrostatic) f(levels); }
 };
-enum class BodyLoadKind : std::uint8_t { Acceleration, ForcePerVolume, Centrifugal, DensityWeightedCent, RotaryAcceleration, Coriolis };
+enum class BodyLoadKind : std::uint8_t { Acceleration, ForcePerVolume, Centrifugal, DensityWeightedCent, RotaryAcceleration, Coriolis, GlobalLine, LocalLine };
 struct IRBodyLoad {
     LoadDefinition definition;
     BodyLoadKind kind = BodyLoadKind::Acceleration;
     std::array<double,3> value{};
     double magnitude=0;
     std::array<double,3> axis_point{};
-    template<class F> void visit(F f) { f(definition,kind,value); if(kind>=BodyLoadKind::Centrifugal) f(magnitude,axis_point); }
+    template<class F> void visit(F f) { f(definition,kind,value); if(kind>=BodyLoadKind::Centrifugal && kind<=BodyLoadKind::Coriolis) f(magnitude,axis_point); }
 };
 enum class InitialQuantity : std::uint8_t { Displacement, Velocity, Acceleration, Temperature };
 struct IRInitialCondition {
@@ -209,7 +209,7 @@ struct ModelFoundation {
     }
 };
 // Schema-4 extension tail. The schema-3 ModelFoundation visitor is intentionally frozen.
-enum class CouplingKind : std::uint8_t { Kinematic, Distributing };
+enum class CouplingKind : std::uint8_t { Kinematic, Distributing, SurfaceDistributing };
 struct CouplingWeight {
     SourceKey node;
     double weight=1;
@@ -288,7 +288,7 @@ struct EffectiveLoad {
     LoadId id;
     std::vector<StepId> contributions; // Replace resets; Add retains distinct amplitude/basis provenance
 };
-enum class LoadValueKind : std::uint8_t { Nodal, Pressure, Traction, Acceleration, ForcePerVolume, Centrifugal, DensityWeightedCent, RotaryAcceleration, Coriolis, Hydrostatic, ShearTraction };
+enum class LoadValueKind : std::uint8_t { Nodal, Pressure, Traction, Acceleration, ForcePerVolume, Centrifugal, DensityWeightedCent, RotaryAcceleration, Coriolis, Hydrostatic, ShearTraction, GlobalLine, LocalLine };
 struct LoadContribution {
     LoadDefinition definition;
     LoadValueKind kind=LoadValueKind::Nodal;
@@ -373,7 +373,7 @@ struct CompiledFoundation {
         require_step(step);
         for(const auto &l:definition.nodal_loads) if(l.definition.id==id && l.definition.step==step) return {l.definition,LoadValueKind::Nodal,l.dof,l.value,{}};
         for(const auto &l:definition.face_loads) if(l.definition.id==id && l.definition.step==step) return {l.definition,l.kind==FaceLoadKind::ShearTraction?LoadValueKind::ShearTraction:l.kind==FaceLoadKind::Hydrostatic?LoadValueKind::Hydrostatic:l.kind==FaceLoadKind::Pressure?LoadValueKind::Pressure:LoadValueKind::Traction,Dof::X,l.pressure,l.traction,{},l.levels};
-        for(const auto &l:definition.body_loads) if(l.definition.id==id && l.definition.step==step) return {l.definition,static_cast<LoadValueKind>(unsigned(LoadValueKind::Acceleration)+unsigned(l.kind)),Dof::X,l.magnitude,l.value,l.axis_point};
+        for(const auto &l:definition.body_loads) if(l.definition.id==id && l.definition.step==step) return {l.definition,l.kind==BodyLoadKind::LocalLine?LoadValueKind::LocalLine:l.kind==BodyLoadKind::GlobalLine?LoadValueKind::GlobalLine:static_cast<LoadValueKind>(unsigned(LoadValueKind::Acceleration)+unsigned(l.kind)),Dof::X,l.magnitude,l.value,l.axis_point};
         throw std::out_of_range("unknown load contribution");
     }
     const IRActivationPolicy &activation_policy(std::uint64_t id) const {

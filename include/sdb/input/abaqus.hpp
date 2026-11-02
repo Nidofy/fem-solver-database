@@ -217,7 +217,7 @@ class AbaqusInpReader final : public IModelReader {
         std::optional<std::size_t> pending_coupling;
         std::uint32_t next_constraint=0;
         std::map<std::string,LoadId> pressure_ids;
-        bool has_dload=false, extended_dload=false;
+        bool has_dload=false, extended_dload=false, section_dload=false;
         std::map<StepId,std::string> distributed_operation;
         auto source_key=[&](std::string target,const Source &at) {
             SourceKey key; target=upper(target); auto dot=target.find('.');
@@ -474,7 +474,29 @@ class AbaqusInpReader final : public IModelReader {
                     LoadDefinition def{it->second,StepId(index_of(m.steps.size()-1)),region,param("AMPLITUDE"),
                                        CoordinateId(0),false,LoadUpdate::Replace,line.at};
                     double magnitude=number(f[2],line.at);
-                    if(kind=="GRAV" || kind=="BX" || kind=="BY" || kind=="BZ") {
+                    // P1/P2 identify brick faces in solids and section directions in B31.
+                    // SectionRun accepts isolated section models; mixed solid/beam runs are unsupported.
+                    auto isolated_sections=[&] {
+                        for(const auto& part:m.parts) for(const auto& el:part.elements)
+                            if(el.descriptor.formulation==Formulation::Solid)return false;
+                        return true;
+                    };
+                    if(kind=="PX" || kind=="PY" || kind=="PZ" || ((kind=="P1" || kind=="P2") && isolated_sections())) {
+                        count(f,3,3,line.at);
+                        IRBodyLoad l; l.definition=def;
+                        if(kind[1]=='1' || kind[1]=='2') {
+                            l.kind=BodyLoadKind::LocalLine;l.value[kind[1]-'0']=magnitude;
+                        } else {l.kind=BodyLoadKind::GlobalLine;l.value[kind[1]-'X']=magnitude;}
+                        m.foundation.body_loads.push_back(l);section_dload=true;
+                    } else if(kind=="P") {
+                        // Element-based shell P is positive along the connectivity normal,
+                        // equivalent to positive inward pressure on the negative surface.
+                        count(f,3,3,line.at);
+                        def.region="__SDB_DLOAD_FACE_"+std::to_string(def.id.value());
+                        if(first)m.surfaces.push_back({"",def.region,{{region,"SNEG"}},line.at});
+                        m.foundation.face_loads.push_back({def,FaceLoadKind::Pressure,magnitude,{}});
+                        section_dload=true;
+                    } else if(kind=="GRAV" || kind=="BX" || kind=="BY" || kind=="BZ") {
                         IRBodyLoad load;load.definition=def;
                         if(kind=="GRAV") {
                             count(f,6,6,line.at); load.kind=BodyLoadKind::Acceleration;
@@ -836,6 +858,7 @@ class AbaqusInpReader final : public IModelReader {
         if (has_dload) m.schema = 7;
         if (m.finite_geometry) m.schema=8;
         if (extended_dload) m.schema=9;
+        if (section_dload) m.schema=10;
         for(const auto& [step_id,op]:distributed_operation) if(op=="NEW") {
             auto reset=[&](auto& loads) {
                 using L=typename std::remove_reference_t<decltype(loads)>::value_type;

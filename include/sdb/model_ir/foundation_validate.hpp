@@ -210,9 +210,9 @@ template<class T,class Resolve> void resolve_foundation(const ModelIR &ir,Compil
     }
     for(auto &l:f.body_loads) {
         auto r=load(l.definition,20+static_cast<unsigned>(l.kind),Dof::X);
-        if(l.kind>BodyLoadKind::Coriolis) fail(l.definition.source,"invalid body load kind");
+        if(l.kind>BodyLoadKind::LocalLine || (l.kind>=BodyLoadKind::GlobalLine && ir.schema<10)) fail(l.definition.source,"invalid body load kind");
         for(auto v:l.value) foundation_real<T>(v,l.definition.source);
-        if(l.kind>=BodyLoadKind::Centrifugal) {
+        if(l.kind>=BodyLoadKind::Centrifugal && l.kind<=BodyLoadKind::Coriolis) {
             if(ir.schema<9 || ir.finite_geometry || std::abs(std::hypot(l.value[0],l.value[1],l.value[2])-1)>1e-10)
                 fail(l.definition.source,"rotational loads require small strain and unit axis");
             for(auto x:l.axis_point) foundation_real<T>(x,l.definition.source);

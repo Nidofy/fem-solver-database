@@ -1,7 +1,7 @@
 # Six-DOF section consumer
 
 Run sdb_section_run model.inp output.sdbres for a standalone S4R/B31 linear
-elastic model. Without output requests this single-step runner publishes initial/final U and UR. See [mechanical publishers](MECHANICAL_PUBLISHERS.md) for scheduled S/E section recovery. It
+elastic model. Without output requests this runner publishes initial/final U and UR. See [mechanical publishers](MECHANICAL_PUBLISHERS.md) for scheduled S/E section recovery. It
 exposes ModelStore and lifecycle RestartDB through SectionRun. It supports
 constant zero translational/rotational constraints, CLOAD or moment with
 amplitude, mass lumping, central difference and a conservative local Gershgorin

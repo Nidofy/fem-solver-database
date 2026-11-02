@@ -12,11 +12,58 @@ template<class T> class SectionRun {
     Field<std::uint8_t,6> fixed_;
     std::optional<PenaltyConstraints> penalty_;
     std::uint64_t increments_=0,configuration_=0;
+    struct Segment { std::uint64_t first, count; double start, dt; };
+    std::vector<Segment> segments_;
+    std::size_t step_id_=0;
+    std::vector<std::vector<lifecycle::Action>> loads_;
     double dt_=0;
     std::optional<lifecycle::ResultModel> recovery_model_;
     static std::uint64_t basis_id(Index e) {return (std::uint64_t(1)<<63)+e;}
-    void evaluate(){
-        const auto& step=model_.analysis.steps[0];auto &s=state_.data();auto& r=*s.rotation;
+    void prepare_loads() {
+        using namespace lifecycle;
+        const auto& foundation=model_.foundation;
+        for(std::size_t step=0;step<segments_.size();++step) {
+            auto& actions=loads_.emplace_back(model_.analysis.steps[step].loads);
+            for(const auto& live:foundation.effective_loads(StepId::checked(step))) for(auto origin:live.contributions) {
+                auto v=foundation.load_contribution(live.id,origin);
+                const auto& r=foundation.load(live.id,origin);
+                if(v.definition.coordinate.value()!=0)throw std::invalid_argument("section loads require global coordinates");
+                auto add=[&](const SectionElement& el,Vec3 total,double scale){
+                    for(unsigned a=0;a<el.count;++a) for(std::uint8_t d=0;d<3;++d){
+                        double value=total[d]*scale;
+                        if(!std::isfinite(value))throw std::overflow_error("section load exceeds finite range");
+                        if(value!=0) actions.push_back({el.nodes[a],d,value,v.definition.amplitude,origin.value()});
+                    }
+                };
+                if(v.kind==LoadValueKind::Pressure) {
+                    for(auto face:model_.mesh.surfaces().at(r.surface.value()).faces) {
+                        const auto& el=elements_.at(model_.mesh.element_index(face.element));
+                        if(el.count!=4 || face.local!=0)throw std::invalid_argument("section pressure requires S4R face");
+                        add(el,el.axis(2),-face.side*v.scalar*el.load_measure()/4);
+                    }
+                    continue;
+                }
+                for(auto id:r.elements) {
+                    auto e=id.value();const auto& el=elements_.at(e);
+                    if(v.kind==LoadValueKind::Acceleration) add(el,v.vector,el.nodal_mass);
+                    else if(v.kind==LoadValueKind::ForcePerVolume) {
+                        auto rho=model_.mesh.materials()[model_.mesh.element(e).material].parameters.at(0);
+                        add(el,v.vector,el.nodal_mass/rho);
+                    } else if(v.kind==LoadValueKind::GlobalLine || v.kind==LoadValueKind::LocalLine) {
+                        if(el.count!=2)throw std::invalid_argument("line load requires B31");
+                        Vec3 global=v.vector;
+                        if(v.kind==LoadValueKind::LocalLine) {
+                            global={};
+                            for(unsigned i=0;i<3;++i)for(unsigned d=0;d<3;++d)global[d]+=v.vector[i]*el.axis(i)[d];
+                        }
+                        add(el,global,el.load_measure()/2);
+                    } else throw std::invalid_argument("unsupported sectional body load");
+                }
+                if(r.elements.empty())throw std::invalid_argument("unsupported sectional load target");
+            }
+        }
+    }
+    void evaluate(){auto &s=state_.data();auto& r=*s.rotation;
         forces_.fill(0);s.internal_force.fill(0);s.external_force.fill(0);r.torque.fill(0);
         auto f=forces_.write(); auto u=s.displacement.read(),a=r.angle.read();
         for(Index e=0;e<elements_.size();++e) if(s.element_active.read()(e)){
@@ -35,8 +82,11 @@ template<class T> class SectionRun {
                 f(n,d+3)+=reactions.restoring_moment.read()(n,d);
             }
         }
-        for(auto& l:step.loads) {
-            double val=l.value*model_.load_amplitude(l.amplitude,StepId(0),StepId(0),s.time,s.time);
+        for(const auto& l:loads_.at(step_id_)) {
+            auto current=StepId::checked(step_id_);
+            auto origin=l.origin_step==UINT64_MAX?current:StepId::checked(l.origin_step);
+            double val=l.value*model_.load_amplitude(l.amplitude,origin,current,
+                (s.step-segments_[step_id_].first)*dt_,s.time);
             f(l.node,l.component)+=T(val);if(l.component<3)s.external_force.write()(l.node,l.component)+=T(val);
         }
         for(Index n=0;n<model_.mesh.nodes();++n)for(unsigned d=0;d<6;++d){
@@ -59,10 +109,11 @@ template<class T> class SectionRun {
         auto other=def.foundation;auto extensions=def.extensions;
         if(def.penalty_stiffness>0){other.equations.clear();other.rigids.clear();extensions.couplings.clear();
             penalty_.emplace(model,def.penalty_stiffness);}
-        if(def.mode!=lifecycle::ImportMode::Solve || model.analysis.steps.size()!=1 || !def.opaque.empty() ||
+        other.face_loads.clear();other.body_loads.clear();
+        if(def.mode!=lifecycle::ImportMode::Solve || model.analysis.steps.empty() || !def.opaque.empty() ||
            !other.empty() || !extensions.empty() || def.finite_geometry || !def.plastic.empty() ||
            model.sections.size()!=model.mesh.elements())
-            throw std::invalid_argument("section backend requires an isolated single-step elastic section model");
+            throw std::invalid_argument("section backend requires an isolated elastic section model");
         const auto& step=model.analysis.steps[0];
         for(const auto& b:step.boundaries)fixed_.write()(b.node,b.component)=1;
         std::vector<const lifecycle::SectionRecord*> sections(model.mesh.elements());
@@ -84,14 +135,29 @@ template<class T> class SectionRun {
         }
         if(penalty_)bound+=penalty_->evaluate(state_).frequency_squared_bound;
         double h=1.9/std::sqrt(bound);
+        double start=0;
+        for(const auto& step:model.analysis.steps) {
+        // Multi-step runs share the established homogeneous six-DOF mask.
+        if(step.boundaries.size()!=model.analysis.steps.front().boundaries.size())throw std::invalid_argument("changing section boundary mask unsupported");
+        for(auto& b:step.boundaries)if(!fixed_.read()(b.node,b.component))throw std::invalid_argument("changing section boundary mask unsupported");
         if(step.direct && step.increment>h)throw std::domain_error("section increment exceeds stability bound");
         double requested=step.direct?step.increment:std::min(step.increment>0?step.increment:h,.8*h);
         double count=std::ceil(step.period/requested-1e-12);
         if(!(count>=1 && count<=1e8))throw std::domain_error("section increment budget");
-        increments_=std::uint64_t(count);dt_=double(T(step.period/count));
-        if(!(dt_>0) || (step.direct && std::abs(step.period/count-step.increment)>step.increment*1e-7))
+        double segment_dt=double(T(step.period/count));
+        if(!(segment_dt>0) || (step.direct && std::abs(step.period/count-step.increment)>step.increment*1e-7))
             throw std::invalid_argument("invalid section direct increment");
+        segments_.push_back({increments_,std::uint64_t(count),start,segment_dt});
+        increments_+=std::uint64_t(count); start+=count*segment_dt;
+        }
+        dt_=segments_[0].dt;
+        prepare_loads();
         configuration_=semantic_hash(std::make_pair(std::string("section/small-strain/v1"),dt_));
+        if(segments_.size()>1) {
+            std::vector<std::pair<std::uint64_t,double>> signature;
+            for(auto& seg:segments_)signature.emplace_back(seg.count,seg.dt);
+            configuration_=semantic_hash(std::make_pair(std::string("section/steps/v1"),signature));
+        }
         if(recovery_model_) {
             auto &out=*recovery_model_;out=lifecycle::ResultModel::from(model_,configuration_);
             out.samples.assign(elements_.size(),{});
@@ -120,18 +186,31 @@ template<class T> class SectionRun {
     }
     bool advance(){
         auto& s=state_.data();if(s.dt==0)initialize();if(s.step>=increments_)return false;
+        if(s.step==segments_[step_id_].first+segments_[step_id_].count) {
+            // Recover integer-time velocities with the old loads, then initialize
+            // the new half step with the new loads. All boundaries are unchanged.
+            evaluate();
+            auto shift=[&](double h) {
+                for(Index n=0;n<model_.mesh.nodes();++n)for(unsigned d=0;d<3;++d) {
+                    s.velocity.write()(n,d)+=T(h)*s.acceleration.read()(n,d);
+                    s.rotation->velocity.write()(n,d)+=T(h)*s.rotation->acceleration.read()(n,d);
+                }
+            };
+            shift(dt_/2);++step_id_;dt_=segments_[step_id_].dt;s.dt=dt_;evaluate();shift(-dt_/2);
+        }
         evaluate();auto& r=*s.rotation;
         for(Index n=0;n<model_.mesh.nodes();++n)for(unsigned d=0;d<3;++d){
             s.velocity.write()(n,d)+=T(dt_)*s.acceleration.read()(n,d);s.displacement.write()(n,d)+=T(dt_)*s.velocity.read()(n,d);
             r.velocity.write()(n,d)+=T(dt_)*r.acceleration.read()(n,d);r.angle.write()(n,d)+=T(dt_)*r.velocity.read()(n,d);
         }
-        ++s.step;s.time=dt_*s.step;return true;
+        ++s.step;s.time=segments_[step_id_].start+dt_*(s.step-segments_[step_id_].first);return true;
     }
     lifecycle::ResultFrame snapshot() const{
         const auto& s=state_.data();lifecycle::ResultFrame frame;
-        frame.info={s.step,0,s.step,model_.mesh.fingerprint(),s.time,s.time,sizeof(T),8};
+        auto local=s.step-segments_[step_id_].first;
+        frame.info={s.step,step_id_,local,model_.mesh.fingerprint(),s.time,dt_*local,sizeof(T),8};
         if(recovery_model_) lifecycle::bind_result_frame(frame,*recovery_model_);
-        const auto &requests=model_.outputs.at(0);
+        const auto &requests=model_.outputs.at(step_id_);
         auto publish=[&](const std::string& name,const std::string& region,bool history) {
             const bool nodal=name=="U" || name=="UR";
             std::vector<Index> all;
@@ -161,27 +240,29 @@ template<class T> class SectionRun {
         };
         if(requests.empty()) {publish("U","",false);publish("UR","",false);}
         std::set<std::tuple<std::string,std::string,bool>> emitted;
-        for(const auto& r:requests) if(lifecycle::OutputScheduler::due(r,s.step,increments_))
+        for(const auto& r:requests) if(lifecycle::OutputScheduler::due(r,local,segments_[step_id_].count))
             for(const auto& name:r.variables) if(emitted.emplace(name,r.region,r.history).second)
                 publish(name,r.region,r.history);
         return frame;
     }
     void save(const std::filesystem::path& path){
         if(state_.data().dt==0)initialize();evaluate();lifecycle::RestartInfo info;
-        info.configuration=configuration_;info.increment=state_.data().step;
+        info.configuration=configuration_;info.step=step_id_;info.increment=state_.data().step-segments_[step_id_].first;
         lifecycle::RestartDB::save(path,model_,state_,info);
     }
     void restore(const std::filesystem::path& path){
         StateDB<T> next(model_.mesh,true);
         auto info=lifecycle::RestartDB::load(path,model_,next,configuration_);
-        if(info.step || info.increment!=info.total_increment || info.increment>increments_ || info.dt!=dt_ ||
-           info.time!=dt_*info.increment) throw std::invalid_argument("section restart cursor mismatch");
+        if(info.step>=segments_.size())throw std::invalid_argument("section restart step mismatch");
+        auto seg=segments_[info.step];
+        if(info.increment>seg.count || info.total_increment!=seg.first+info.increment || info.dt!=seg.dt ||
+           info.time!=seg.start+seg.dt*info.increment) throw std::invalid_argument("section restart cursor mismatch");
         for(Index n=0;n<model_.mesh.nodes();++n) {
             if(next.data().mass.read()(n)!=state_.data().mass.read()(n)) throw std::invalid_argument("section mass mismatch");
             for(unsigned d=0;d<3;++d)if(next.data().rotation->inertia.read()(n,d)!=state_.data().rotation->inertia.read()(n,d))
                 throw std::invalid_argument("section rotary inertia mismatch");
         }
-        state_.data()=std::move(next.data());
+        state_.data()=std::move(next.data());step_id_=info.step;dt_=seg.dt;
     }
 };
 }

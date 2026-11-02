@@ -24,6 +24,8 @@ class SectionElement {
     std::array<Index,4> nodes{};
     std::array<Row,24> K{};
     double nodal_mass=0, rotary_mass=0;
+    const Vec3& axis(unsigned i) const { return axes_.at(i); }
+    double load_measure() const { return count==2?length_:length_*width_; }
     unsigned sample_count() const noexcept {return point_count_;}
     lifecycle::Rotation recovery_basis() const {
         lifecycle::Rotation r{};
