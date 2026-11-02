@@ -13,3 +13,6 @@ add_test(NAME inertial_load_contracts COMMAND sdb_inertial_loads_tests ${CMAKE_C
 add_executable(sdb_section_dload_tests tests/section_dload_tests.cpp)
 target_link_libraries(sdb_section_dload_tests PRIVATE sdb_lifecycle)
 add_test(NAME section_dload_contracts COMMAND sdb_section_dload_tests ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/abaqus ${CMAKE_CURRENT_BINARY_DIR}/section-dload-scratch)
+add_executable(sdb_cantilever_reference tests/cantilever_reference.cpp)
+target_link_libraries(sdb_cantilever_reference PRIVATE sdb_lifecycle)
+add_test(NAME cantilever_bending_reference COMMAND sdb_cantilever_reference)
