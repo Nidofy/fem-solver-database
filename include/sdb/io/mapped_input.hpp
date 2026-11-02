@@ -13,6 +13,9 @@ namespace sdb {
 class MappedInput {
     const std::uint8_t *bytes_ = nullptr;
     std::size_t size_ = 0;
+#ifdef _WIN32
+    HANDLE read_lease_ = INVALID_HANDLE_VALUE;
+#endif
 public:
     explicit MappedInput(const std::filesystem::path& path) {
 #ifdef _WIN32
@@ -26,11 +29,14 @@ public:
             size_=static_cast<std::size_t>(size.QuadPart);
             mapping=CreateFileMappingW(file,nullptr,PAGE_READONLY,0,0,nullptr);
         }
-        CloseHandle(file);
         if(mapping) {
             bytes_=static_cast<const std::uint8_t*>(MapViewOfFile(mapping,FILE_MAP_READ,0,0,0));
             CloseHandle(mapping);
         }
+        // The view keeps section pages alive, but does not retain the original
+        // handle's FILE_SHARE_READ restriction. Keep that handle until unmap.
+        if (bytes_) read_lease_ = file;
+        else CloseHandle(file);
 #else
         int fd=open(path.c_str(),O_RDONLY|O_CLOEXEC);
         if(fd<0) throw std::runtime_error("mapped input open failed");
@@ -48,6 +54,7 @@ public:
     ~MappedInput() {
 #ifdef _WIN32
         UnmapViewOfFile(bytes_);
+        CloseHandle(read_lease_);
 #else
         munmap(const_cast<std::uint8_t*>(bytes_),size_);
 #endif
