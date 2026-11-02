@@ -61,12 +61,52 @@ template <class T> class CpuRun {
             f(n,d)=T(total);
         }
     }
-    void loads() {
+    // Center the lumped Coriolis force at the integer-time velocity. On free DOFs
+    // (I-cross(d))*w=v_half + dt*a_other/2, d=dt*k/(2*m); antisymmetry gives zero work.
+    void coriolis_loads(StateDB<T>& state,std::size_t step,double local,bool full_velocity) {
+        const auto& actions=model_.analysis.steps.at(step).coriolis;
+        if(actions.empty())return;
+        std::map<Index,distributed::Vec> coefficients;
+        for(const auto& a:actions)
+            coefficients[a.node][a.component]+=a.value*model_.load_amplitude(a.amplitude,StepId::checked(a.origin_step),
+                StepId::checked(step),local,state.data().time);
+        const auto& s=state.data();
+        const bool center=!full_velocity && s.dt!=0;
+        View<const T,3> internal{};
+        if(center)internal=cpu_.output_forces(state).internal_force.read();
+        std::map<Index,std::array<bool,3>> fixed;
+        for(const auto& a:model_.analysis.steps[step].boundaries)fixed[a.node][a.component]=true;
+        auto f=state.data().external_force.write();
+        for(const auto& [n,k]:coefficients) {
+            if(!s.node_active.read()(n))continue;
+            auto constrained=fixed[n];
+            distributed::Vec rhs{},d{},w{};
+            for(unsigned j=0;j<3;++j) {
+                if(!constrained[j]) {
+                    rhs[j]=s.velocity.read()(n,j);
+                    if(center)rhs[j]+=.5*s.dt*s.inverse_mass.read()(n)*(double(f(n,j))+s.contact_force.read()(n,j)-internal(n,j));
+                }
+                if(center && !constrained[(j+1)%3] && !constrained[(j+2)%3])
+                    d[j]=.5*s.dt*s.inverse_mass.read()(n)*k[j];
+            }
+            auto skew=distributed::cross(d,rhs);
+            double denom=1+distributed::dot(d,d),proj=distributed::dot(d,rhs);
+            for(unsigned j=0;j<3;++j)w[j]=(rhs[j]+skew[j]+d[j]*proj)/denom;
+            auto force=distributed::cross(k,w);
+            for(unsigned j=0;j<3;++j) {
+                double total=double(f(n,j))+force[j];
+                if(!std::isfinite(total) || std::abs(total)>std::numeric_limits<T>::max())throw std::overflow_error("Coriolis load overflow");
+                f(n,j)=T(total);
+            }
+        }
+    }
+    void loads(bool full_velocity=false) {
         LoadEvaluator::apply(model_.analysis, step_, double(increment_) * plans_[step_].dt,
                              state_.data().time, state_);
         follower_loads(state_,step_,double(increment_)*plans_[step_].dt,state_.data().time);
         if (penalty_ && state_.data().external_work) applied_without_penalty_=state_.data().external_force;
         apply_penalty(state_);
+        coriolis_loads(state_,step_,double(increment_)*plans_[step_].dt,full_velocity);
     }
     // Prepare every throwing operation on the candidate. set_constraints checks
     // all inputs before its nonallocating mask/velocity/acceleration writes.
@@ -79,6 +119,7 @@ template <class T> class CpuRun {
                              candidate.data().time, candidate);
         follower_loads(candidate,step,double(increment)*plans_[step].dt,candidate.data().time);
         apply_penalty(candidate);
+        coriolis_loads(candidate,step,double(increment)*plans_[step].dt,false);
         cpu_.set_constraints(constraints, candidate);
         static_assert(std::is_nothrow_move_assignable_v<StateData<T>>);
         state_.data() = std::move(candidate.data());
@@ -124,7 +165,7 @@ template <class T> class CpuRun {
         ++step_;
         increment_ = 0;
         mask(step_);
-        loads();
+        loads(true);
         cpu_.forces(state_);
         s.dt = plans_[step_].dt;
         auto fixed = cpu_.plan().fixed.read();
@@ -141,6 +182,9 @@ template <class T> class CpuRun {
     explicit CpuRun(const CompiledModel<T> &model, ExplicitControls controls = {}, CpuPolicy policy = CpuPolicy::Serial, TetKernel kernel = TetKernel::Scalar)
         : model_(model), state_(validated(model).mesh), cpu_(model.mesh, state_, policy, Assembly::Deterministic, controls,kernel,model.definition.finite_geometry) {
         model.require_cpu();
+        if(controls.bulk_linear || controls.bulk_quadratic)
+            for(const auto& step:model.analysis.steps) if(!step.coriolis.empty())
+                throw std::invalid_argument("coupled Coriolis and bulk viscosity requires a coupled velocity solve");
         double stable = cpu_.plan().stable_step;
         if (model.definition.penalty_stiffness > 0) {
             penalty_.emplace(model, model.definition.penalty_stiffness);

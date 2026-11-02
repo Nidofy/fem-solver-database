@@ -196,16 +196,30 @@ template<class T,class Resolve> void resolve_foundation(const ModelIR &ir,Compil
     }
     for(auto &l:f.face_loads) {
         auto r=load(l.definition,10+static_cast<unsigned>(l.kind),Dof::X);
-        if(l.kind>FaceLoadKind::Traction || !out.surface_ids.contains(l.definition.region)) fail(l.definition.source,"invalid face load surface/kind");
+        if(l.kind>FaceLoadKind::Hydrostatic || !out.surface_ids.contains(l.definition.region)) fail(l.definition.source,"invalid face load surface/kind");
+        if(l.kind==FaceLoadKind::Hydrostatic) {
+            if(ir.schema<9 || ir.finite_geometry || !(l.levels[0]>l.levels[1]))
+                fail(l.definition.source,"HPn requires small strain and a submerged reference level");
+            for(auto z:l.levels) foundation_real<T>(z,l.definition.source);
+        }
         foundation_real<T>(l.pressure,l.definition.source); for(auto v:l.traction) foundation_real<T>(v,l.definition.source);
         if((l.kind==FaceLoadKind::Pressure && l.traction!=std::array<double,3>{}) || (l.kind==FaceLoadKind::Traction && l.pressure!=0)) fail(l.definition.source,"face load inactive value lane is nonzero");
         r.surface=out.surface_ids.at(l.definition.region); out.loads.push_back(std::move(r));
     }
     for(auto &l:f.body_loads) {
         auto r=load(l.definition,20+static_cast<unsigned>(l.kind),Dof::X);
-        if(l.kind>BodyLoadKind::ForcePerVolume) fail(l.definition.source,"invalid body load kind");
+        if(l.kind>BodyLoadKind::Coriolis) fail(l.definition.source,"invalid body load kind");
         for(auto v:l.value) foundation_real<T>(v,l.definition.source);
-        r.elements=elements(l.definition.region,l.definition.source); out.loads.push_back(std::move(r));
+        if(l.kind>=BodyLoadKind::Centrifugal) {
+            if(ir.schema<9 || ir.finite_geometry || std::abs(std::hypot(l.value[0],l.value[1],l.value[2])-1)>1e-10)
+                fail(l.definition.source,"rotational loads require small strain and unit axis");
+            for(auto x:l.axis_point) foundation_real<T>(x,l.definition.source);
+            foundation_real<T>(l.magnitude,l.definition.source);
+        }
+        if(l.definition.region=="@SDB:WHOLE_MODEL") {
+            for(std::size_t e=0;e<sources.elements.size();++e)r.elements.push_back(ElementId::checked(e));
+        } else r.elements=elements(l.definition.region,l.definition.source);
+        out.loads.push_back(std::move(r));
     }
     // Evaluate update validity in chronological step order, independent of input vector ordering.
     std::map<std::pair<StepId,LoadId>,const LoadDefinition*> events;

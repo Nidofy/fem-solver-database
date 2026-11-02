@@ -217,7 +217,8 @@ class AbaqusInpReader final : public IModelReader {
         std::optional<std::size_t> pending_coupling;
         std::uint32_t next_constraint=0;
         std::map<std::string,LoadId> pressure_ids;
-        bool has_dload=false;
+        bool has_dload=false, extended_dload=false;
+        std::map<StepId,std::string> distributed_operation;
         auto source_key=[&](std::string target,const Source &at) {
             SourceKey key; target=upper(target); auto dot=target.find('.');
             if(dot!=target.npos) {
@@ -457,11 +458,16 @@ class AbaqusInpReader final : public IModelReader {
                 m.schema=std::max(m.schema,3u);
             } else if (b.key == "DLOAD" && options.mode == ImportMode::Solve) {
                 params({"OP","AMPLITUDE"});
-                if(!step || in_part || in_assembly || param("OP","MOD")!="MOD" || b.data.empty())
-                    fail(b.at,"DLOAD requires step, OP=MOD and data");
+                auto op=param("OP","MOD");
+                if(!step || in_part || in_assembly || (op!="MOD" && op!="NEW") || (op=="MOD" && b.data.empty()))
+                    fail(b.at,"invalid DLOAD step or OP");
+                auto [op_it,new_step]=distributed_operation.emplace(StepId::checked(m.steps.size()-1),op);
+                if(op_it->second!=op) fail(b.at,"DLOAD OP must be consistent within a step");
                 for(const auto& line:b.data) {
                     auto f=fields(line); if(f.size()<3) fail(line.at,"incomplete DLOAD row");
                     auto region=upper(f[0]),kind=upper(f[1]);
+                    if(region.empty() && (kind=="GRAV" || kind=="CENT" || kind=="CENTRIF" || kind=="ROTA" || kind=="CORIO"))
+                        region="@SDB:WHOLE_MODEL";
                     if(region.empty()) fail(line.at,"DLOAD requires an element or ELSET");
                     const auto key="DLOAD:"+kind+":"+region;
                     auto [it,first]=pressure_ids.emplace(key,LoadId(index_of(pressure_ids.size())));
@@ -481,6 +487,23 @@ class AbaqusInpReader final : public IModelReader {
                             load.value[kind[1]-'X']=magnitude;
                         }
                         m.foundation.body_loads.push_back(std::move(load));
+                    } else if(kind=="CENT" || kind=="CENTRIF" || kind=="ROTA" || kind=="CORIO") {
+                        count(f,9,9,line.at);
+                        IRBodyLoad l; l.definition=def; l.magnitude=magnitude;
+                        l.kind=kind=="CENT"?BodyLoadKind::DensityWeightedCent:kind=="CENTRIF"?BodyLoadKind::Centrifugal:
+                               kind=="ROTA"?BodyLoadKind::RotaryAcceleration:BodyLoadKind::Coriolis;
+                        for(unsigned d=0;d<3;++d){l.axis_point[d]=number(f[3+d],line.at);l.value[d]=number(f[6+d],line.at);}
+                        auto norm=std::hypot(l.value[0],l.value[1],l.value[2]);
+                        if(!(norm>0) || !std::isfinite(norm)) fail(line.at,"invalid rotation axis");
+                        for(auto& v:l.value)v/=norm;
+                        m.foundation.body_loads.push_back(l);extended_dload=true;
+                    } else if(kind.size()==3 && kind.starts_with("HP") && kind[2]>='1' && kind[2]<='6') {
+                        count(f,5,5,line.at);
+                        def.region="__SDB_DLOAD_FACE_"+std::to_string(def.id.value());
+                        if(first) m.surfaces.push_back({"",def.region,{{region,"S"+kind.substr(2)}},line.at});
+                        IRFaceLoad l{def,FaceLoadKind::Hydrostatic,magnitude,{}};
+                        l.levels={number(f[3],line.at),number(f[4],line.at)};
+                        m.foundation.face_loads.push_back(l);extended_dload=true;
                     } else if(kind.size()==2 && kind[0]=='P' && kind[1]>='1' && kind[1]<='6') {
                         count(f,3,3,line.at);
                         def.region="__SDB_DLOAD_FACE_"+std::to_string(def.id.value());
@@ -800,6 +823,26 @@ class AbaqusInpReader final : public IModelReader {
         if (!m.plastic.empty()) m.schema = 5;
         if (has_dload) m.schema = 7;
         if (m.finite_geometry) m.schema=8;
+        if (extended_dload) m.schema=9;
+        for(const auto& [step_id,op]:distributed_operation) if(op=="NEW") {
+            auto reset=[&](auto& loads) {
+                using L=typename std::remove_reference_t<decltype(loads)>::value_type;
+                std::map<LoadId,L> old; std::set<LoadId> replaced;
+                for(const auto& l:loads) {
+                    auto d=l.definition;
+                    if(d.step<step_id && (!old.contains(d.id) || old.at(d.id).definition.step<d.step)) old[d.id]=l;
+                    if(d.step==step_id) replaced.insert(d.id);
+                }
+                for(auto& [id,l]:old) {
+                    bool is_dload=false;
+                    for(auto& [key,known]:pressure_ids) if(known==id && key.starts_with("DLOAD:")) is_dload=true;
+                    if(!is_dload || replaced.contains(id) || l.definition.update==LoadUpdate::Remove) continue;
+                    l.definition.step=step_id;l.definition.update=LoadUpdate::Remove;l.definition.amplitude.clear();
+                    loads.push_back(l);
+                }
+            };
+            reset(m.foundation.face_loads);reset(m.foundation.body_loads);
+        }
         return result;
     }
 };
