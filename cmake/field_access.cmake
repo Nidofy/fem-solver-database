@@ -1,0 +1,10 @@
+# Storage-only tests and synthetic access benchmark.
+add_executable(sdb_field_access_tests tests/field_access_tests.cpp)
+target_link_libraries(sdb_field_access_tests PRIVATE solver_database_v2)
+add_test(NAME field_access COMMAND sdb_field_access_tests)
+add_executable(sdb_field_access_benchmark benchmarks/field_access.cpp)
+target_link_libraries(sdb_field_access_benchmark PRIVATE solver_database_v2)
+if(MINGW)
+  target_link_options(sdb_field_access_tests PRIVATE -static)
+  target_link_options(sdb_field_access_benchmark PRIVATE -static)
+endif()
