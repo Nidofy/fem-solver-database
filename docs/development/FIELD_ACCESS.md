@@ -55,6 +55,10 @@ a universal speedup threshold or compare different builds as a controlled pair.
 
 ## Next bounded stages
 
+The immutable batch-view stage is now implemented and independently tested; see
+[MESH_ACCESS.md](MESH_ACCESS.md). It reuses existing packed storage without changing
+MeshDB layout or adding another connectivity cache. Remaining stages stay opt-in.
+
 1. Measure component-major contiguous access versus mapped order on independent
    workloads, recording allocation count and address-plan overhead.
 2. Evaluate typed immutable connectivity/material read views that resolve metadata
