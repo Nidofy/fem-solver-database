@@ -44,6 +44,10 @@ inline ModelIR canonical_definition(ModelIR ir) {
     for(auto &s:ir.surfaces) std::sort(s.faces.begin(),s.faces.end());
     std::sort(ir.history_bindings.begin(),ir.history_bindings.end(),[](auto &a,auto &b){return a.material<b.material;});
     auto &f=ir.foundation;
+    auto &thermal=f.thermal;
+    by_name(thermal.tables); by_name(thermal.films); by_name(thermal.radiation); by_name(thermal.fluxes);
+    by_name(thermal.contacts); by_name(thermal.materials);
+    std::ranges::sort(thermal.coupled_steps,{},&IRCoupledStep::step);
     auto by_id=[](auto &v) { std::sort(v.begin(),v.end(),[](auto &a,auto &b){return a.id<b.id;}); };
     by_id(f.coordinates); by_id(f.orientations); by_id(f.equations); by_id(f.ties); by_id(f.rigids); by_id(f.initial_conditions); by_id(f.activations);
     auto by_assignment=[](auto &v) { std::sort(v.begin(),v.end(),[](auto &a,auto &b){return a.assignment.id<b.assignment.id;}); };
@@ -95,7 +99,9 @@ template <class T> struct CompiledModel {
         auto ir=canonical_definition(definition);
         AnalysisIdentity base{ir.amplitudes,ir.initial_boundaries,ir.steps,ir.foundation.nodal_loads,ir.foundation.face_loads,ir.foundation.body_loads,ir.foundation.initial_conditions,ir.foundation.activations};
         if(ir.schema<4) return semantic_hash(base);
-        return semantic_hash(std::array<std::uint64_t,5>{semantic_hash(base),semantic_hash(ir.extensions.amplitude_policies),semantic_hash(ir.extensions.initial_events),semantic_hash(ir.extensions.activation_policies),semantic_hash(ir.extensions.sample_axis)});
+        auto legacy=semantic_hash(std::array<std::uint64_t,5>{semantic_hash(base),semantic_hash(ir.extensions.amplitude_policies),semantic_hash(ir.extensions.initial_events),semantic_hash(ir.extensions.activation_policies),semantic_hash(ir.extensions.sample_axis)});
+        if(ir.schema>=11) return semantic_hash(std::array<std::uint64_t,2>{legacy,semantic_hash(ir.foundation.thermal)});
+        return legacy;
     }
     const IRInstance &instance(InstanceId id) const {
         if(!id.valid()) throw std::out_of_range("invalid instance ID");
@@ -168,8 +174,9 @@ template <class T> struct CompiledModel {
 class ModelCompiler {
   public:
     template <class T> CompiledModel<T> compile(ModelIR ir, CpuPolicy policy = CpuPolicy::Serial) const {
-        if (ir.schema != 1 && ir.schema != 2 && ir.schema != 3 && ir.schema != 4 && ir.schema != 5 && ir.schema != 6 && ir.schema != 7 && ir.schema != 8 && ir.schema != 9 && ir.schema != 10)
+        if (ir.schema<1 || ir.schema>11)
             throw std::runtime_error("unsupported ModelIR schema");
+        if (ir.schema<11 && !ir.foundation.thermal.empty()) throw std::invalid_argument("thermal foundation requires ModelIR schema 11");
         if (ir.schema == 1 && !ir.history_bindings.empty())
             throw std::runtime_error("history bindings require ModelIR schema 2");
         if (ir.parts.empty() || (ir.mode != ImportMode::Solve && ir.mode != ImportMode::MeshOnly))
@@ -227,6 +234,11 @@ class ModelCompiler {
         }
         for (auto &o : ir.opaque)
             incapable(o.source, "opaque unsupported semantics: " + o.keyword);
+        if (!ir.foundation.thermal.empty()) {
+            validate_thermal_contract(ir,ir.foundation.thermal);
+            b.set_storage_contract(canonical_semantic_hash(ir));
+            incapable({},"thermal and coupled step contracts require a downstream solver");
+        }
         std::map<std::string, const IRPart *> parts;
         for (auto &p : ir.parts)
             if (!parts.emplace(p.name, &p).second)
@@ -741,6 +753,14 @@ class ModelCompiler {
         if (ir.steps.empty())
             incapable(ir.parts.front().source, "no executable analysis step");
         resolve_foundation<T>(ir,foundation,source,node_dofs,resolve);
+        auto thermal_region=[&](const IRThermalRegion &r) {
+            if (r.kind==ThermalRegionKind::Surface) {
+                if (!foundation.surface_ids.contains(r.name)) fail({},"unknown thermal surface: "+r.name);
+            } else if (resolve(false,r.name,"",{}).empty()) fail({},"empty thermal element region: "+r.name);
+        };
+        for(const auto &v:ir.foundation.thermal.films) thermal_region(v.region);
+        for(const auto &v:ir.foundation.thermal.radiation) thermal_region(v.region);
+        for(const auto &v:ir.foundation.thermal.fluxes) thermal_region(v.region);
         foundation.element_materials.resize(source.elements.size()); foundation.element_orientations.resize(source.elements.size());
         for(const auto &s:sections) foundation.element_materials.at(s.element)=MaterialId(s.material);
         for(const auto &s:foundation.sections) {

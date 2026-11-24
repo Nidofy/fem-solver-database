@@ -186,6 +186,74 @@ struct IRActivation {
     Source source;
     template<class F> void visit(F f) { f(id,step,elements,active,source); }
 };
+// Schema 11 tail. Tables are named, Cartesian, and use their declared units.
+enum class ThermalValueSource : std::uint8_t { Constant, Table, Amplitude };
+struct IRThermalValue {
+    ThermalValueSource source=ThermalValueSource::Constant;
+    double constant=0;
+    std::string reference;
+    template<class F> void visit(F f) { f(source,constant,reference); }
+};
+enum class ThermalRegionKind : std::uint8_t { Surface, ElementSet };
+struct IRThermalRegion {
+    std::string name;
+    ThermalRegionKind kind=ThermalRegionKind::Surface;
+    template<class F> void visit(F f) { f(name,kind); }
+};
+struct IRFilmCondition {
+    std::string name;
+    StepId step;
+    IRThermalRegion region;
+    IRThermalValue sink_temperature,film_coefficient;
+    template<class F> void visit(F f) { f(name,step,region,sink_temperature,film_coefficient); }
+};
+struct IRRadiationCondition {
+    std::string name;
+    StepId step;
+    IRThermalRegion region;
+    double emissivity=0,ambient_temperature=0,absolute_zero=0,stefan_boltzmann=0;
+    template<class F> void visit(F f) { f(name,step,region,emissivity,ambient_temperature,absolute_zero,stefan_boltzmann); }
+};
+enum class HeatFluxKind : std::uint8_t { SurfaceFlux, BodyGeneration };
+struct IRDistributedHeatFlux {
+    std::string name;
+    StepId step;
+    IRThermalRegion region;
+    HeatFluxKind kind=HeatFluxKind::SurfaceFlux;
+    double rate=0;
+    template<class F> void visit(F f) { f(name,step,region,kind,rate); }
+};
+struct IRThermalContactProperty {
+    std::string name,gap_conductance_table;
+    bool radiative_gap=false;
+    double gap_emissivity=0,absolute_zero=0,stefan_boltzmann=0,eta_fric=0,f_slave=0.5;
+    template<class F> void visit(F f) { f(name,gap_conductance_table,radiative_gap,gap_emissivity,absolute_zero,stefan_boltzmann,eta_fric,f_slave); }
+};
+struct IRThermalMaterial {
+    std::string name,conductivity,specific_heat,enthalpy;
+    bool phase_change=false;
+    double solidus_temp=0,liquidus_temp=0,latent_heat=0;
+    template<class F> void visit(F f) { f(name,conductivity,specific_heat,enthalpy,phase_change,solidus_temp,liquidus_temp,latent_heat); }
+};
+enum class CouplingScheme : std::uint8_t { SequentialThermalToMechanical, PicardStaggered, Monolithic };
+struct IRCoupledStep {
+    StepId step;
+    CouplingScheme scheme=CouplingScheme::SequentialThermalToMechanical;
+    double thermal_tolerance=1e-8,mechanical_tolerance=1e-8,beta_tq=0;
+    template<class F> void visit(F f) { f(step,scheme,thermal_tolerance,mechanical_tolerance,beta_tq); }
+};
+struct IRThermalFoundation {
+    std::uint32_t tag=0x314d4854,version=1; // THM1
+    std::vector<MaterialTable> tables;
+    std::vector<IRFilmCondition> films;
+    std::vector<IRRadiationCondition> radiation;
+    std::vector<IRDistributedHeatFlux> fluxes;
+    std::vector<IRThermalContactProperty> contacts;
+    std::vector<IRThermalMaterial> materials;
+    std::vector<IRCoupledStep> coupled_steps;
+    template<class F> void visit(F f) { f(tag,version); if(tag!=0x314d4854 || version!=1) throw std::invalid_argument("thermal extension tag/version"); f(tables,films,radiation,fluxes,contacts,materials,coupled_steps); }
+    bool empty() const { return tables.empty() && films.empty() && radiation.empty() && fluxes.empty() && contacts.empty() && materials.empty() && coupled_steps.empty(); }
+};
 struct ModelFoundation {
     std::vector<IRCoordinate> coordinates;
     std::vector<IROrientation> orientations;
@@ -201,11 +269,12 @@ struct ModelFoundation {
     std::vector<IRBodyLoad> body_loads;
     std::vector<IRInitialCondition> initial_conditions;
     std::vector<IRActivation> activations;
+    IRThermalFoundation thermal; // visited separately by the versioned ModelIR codec
     template<class F> void visit(F f) { f(coordinates,orientations,material_definitions,solid_sections,shell_sections,beam_sections,equations,ties,rigids,nodal_loads,face_loads,body_loads,initial_conditions,activations); }
     bool empty() const {
         bool result = true;
         const_cast<ModelFoundation*>(this)->visit([&](const auto &...v) { ((result &= v.empty()), ...); });
-        return result;
+        return result && thermal.empty();
     }
 };
 // Schema-4 extension tail. The schema-3 ModelFoundation visitor is intentionally frozen.
@@ -473,3 +542,14 @@ struct CompiledFoundation {
     }
 };
 } // namespace sdb::lifecycle
+
+namespace sdb {
+// The wire visitor above is frozen for ModelIR schemas 3–10. Standalone
+// foundation identities also cover an attached, versioned thermal section.
+template<> inline std::uint64_t semantic_hash(const lifecycle::ModelFoundation &foundation) {
+    SemanticHasher hash;
+    hash.append(foundation);
+    if(!foundation.thermal.empty()) hash.append(foundation.thermal);
+    return hash.value();
+}
+} // namespace sdb

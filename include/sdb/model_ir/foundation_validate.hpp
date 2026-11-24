@@ -1,5 +1,6 @@
 #pragma once
 #include "model_ir.hpp"
+#include "thermal_validate.hpp"
 
 namespace sdb::lifecycle {
 inline Rotation multiply_rotation(const Rotation &a,const Rotation &b) {

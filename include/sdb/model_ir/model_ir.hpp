@@ -47,9 +47,9 @@ inline ElementDescriptor descriptor(const std::string &type, const Source &s) {
     d.token = type;
     if (type == "C3D4")
         return d;
-    if (type == "C3D8" || type == "C3D8R") {
+    if (type == "C3D8" || type == "C3D8R" || type == "DC3D8") {
         d.shape = Topology::Hex8;
-        d.points = type == "C3D8" ? 8 : 1;
+        d.points = type == "C3D8R" ? 1 : 8;
     } else if (type == "S4R") {
         d.shape = Topology::Quad4;
         d.formulation = Formulation::Shell;
@@ -197,7 +197,7 @@ struct ModelIR {
     bool finite_geometry = false;
     template <class F> void visit(F f) {
         f(schema);
-        if (schema != 1 && schema != 2 && schema != 3 && schema != 4 && schema != 5 && schema != 6 && schema != 7 && schema != 8 && schema != 9 && schema != 10)
+        if (schema<1 || schema>11)
             throw std::runtime_error("unsupported ModelIR schema");
         f(units, assembly, mode, parts, instances, sets, materials, sections, surfaces, amplitudes,
           initial_boundaries, steps, opaque);
@@ -214,6 +214,8 @@ struct ModelIR {
         else if (penalty_stiffness != 0) throw std::runtime_error("penalty stiffness requires ModelIR schema 6");
         if(schema>=8) f(finite_geometry);
         else if(finite_geometry) throw std::runtime_error("finite geometry requires schema 8");
+        if(schema>=11) f(foundation.thermal);
+        else if(!foundation.thermal.empty()) throw std::runtime_error("thermal foundation requires schema 11");
     }
 };
 struct SourceEntry {

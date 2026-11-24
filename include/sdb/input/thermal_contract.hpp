@@ -1,8 +1,17 @@
 #pragma once
 #include "abaqus.hpp"
 #include "../analysis_contract.hpp"
+#include "../model_ir/thermal_validate.hpp"
 
 namespace sdb::lifecycle {
+// Typed input for film, radiation, flux, thermal materials/contact and coupled
+// steps. ModelCompiler resolves the named geometric regions against the mesh.
+inline void admit_thermal_contract(ModelIR &ir,IRThermalFoundation thermal) {
+    if(ir.schema<1 || ir.schema>11) throw std::invalid_argument("unsupported thermal input model schema");
+    validate_thermal_contract(ir,thermal);
+    ir.foundation.thermal=std::move(thermal);
+    ir.schema=11;
+}
 // Storage-only fragment importer. Labels -> thermal slots are supplied explicitly.
 // Supports only constant nodal TEMPERATURE/CFLUX and initial TEMPERATURE.
 // General sets, amplitudes, OP=NEW, steps and the rest of INP remain rejected here.
