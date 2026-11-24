@@ -1,6 +1,18 @@
 # Solver Database V2
 
-Current SDK **2.4.0** adds [DBF8 extensions](docs/development/db_foundation/DBF8_HANDOFF.md):
+SDK **2.5.0 candidate (DBF9)** adds flat DOF lookup and ordered multi-batch job bundles.
+Bind a frozen registry to `BatchCatalog::identity()` for `MultiBatchBundle::save/inspect/restore`.
+For trusted host steps pass `CommitValidation::FastShapeOnly` to both COW begin and commit.
+The default overloads and checkpoint writers perform full validation.
+
+The optional `<sdb/device_state_session.hpp>` header provides `DeviceStateSession` and
+`HostDeviceSimulator`. Upload selected fields, run device trials, and download the output
+fields needed on the host. A full host snapshot requires every field to be current.
+CUDA builds can select `CudaStateBackend` with the owning `cuda::Context`.
+Native CUDA in this candidate is **not locally compiled / not locally verified**.
+Rebuild C++ consumers against one SDK and index width throughout the process.
+
+SDK **2.4.0** added [DBF8 extensions](docs/development/db_foundation/DBF8_HANDOFF.md):
 lossless INP documents, selectable global MeshDB Index32/Index64, opt-in COW trials,
 C++ allocation admission and OS-limited workers. See the handoff for exact file, ABI,
 semantic and memory-metric boundaries.

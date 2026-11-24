@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(SolverDatabaseV2 VERSION 2.4.0 LANGUAGES CXX)
+project(SolverDatabaseV2 VERSION 2.5.0 LANGUAGES CXX)
 option(SDB_OPENMP "Enable OpenMP CPU execution" ON)
 option(SDB_CUDA "Build native single GPU CUDA backend (CUDA 12+)" OFF)
 option(SDB_SANITIZE "Enable address/undefined sanitizers on supported compilers" OFF)

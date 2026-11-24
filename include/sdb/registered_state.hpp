@@ -107,6 +107,12 @@ class RegisteredFieldBase {
     virtual registered_detail::Bytes block(std::size_t offset, std::size_t count) const = 0;
     virtual void restore_block(std::span<const std::uint8_t>, std::size_t offset, std::size_t count) = 0;
     virtual void manifest(registered_detail::Bytes &) const = 0;
+  private:
+    friend class DeviceStateSession;
+    // Host-native padded value plane for an owning device session. Custom field
+    // implementations can opt in by overriding these two hooks.
+    virtual std::span<const std::byte> value_storage() const { throw std::logic_error("field has no device storage contract"); }
+    virtual std::span<std::byte> writable_value_storage() { throw std::logic_error("field has no device storage contract"); }
 };
 template<class F> class RegisteredField final : public RegisteredFieldBase {
     using V = typename F::value_type;
@@ -138,6 +144,12 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
         return std::make_unique<RegisteredField>(*this);
     }
   private:
+    std::span<const std::byte> value_storage() const override {
+        return std::as_bytes(std::span(field_.read().data,field_.storage_size()));
+    }
+    std::span<std::byte> writable_value_storage() override {
+        return std::as_writable_bytes(std::span(field_.write().data,field_.storage_size()));
+    }
     std::unique_ptr<RegisteredFieldBase> stage_shared() const override {
         return std::unique_ptr<RegisteredFieldBase>(new RegisteredField(*this,SharedTag{}));
     }

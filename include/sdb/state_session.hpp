@@ -90,6 +90,8 @@ class StateSession {
     StateSession &operator=(const StateSession&)=delete;
     auto read() const { return Lease<false>(core_); }
     auto write() { return Lease<true>(core_); }
+    // A joined, committed registry with independent writable field storage.
+    RegisteredState snapshot() const { auto lease=read(); return core_->state; }
     StateMemoryStats memory() const { auto lease=read(); return core_->stats; }
     void begin_trial(TrialPolicy policy=TrialPolicy::DeepCopy) { begin_trial(policy,CommitValidation::FullFiniteScan); }
     void begin_trial(TrialPolicy policy, CommitValidation mode) {
