@@ -298,6 +298,8 @@ template<class T,class ScopedResolve> void resolve_extensions(const ModelIR &ir,
     const SourceMap &sources,const std::vector<std::uint8_t> &node_dofs,const MeshDB<T>& mesh,ScopedResolve scoped_resolve) {
     const auto &x=ir.extensions;
     if(x.topology_numbering_version!=topology_numbering_version) throw std::invalid_argument("unknown topology numbering version");
+    if(ir.schema<12 && x.sample_axis.version!=1)
+        throw std::invalid_argument("model schema through 11 requires sample axis version 1");
     x.sample_axis.validate(); out.extensions=x; out.step_count=ir.steps.size(); out.element_count=sources.elements.size();
     std::set<ConstraintId> constraints;
     for(auto &e:ir.foundation.equations) constraints.insert(e.id);
