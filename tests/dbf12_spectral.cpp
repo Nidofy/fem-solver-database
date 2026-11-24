@@ -65,7 +65,30 @@ static void read(const Path &p,bool modal) {
              <<" reader_extra_peak_bytes="<<peak<<" largest_raw_chunk="<<reader.largest_decoded_chunk()
              <<" decoded_chunks="<<reader.decoded_chunks()<<"\n";
 }
+static void wide_frf(const Path &dir) {
+    constexpr unsigned width=65537, per_block=32, points=4;
+    auto path=dir/"wide.spectral";
+    SampleAxisDescriptor axis{2,SampleAxisKind::FrequencyHz,"Hz",ComplexChannels::RealImag};
+    { StreamingSpectralWriter writer(path,{axis,width,per_block,99},SpectralCodec::Rle);
+      std::vector<SpectralValue> values(width);
+      for(unsigned s=0;s<points;++s) {
+          for(unsigned i=0;i<width;++i) values[i]=expected(s,i);
+          writer.append(metadata(s,false),values);
+      }
+      writer.finish();
+    }
+    StreamingSpectralReader reader(path);
+    for(unsigned dof:{0u,32770u,width-1}) {
+        auto before=reader.chunk_headers_read(); unsigned s=0;
+        reader.frequency_response(dof,[&](auto &,auto v){check(v==expected(s++,dof),"wide FRF data");});
+        check(s==points && reader.chunk_headers_read()-before==points,"FRF scanned unrelated headers");
+    }
+    check(reader.slice(3).values.size()==width,"full indexed slice");
+    std::cout<<"wide_dofs="<<width<<" chunks_per_sample="<<(1+(width-1)/per_block)
+             <<" FRF_headers_per_sample=1 samples="<<points<<"\n";
+}
 static void faults(const Path &dir) {
+    wide_frf(dir);
     auto original=dir/"modes.raw", path=dir/"damaged.spc";
     std::filesystem::copy_file(original,path,std::filesystem::copy_options::overwrite_existing);
     // Read real record headers to target the first payload without damaging its header.

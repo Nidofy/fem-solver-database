@@ -5,8 +5,8 @@ from pathlib import Path
 import sys
 
 CANONICAL = {
-    "modes.raw": "67b2f1634cbd83dee31c29e445a0bc7df91834145d08c4534aea8cc4ad38f34e",
-    "frequency.rle": "84b4bf80b5aa0c4864a141c63647f1dbd0568ca1c378f0f48f9a303df8de00ea",
+    "modes.raw": "ee7cf861aeddc550c3d0a06c706b4d1b0777185b7fc2c9e9b326520688179bd9",
+    "frequency.rle": "f727e7cef7a3ae5c28fe5c4bdcfe12a33cd0248596884ec10844d4124dc41bbb",
 }
 
 
