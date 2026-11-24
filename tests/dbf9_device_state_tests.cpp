@@ -15,9 +15,9 @@ template<class E=std::logic_error,class F> void rejects(F fn) {
 class FailingBackend final : public DeviceStateBackend {
     HostDeviceSimulator sim_;
   public:
-    std::size_t device_allocations=0;
+    std::size_t device_allocations=0, host_allocations=0;
     bool fail_copy=false, fail_wait=false;
-    std::unique_ptr<Buffer> allocate_host(std::size_t n) override { return sim_.allocate_host(n); }
+    std::unique_ptr<Buffer> allocate_host(std::size_t n) override { ++host_allocations; return sim_.allocate_host(n); }
     std::unique_ptr<Buffer> allocate_device(std::size_t n) override { ++device_allocations; return sim_.allocate_device(n); }
     void copy(DeviceCopy d,Buffer &a,Buffer &b,std::size_t n) override {
         if (std::exchange(fail_copy,false)) throw std::runtime_error("injected submission error");
@@ -57,6 +57,7 @@ int main(int argc,char **argv) { try {
     if (argc==2) device_restart(argv[1]);
     auto backend=std::make_shared<FailingBackend>();
     RegisteredState input;
+    input.bind_context(101,102,103);
     FieldDescriptor p; p.name="x"; p.shape={2}; p.components={"X","Y"}; p.missing=MissingPolicy::ValidityMask;
     input.add<Pair>(p,3,"position",1,{0,2},0);
     FieldDescriptor q; q.name="count"; q.scalar=ScalarType::Int32;
@@ -74,6 +75,8 @@ int main(int argc,char **argv) { try {
     rejects<std::out_of_range>([&]{ s.sync_to_device({"x","unknown"}); });
     check(s.transfers().h2d_bytes==0,"subset preflight");
     s.begin_upload("x");
+    auto output=input;
+    rejects([&]{ s.export_host_subset(output,{"x"}); });
     check(s.residency("x")==MirrorResidency::Uploading,"upload pending");
     rejects([&]{ host.at(0); }); rejects([&]{ s.host_write<Pair>("x"); }); rejects([&]{ s.device_read<Pair>("x"); });
     rejects([&]{ s.begin_trial_device(); }); rejects([&]{ s.begin_upload("x"); });
@@ -81,6 +84,7 @@ int main(int argc,char **argv) { try {
     check(s.residency("x")==MirrorResidency::Uploading && s.transfers().h2d_bytes==0,"failed wait published upload");
     s.finish_transfer("x");
     s.sync_to_device({"count","empty","x","x"});
+    check(backend->host_allocations==2,"one staging allocation per nonempty field");
     auto committed=s.device_read<Pair>("x");
     auto original=committed.raw();
     check(reinterpret_cast<std::uintptr_t>(original.data)%64==0 && original.data!=s.host_read<Pair>("x").raw().data,"isolated aligned device");
@@ -88,6 +92,7 @@ int main(int argc,char **argv) { try {
     std::memcpy(bits.data(),original.data,bits.size());
     check(s.transfers().h2d_bytes==x_bytes+count_bytes,"upload byte accounting");
     s.begin_trial_device();
+    rejects([&]{ s.export_host_subset(output,{"x"}); });
     rejects([&]{ committed.at(0); }); rejects([&]{ s.begin_trial_device(); }); rejects([&]{ s.host_write<Pair>("x"); });
     backend->fail_copy=true; rejects<std::runtime_error>([&]{ s.device_write<Pair>("x"); });
     check(s.device_read<Pair>("x").raw().data==original.data && s.transfers().d2d_bytes==0,"failed clone preserved original");
@@ -129,6 +134,20 @@ int main(int argc,char **argv) { try {
     s.finish_transfer("x"); s.sync_to_host({"x"});
     check(s.host_read<Pair>("x").at(0)==3 && s.transfers().d2h_bytes==x_bytes,"only output field downloaded");
     check(s.residency("count")==MirrorResidency::DeviceLatest,"unselected field resident");
+    rejects([&]{ s.export_host_subset(output,{"x","count"}); });
+    check(output.get<Pair>("x").read()(0)==0,"failed export partially published");
+    s.host_write<Pair>("x").at(2,1)=0;
+    s.host_write<Pair>("x").validity_at(2,1)=0;
+    s.sync_to_device({"x"});
+    std::array<std::string_view,1> selected{"x"};
+    s.export_host_subset(output,selected);
+    check(output.get<Pair>("x").read()(0)==3 && output.find("x").validity().at(5)==0 &&
+          output.get<Scalar>("count").read()(0)==6 && s.residency("count")==MirrorResidency::DeviceLatest &&
+          s.transfers().d2h_bytes==x_bytes,"subset values, mask or resident field changed");
+    for (auto context: {std::array<std::uint64_t,3>{1,102,103},{101,2,103},{101,102,3}}) {
+        RegisteredState wrong; wrong.bind_context(context[0],context[1],context[2]); wrong.freeze();
+        rejects<std::invalid_argument>([&]{ s.export_host_subset(wrong,{}); });
+    }
     s.sync_to_host({"count"});
     auto snap=s.snapshot(); check(snap.get<Scalar>("count").read()(0)==13 && owner.read().field<Scalar>("count").at(0)==6,"snapshot ownership");
     auto read=s.device_read<Scalar>("count"); s.host_write<Scalar>("count").at(0)=19;
@@ -140,6 +159,10 @@ int main(int argc,char **argv) { try {
     s.device_write<Pair>("x").at(0)=std::numeric_limits<double>::infinity();
     s.sync_to_host({"x"});
     rejects<std::invalid_argument>([&]{ s.snapshot(); });
+    rejects<std::invalid_argument>([&]{ s.export_host_subset(output,{"x"}); });
+    s.export_host_subset(output,{"count"});
+    s.export_host_subset(output,{"x"},CommitValidation::FastShapeOnly);
+    check(std::isinf(output.get<Pair>("x").read()(0)) && backend->host_allocations==2,"subset mode or staging reuse");
     std::cout << "field_bytes=" << x_bytes << " output_step_d2h=" << x_bytes << " resident_steps=3 PASS\n";
     return 0;
 } catch (const std::exception &e) { std::cerr << e.what() << '\n'; return 1; } }

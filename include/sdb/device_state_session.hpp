@@ -109,18 +109,24 @@ template<class F,bool Writable> class DeviceLeaseView {
 // residency. All session operations are single-owner, joined phase boundaries.
 class DeviceStateSession {
     using Buffer = DeviceStateBackend::Buffer;
+    enum class TransferOp { None, Upload, Download };
     struct Entry {
         RegisteredFieldBase *field;
         std::size_t value_bytes, mask_bytes;
         MirrorResidency authority = MirrorResidency::HostLatest;
+        TransferOp transfer = TransferOp::None;
         std::unique_ptr<Buffer> device, alternate, staging;
         bool trial_written = false;
         std::shared_ptr<ViewLifetime> lifetime = std::make_shared<ViewLifetime>();
         Entry(RegisteredFieldBase &owner,std::size_t values,std::size_t mask)
             : field(&owner),value_bytes(values),mask_bytes(mask) {}
         std::size_t bytes() const { return sum(value_bytes,mask_bytes); }
-        MirrorResidency residency() const { return trial_written ? MirrorResidency::DeviceLatest : authority; }
-        bool pending() const { return authority==MirrorResidency::Uploading || authority==MirrorResidency::Downloading; }
+        MirrorResidency residency() const {
+            if (transfer==TransferOp::Upload) return MirrorResidency::Uploading;
+            if (transfer==TransferOp::Download) return MirrorResidency::Downloading;
+            return trial_written ? MirrorResidency::DeviceLatest : authority;
+        }
+        bool pending() const { return transfer!=TransferOp::None; }
         void invalidate() noexcept { ++lifetime->generation; }
     };
     std::shared_ptr<DeviceStateBackend> backend_;
@@ -129,10 +135,11 @@ class DeviceStateSession {
     DeviceTransferStats stats_;
     bool trial_ = false;
 
-    Entry &entry(std::string_view name) {
-        for (auto &e:entries_) if (e.field->descriptor().name==name) return e;
+    const Entry &entry(std::string_view name) const {
+        for (const auto &e:entries_) if (e.field->descriptor().name==name) return e;
         throw std::out_of_range("unknown device state field");
     }
+    Entry &entry(std::string_view name) { return const_cast<Entry&>(std::as_const(*this).entry(name)); }
     static void copy_bytes(std::byte *dst,const std::byte *src,std::size_t n) {
         if (n) std::memcpy(dst,src,n);
     }
@@ -149,24 +156,25 @@ class DeviceStateSession {
     }
     void start(Entry &e,bool upload) {
         const auto source=upload ? MirrorResidency::HostLatest : MirrorResidency::DeviceLatest;
-        if (trial_ || e.authority!=source) throw std::logic_error("invalid field transfer");
-        auto staging=backend_->allocate_host(e.bytes());
-        if (upload) {
-            pack_host(e,*staging);
-            if (!e.device) e.device=backend_->allocate_device(e.bytes());
-            backend_->copy(DeviceCopy::Upload,*e.device,*staging,e.bytes());
-        } else backend_->copy(DeviceCopy::Download,*staging,*e.device,e.bytes());
-        e.staging=std::move(staging);
-        e.authority=upload ? MirrorResidency::Uploading : MirrorResidency::Downloading;
+        if (trial_ || e.pending() || e.authority!=source) throw std::logic_error("invalid field transfer");
+        if (upload && !e.device) e.device=backend_->allocate_device(e.bytes());
+        if (e.bytes()) {
+            if (!e.staging) e.staging=backend_->allocate_host(e.bytes());
+            if (upload) {
+                pack_host(e,*e.staging);
+                backend_->copy(DeviceCopy::Upload,*e.device,*e.staging,e.bytes());
+            } else backend_->copy(DeviceCopy::Download,*e.staging,*e.device,e.bytes());
+        }
+        e.transfer=upload ? TransferOp::Upload : TransferOp::Download;
         e.invalidate();
     }
     void finish(Entry &e) {
         if (!e.pending()) throw std::logic_error("no pending field transfer");
         backend_->wait();
-        auto &bytes=e.authority==MirrorResidency::Uploading ? stats_.h2d_bytes : stats_.d2h_bytes;
-        if (e.authority==MirrorResidency::Downloading) unpack_host(e,*e.staging);
+        auto &bytes=e.transfer==TransferOp::Upload ? stats_.h2d_bytes : stats_.d2h_bytes;
+        if (e.transfer==TransferOp::Download && e.bytes()) unpack_host(e,*e.staging);
         bytes=state_counter_add(bytes,e.bytes());
-        e.authority=MirrorResidency::Synced; e.staging.reset(); e.invalidate();
+        e.authority=MirrorResidency::Synced; e.transfer=TransferOp::None; e.invalidate();
     }
     void sync(std::span<const std::string_view> names,bool upload) {
         if (trial_) throw std::logic_error("sync during device trial");
@@ -268,9 +276,46 @@ class DeviceStateSession {
     }
     void commit_device() { end_trial(true); }
     void rollback_device() { end_trial(false); }
+    void export_host_subset(RegisteredState &target,std::span<const std::string_view> names,
+                            CommitValidation mode=CommitValidation::FullFiniteScan) const {
+        if (trial_ || target.in_trial() || !target.frozen()) throw std::logic_error("subset export requires committed registries");
+        if (target.model_context()!=host_.model_context() || target.equation_context()!=host_.equation_context() ||
+            target.consumer_context()!=host_.consumer_context()) throw std::invalid_argument("subset export context mismatch");
+        if (mode!=CommitValidation::FullFiniteScan && mode!=CommitValidation::FastShapeOnly)
+            throw std::invalid_argument("unknown subset validation");
+        struct Copy { std::span<const std::byte> from; std::span<std::byte> to; };
+        std::vector<Copy> copies;
+        for (auto name:names) {
+            const auto &e=entry(name);
+            if (e.pending() || (e.authority!=MirrorResidency::HostLatest && e.authority!=MirrorResidency::Synced))
+                throw std::logic_error("export requires current host field");
+            const auto &src=*e.field;
+            auto &dst=target.find(src.descriptor().name);
+            if (mode==CommitValidation::FullFiniteScan) src.validate(); else src.validate_shape();
+            dst.validate_shape();
+            registered_detail::Bytes a,b;
+            src.manifest(a); dst.manifest(b);
+            if (src.addressing()) registered_detail::encode(a,*src.addressing());
+            if (dst.addressing()) registered_detail::encode(b,*dst.addressing());
+            if (src.type()!=dst.type() || a!=b) throw std::invalid_argument("subset export schema mismatch");
+            auto prepare=[&](std::span<const std::byte> from,std::span<std::byte> to) {
+                if (from.size()!=to.size()) throw std::invalid_argument("subset export storage mismatch");
+                copies.push_back({from,to});
+            };
+            prepare(src.value_storage(),dst.writable_value_storage());
+            if (e.mask_bytes)
+                prepare(std::as_bytes(std::span(src.validity_->read().data,e.mask_bytes)),
+                        std::as_writable_bytes(std::span(dst.validity_->write().data,e.mask_bytes)));
+        }
+        for (const auto &c:copies) copy_bytes(c.to.data(),c.from.data(),c.from.size());
+    }
+    void export_host_subset(RegisteredState &target,std::initializer_list<std::string_view> names,
+                            CommitValidation mode=CommitValidation::FullFiniteScan) const {
+        export_host_subset(target,std::span(names),mode);
+    }
     RegisteredState snapshot() const {
         if (trial_) throw std::logic_error("cannot snapshot device trial");
-        for (const auto &e:entries_) if (e.authority!=MirrorResidency::HostLatest && e.authority!=MirrorResidency::Synced)
+        for (const auto &e:entries_) if (e.pending() || (e.authority!=MirrorResidency::HostLatest && e.authority!=MirrorResidency::Synced))
             throw std::logic_error("snapshot requires current host fields");
         host_.validate();
         return host_;

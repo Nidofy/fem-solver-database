@@ -1,15 +1,18 @@
 # Solver Database V2
 
-SDK **2.5.0 candidate (DBF9)** adds flat DOF lookup and ordered multi-batch job bundles.
+SDK **2.5.0 (DBF9)** adds flat DOF lookup and ordered multi-batch job bundles.
 Bind a frozen registry to `BatchCatalog::identity()` for `MultiBatchBundle::save/inspect/restore`.
 For trusted host steps pass `CommitValidation::FastShapeOnly` to both COW begin and commit.
 The default overloads and checkpoint writers perform full validation.
 
 The optional `<sdb/device_state_session.hpp>` header provides `DeviceStateSession` and
 `HostDeviceSimulator`. Upload selected fields, run device trials, and download the output
-fields needed on the host. A full host snapshot requires every field to be current.
+fields needed on the host. Call `export_host_subset(target, names)` after downloading
+those fields to copy their values and validity masks into a compatible output registry.
+Other fields can stay device-resident. Each nonempty field reuses its transfer staging.
+A full host snapshot requires every field to be current.
 CUDA builds can select `CudaStateBackend` with the owning `cuda::Context`.
-Native CUDA in this candidate is **not locally compiled / not locally verified**.
+Native CUDA in this release is **not locally compiled / not locally verified**.
 Rebuild C++ consumers against one SDK and index width throughout the process.
 
 SDK **2.4.0** added [DBF8 extensions](docs/development/db_foundation/DBF8_HANDOFF.md):
