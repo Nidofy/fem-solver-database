@@ -93,8 +93,17 @@ template<class T> void contracts(const std::filesystem::path &scratch) {
     bad([](auto &v){v.schema=3;},"schema 4");
     bad([](auto &v){v.extensions.topology_numbering_version=2;},"numbering");
     bad([](auto &v){v.extensions.sample_axis.version=2;},"sample axis");
-    for(unsigned schema=4;schema<=11;++schema)
-        bad([schema](auto &v){v.schema=schema; v.extensions.sample_axis={2,SampleAxisKind::FrequencyHz,"Hz",ComplexChannels::RealImag};},"sample axis");
+    auto spectral=SampleAxisDescriptor{2,SampleAxisKind::FrequencyHz,"Hz",ComplexChannels::RealImag};
+    bad([&](auto &v){v.extensions.sample_axis=spectral;},"sample axis");
+    for(unsigned schema=4;schema<=11;++schema) {
+        auto v=ir; v.schema=schema; (void)native::pack(v);
+        v.extensions.sample_axis=spectral;
+        rejects([&]{(void)native::pack(v);},"sample axis");
+    }
+    m.definition.extensions.sample_axis=spectral;
+    rejects([&]{ModelStore::save(path,m);},"sample axis");
+    check(ModelStore::load<T>(path).definition.extensions.sample_axis.version==1,"failed save replaced frozen model");
+    m.definition.extensions.sample_axis=ir.extensions.sample_axis;
     bad([](auto &v){v.extensions.couplings[0].reference.label=99;});
     bad([](auto &v){v.extensions.couplings[0].reference.label=1;},"reference in dependent");
     bad([](auto &v){v.extensions.couplings[0].id=ConstraintId(2);},"duplicate coupling");

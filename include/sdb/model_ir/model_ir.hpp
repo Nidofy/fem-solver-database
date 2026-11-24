@@ -195,6 +195,10 @@ struct ModelIR {
     std::vector<IRPlastic> plastic;
     double penalty_stiffness = 0;
     bool finite_geometry = false;
+    void validate_sample_axis_version() const {
+        if(schema<12 && extensions.sample_axis.version!=1)
+            throw std::invalid_argument("model schema through 11 requires sample axis version 1");
+    }
     template <class F> void visit(F f) {
         f(schema);
         if (schema<1 || schema>11)
@@ -206,7 +210,10 @@ struct ModelIR {
             throw std::runtime_error("history bindings require ModelIR schema 2");
         if (schema >= 3) f(foundation);
         else if (!foundation.empty()) throw std::runtime_error("foundation requires ModelIR schema 3");
-        if(schema>=4) f(extensions);
+        if(schema>=4) {
+            f(extensions);
+            validate_sample_axis_version(); // Runs after extension decoding and during encoded-size admission.
+        }
         else if(!extensions.empty()) throw std::runtime_error("model extensions require ModelIR schema 4");
         if (schema >= 5) f(plastic);
         else if (!plastic.empty()) throw std::runtime_error("plasticity requires ModelIR schema 5");
