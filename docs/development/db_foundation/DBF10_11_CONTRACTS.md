@@ -22,6 +22,12 @@ The new formats have a fixed little-endian magic and 32-bit version 2, independe
 
 `PartitionedResultReader` returns per-entity values in sample and full-address order. Sample intervals are half-open and time intervals are closed. Scalars retain their native type, including uint64 values above binary64's exact range. `PartitionedCheckpoint::restore` takes all target ownership sets, the destination rank, its committed registry and the expected epoch. It checks ownership completeness and every field schema, matches full row addresses and reads only the destination's value bytes. It stages one destination registry and publishes it after full value and mask validation. The return value reports the restored cursor, payload bytes, selected rows and source rows examined. Memory includes the global shard directories and a local staged registry. MPI communication and partition assignment are the caller's responsibility.
 
+### Wave 3 audit revisions
+
+The partition metadata budget defaults to 2 GiB per record. Supply the trailing byte budget on shard write, manifest publication or open, result-reader construction and checkpoint restore to fit the process memory envelope. Native decode also charges its container allocations against that budget. Resident indices, payloads and the destination state need additional memory. The v1 and v2 shard encodings retain their original layouts.
+
+A checkpoint consumer can restore from the manifest and its checkpoint files alone. A result consumer requires the manifest and its result files. Full manifest publication and deep verification still check every advertised file. Restore compares the required replicated globals on all source ranks and skips the payload pass on disjoint nonzero ranks. Required fields restore from the checkpoint. Omitted and reconstructed fields receive their registered initializers, including when an older writer recorded extra rows. Result queries check finite values, mask bytes and the canonical positive zero of masked components.
+
 ## Verification entry points
 
 Configure the standalone CMake project with `SDB_INDEX_BITS=32` or `64`. Run `ctest -R "^dbf1[01]_" --output-on-failure` for thermal and plugin history round trips, released SDK wire goldens, independent rank writers, result queries, repartitioned restore and fault injection. The freeze packet records the exact compilers, configurations, counts and cross-OS checks. Real CUDA in this release lineage is **BLOCKED_ENV · not locally compiled / not locally verified** on the development host.
