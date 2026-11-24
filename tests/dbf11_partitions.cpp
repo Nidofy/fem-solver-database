@@ -137,7 +137,7 @@ static void restore(const Path &file,unsigned dests,bool one_rank=false,unsigned
         if(one_rank && r!=rank) continue;
         auto dest=state(layout[r],0,false,false,1000+dests*10+r),oracle=state(layout[r],2);
         auto stats=PartitionedCheckpoint::restore(file,layout,r,dest,epoch());
-        check(stats.cursor==epoch().samples.back() && stats.selected_rows<stats.source_rows,"restore selection/cursor");
+        check(stats.cursor==epoch().samples.back() && stats.selected_rows<=stats.source_rows,"restore selection/cursor");
         std::uint64_t bytes=0;
         for(std::size_t i=0;i<dest.entries().size();++i) {
             const auto *f=dest.entries()[i]; auto data=f->block(0,f->scalar_count()); bytes+=data.size();
@@ -186,7 +186,7 @@ static void target_faults(const Path &dir) {
     auto empty_map=partition(1); empty_map.emplace_back();
     auto empty=state(empty_map.back(),0,false);
     auto stats=PartitionedCheckpoint::restore(file,empty_map,1,empty,epoch());
-    check(stats.selected_rows==2 && stats.payload_bytes==16 && empty.get<Exact>("SNEXT_CURSOR").read()(0)==3,"empty rank read payload");
+    check(stats.payload_shards==1 && stats.selected_rows==2 && stats.payload_bytes==16 && empty.get<Exact>("SNEXT_CURSOR").read()(0)==3,"empty rank read payload");
 }
 int main(int argc,char **argv) { try {
     if(argc<3) return 2;
@@ -200,6 +200,10 @@ int main(int argc,char **argv) { try {
     check(partition_detail::crc64(kat)==UINT64_C(0x6c40df5f0b497347),"CRC64 ECMA-182");
     if(op=="write" && argc>=5) write(path,std::stoul(argv[3]),std::stoul(argv[4]),argc>=6?argv[5]:"");
     else if(op=="publish" && argc==4) DistributedManifest::publish(path/"run.sdbmanifest",std::stoul(argv[3]),partition(1)[0],epoch());
+    else if(op=="results_only") {
+        PartitionedResultReader reader(path/"run.sdbmanifest");
+        check(reader.query_samples("node_tag",node_base,0,1).size()==1,"independent result");
+    }
     else if(op=="verify") (void)DistributedManifest::open(path/"run.sdbmanifest");
     else if(op=="query") queries(path);
     else if(op=="restore") { restore(path/"4"/"run.sdbmanifest",2); restore(path/"2"/"run.sdbmanifest",3); }

@@ -313,7 +313,8 @@ struct DistributedManifest {
     // Validates rank membership, immutable indices and the entire global ownership set.
     // Deep verification additionally reads each value row and checks the whole-file digest.
     auto indices(const Path &directory,bool deep=false,const OwnedSourceMap *expected_sorted=nullptr,
-                 std::uint64_t budget=partition_metadata_budget) const {
+                 std::uint64_t budget=partition_metadata_budget,
+                 std::optional<PartitionFile> selection=std::nullopt) const {
         using namespace partition_detail;
         epoch.validate();
         require(part_count && files>=PartitionFiles::Results && files<=PartitionFiles::Both &&
@@ -326,9 +327,14 @@ struct DistributedManifest {
         std::map<std::uint32_t,std::uint64_t> local_contexts;
         using GlobalRow=std::tuple<PartitionFile,std::uint64_t,std::uint64_t>;
         std::vector<std::pair<GlobalRow,n::Bytes>> reference_globals;
+        std::vector<unsigned> membership(part_count);
         for(const auto &p:parts) {
             require((p.kind==PartitionFile::Results || p.kind==PartitionFile::Checkpoint) && contains(p.kind) &&
                     p.rank<part_count && p.relative_path==filename(p.rank,p.kind),"manifest part path, kind or rank");
+            const auto bit=static_cast<unsigned>(p.kind);
+            require(!(membership[p.rank]&bit),"duplicate manifest rank");
+            membership[p.rank]|=bit;
+            if(selection && p.kind!=*selection) continue;
             const auto path=directory/p.relative_path;
             auto idx=index(path,p.kind,budget);
             const auto &h=idx.header;

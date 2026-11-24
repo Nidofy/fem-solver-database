@@ -50,7 +50,7 @@ class PartitionedResultReader {
     explicit PartitionedResultReader(const std::filesystem::path &manifest,std::uint64_t budget=partition_metadata_budget)
         :directory_(manifest.parent_path()),manifest_(DistributedManifest::read(manifest,budget)) {
         if(!manifest_.contains(PartitionFile::Results)) throw std::invalid_argument("manifest has no result shards");
-        auto indices=manifest_.indices(directory_,false,nullptr,budget);
+        auto indices=manifest_.indices(directory_,false,nullptr,budget,PartitionFile::Results);
         for(auto &[part,idx]:indices) if(part.first==PartitionFile::Results) {
             const auto rank=part.second;
             for(std::size_t f=0;f<idx.header.fields.size();++f) fields_.emplace(idx.header.fields[f].field.name,f);

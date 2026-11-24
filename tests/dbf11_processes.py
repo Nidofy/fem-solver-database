@@ -44,6 +44,13 @@ def faults(root):
             assert sorted(job.result().returncode for job in jobs) == [0, 1]
         run("publish", folder, 1)
         run("verify", folder)
+    for suffix, operation in (("sdbres", "rank"), ("sdbrst", "results_only")):
+        with tempfile.TemporaryDirectory(dir=scratch) as temp:
+            part = Path(temp) / "2"
+            shutil.copytree(root / "2", part)
+            for sibling in part.glob("*." + suffix):
+                sibling.unlink()
+            run(operation, part, *(("2", "1") if operation == "rank" else ()))
     count = 0
     for fault in ("missing", "truncated", "row", "axis", "schema", "duplicate", "missing_key", "global"):
         with tempfile.TemporaryDirectory(dir=scratch) as temp:

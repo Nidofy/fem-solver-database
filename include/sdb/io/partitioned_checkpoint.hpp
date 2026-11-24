@@ -4,7 +4,7 @@
 namespace sdb {
 struct PartitionRestoreStats {
     PartitionSample cursor;
-    std::uint64_t selected_rows=0,payload_bytes=0,source_rows=0;
+    std::uint64_t selected_rows=0,payload_bytes=0,source_rows=0,payload_shards=0;
 };
 class PartitionedCheckpoint {
   public:
@@ -25,7 +25,7 @@ class PartitionedCheckpoint {
         const auto all=unite(targets);
         require(all.node_labels.size()==m.node_count && all.element_labels.size()==m.element_count &&
                 crc64(n::pack(all,budget))==m.source_identity,"target partition is missing or substitutes global entities");
-        auto shards=m.indices(path.parent_path(),false,&all,budget);
+        auto shards=m.indices(path.parent_path(),false,&all,budget,PartitionFile::Checkpoint);
         const auto &local=targets[rank];
         const auto sorted=local.sorted();
         const auto schema=n::pack(fields(state),budget);
@@ -48,6 +48,12 @@ class PartitionedCheckpoint {
         for(const auto &[part,idx]:shards) if(part.first==PartitionFile::Checkpoint) {
             const auto &h=idx.header;
             require(n::pack(h.fields,budget)==schema,"checkpoint target history/field schema mismatch");
+            auto intersects=[](const auto &source,const auto &target) {
+                return !target.empty() && std::ranges::any_of(source,[&](auto label){return std::ranges::binary_search(target,label);});
+            };
+            if(part.second!=0 && !intersects(h.owned.node_labels,sorted.node_labels) &&
+               !intersects(h.owned.element_labels,sorted.element_labels)) continue;
+            ++stats.payload_shards;
             std::ifstream in(path.parent_path()/filename(part.second,part.first),std::ios::binary);
             n::Bytes bytes; std::uint64_t next=UINT64_MAX;
             for(std::size_t i=0;i<h.rows.size();++i) {
