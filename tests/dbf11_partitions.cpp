@@ -188,6 +188,32 @@ static void target_faults(const Path &dir) {
     auto stats=PartitionedCheckpoint::restore(file,empty_map,1,empty,epoch());
     check(stats.payload_shards==1 && stats.selected_rows==2 && stats.payload_bytes==16 && empty.get<Exact>("SNEXT_CURSOR").read()(0)==3,"empty rank read payload");
 }
+// Rewrite a private one-rank fixture and regenerate every integrity checksum so
+// semantic validation is reached through the public manifest and query APIs.
+static void payload_faults(const Path &dir) {
+    namespace pd=partition_detail;
+    write(dir,1,0,"");
+    auto path=dir/pd::filename(0,PartitionFile::Results);
+    auto idx=pd::index(path,PartitionFile::Results);
+    auto &h=idx.header; std::size_t row=0;
+    while(h.fields.at(h.rows.at(row).field).field.name!="tensor_history") ++row;
+    std::vector<native::Bytes> blocks;
+    { std::ifstream in(path,std::ios::binary);
+      for(std::size_t i=0;i<h.rows.size();++i) blocks.push_back(pd::read_row(in,idx,i)); }
+    const auto original=blocks.at(row);
+    for(auto [v,valid]:std::array<std::pair<double,std::uint8_t>,5>{{
+        {std::numeric_limits<double>::infinity(),1},{std::numeric_limits<double>::quiet_NaN(),1},
+        {0,2},{1,0},{-0.0,0}}}) {
+        auto scalar=native::pack(v); auto &b=blocks[row]; b=original;
+        std::copy(scalar.begin(),scalar.end(),b.begin()); b[sizeof(double)]=valid;
+        h.rows[row].crc=checkpoint_detail::crc(b);
+        native::atomic_stream(path,[&](auto &out){pd::prefix(out,pd::result_magic);
+            native::record(out,1,native::pack(h)); for(const auto &block:blocks) native::write(out,block);});
+        auto file=dir/"run.sdbmanifest"; DistributedManifest::publish(file,1,partition(1)[0],epoch());
+        PartitionedResultReader reader(file); const auto &r=h.rows[row];
+        rejects([&]{reader.query_samples("tensor_history",r.address.entity,r.sample,r.sample+1);});
+    }
+}
 int main(int argc,char **argv) { try {
     if(argc<3) return 2;
     if(const char *scale=std::getenv("SDB_DBF11_FIXTURE_SCALE")) {
@@ -200,6 +226,7 @@ int main(int argc,char **argv) { try {
     check(partition_detail::crc64(kat)==UINT64_C(0x6c40df5f0b497347),"CRC64 ECMA-182");
     if(op=="write" && argc>=5) write(path,std::stoul(argv[3]),std::stoul(argv[4]),argc>=6?argv[5]:"");
     else if(op=="publish" && argc==4) DistributedManifest::publish(path/"run.sdbmanifest",std::stoul(argv[3]),partition(1)[0],epoch());
+    else if(op=="payload_faults") payload_faults(path);
     else if(op=="results_only") {
         PartitionedResultReader reader(path/"run.sdbmanifest");
         check(reader.query_samples("node_tag",node_base,0,1).size()==1,"independent result");

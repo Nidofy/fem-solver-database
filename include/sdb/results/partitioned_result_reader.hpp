@@ -38,8 +38,17 @@ class PartitionedResultReader {
                 using V=typename std::decay_t<decltype(values)>::value_type;
                 values.reserve(d.component_count());
                 for(std::size_t c=0;c<d.component_count();++c) {
-                    values.push_back(registered_detail::scalar<V>(bytes,pos));
-                    if(d.missing==MissingPolicy::ValidityMask) row.validity.push_back(bytes.at(pos++));
+                    const auto value=registered_detail::scalar<V>(bytes,pos);
+                    if constexpr(std::is_floating_point_v<V>)
+                        partition_detail::require(std::isfinite(value),"nonfinite partition result");
+                    if(d.missing==MissingPolicy::ValidityMask) {
+                        const auto valid=bytes.at(pos++);
+                        partition_detail::require(valid<=1 && (valid || value==V{}),"invalid partition result mask/value");
+                        if constexpr(std::is_floating_point_v<V>)
+                            partition_detail::require(valid || !std::signbit(value),"invalid partition result negative zero");
+                        row.validity.push_back(valid);
+                    }
+                    values.push_back(value);
                 }
             },row.values);
             out.push_back(std::move(row));
