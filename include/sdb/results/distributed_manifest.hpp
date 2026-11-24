@@ -1,5 +1,6 @@
 #pragma once
 #include "../io/native.hpp"
+#include "../io/crc64.hpp"
 #include "../model_ir/model_ir.hpp"
 #include "../registered_state.hpp"
 #include <map>
@@ -70,20 +71,7 @@ inline std::uint64_t magic(PartitionFile kind) { return kind==PartitionFile::Res
 inline std::string filename(std::uint32_t rank,PartitionFile kind) {
     return "part_"+std::to_string(rank)+(kind==PartitionFile::Results?".sdbres":".sdbrst");
 }
-// CRC-64/ECMA-182, init=0, xorout=0, non-reflected.
-inline std::uint64_t crc64(std::span<const std::uint8_t> bytes,std::uint64_t crc=0) {
-    static constexpr auto table=[] {
-        std::array<std::uint64_t,256> t{};
-        for(std::uint64_t i=0;i<t.size();++i) {
-            auto v=i<<56;
-            for(int j=0;j<8;++j) v=(v<<1)^((v>>63)?UINT64_C(0x42f0e1eba9ea3693):0);
-            t[i]=v;
-        }
-        return t;
-    }();
-    for(auto b:bytes) crc=(crc<<8)^table[(crc>>56)^b];
-    return crc;
-}
+using io::crc64;
 // Fixed-width prefix is independent of the local SDK Index ABI.
 inline void prefix(std::ostream &out,std::uint64_t id) { n::write(out,n::pack(std::pair(id,std::uint32_t(2)))); }
 inline std::uint32_t prefix(std::istream &in,std::uint64_t id) {
