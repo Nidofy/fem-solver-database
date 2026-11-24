@@ -7,6 +7,8 @@
 
 namespace sdb {
 using GlobalLabel=std::uint64_t;
+// Per metadata record, also used as the native decoder allocation budget.
+inline constexpr std::uint64_t partition_metadata_budget=UINT64_C(2)*1024*1024*1024;
 struct OwnedSourceMap {
     std::vector<GlobalLabel> node_labels,element_labels; // local row order
     template<class F> void visit(F f) { f(node_labels,element_labels); }
@@ -139,16 +141,19 @@ struct ShardIndex {
     std::vector<std::uint64_t> offsets;
     std::uint64_t bytes=0,index_crc=0;
 };
-inline ShardIndex index(const Path &path,PartitionFile kind) {
+inline ShardIndex index(const Path &path,PartitionFile kind,std::uint64_t budget=partition_metadata_budget) {
     std::ifstream in(path,std::ios::binary); const auto version=prefix(in,magic(kind));
-    auto payload=n::record(in,1);
+    auto record=n::header(in,budget);
+    const auto extent=std::filesystem::file_size(path);
+    require(record.kind==1 && record.offset<=extent && record.size<=extent-record.offset,"shard header extent");
+    auto payload=n::body(in,record);
     ShardIndex idx;
     idx.index_crc=crc64(payload);
     auto &h=idx.header;
     if(version==1) {
-        h=n::unpack<LegacyHeader>(payload);
+        h=n::unpack<LegacyHeader>(payload,budget);
         h.local_equation_context=h.epoch.constraint_contract;
-    } else h=n::unpack<Header>(payload);
+    } else h=n::unpack<Header>(payload,budget);
     require(h.kind==kind && h.parts && h.rank<h.parts,"partition rank/type");
     h.epoch.validate();
     const auto owned=h.owned.sorted();
@@ -242,7 +247,7 @@ template<class Write> void publish_shard(const Path &path,Write write) {
     }
 }
 inline void write_shard(const Path &dir,PartitionFile kind,std::uint32_t rank,std::uint32_t parts,
-                        const PartitionEpoch &epoch,const OwnedSourceMap &owned,std::span<const RegisteredState* const> frames) {
+                        const PartitionEpoch &epoch,const OwnedSourceMap &owned,std::span<const RegisteredState* const> frames,std::uint64_t budget=partition_metadata_budget) {
     epoch.validate(); const auto sorted=owned.sorted();
     require(parts && rank<parts && frames.size()==(kind==PartitionFile::Results?epoch.samples.size():1),"shard rank/frame count");
     const auto path=dir/filename(rank,kind);
@@ -257,8 +262,8 @@ inline void write_shard(const Path &dir,PartitionFile kind,std::uint32_t rank,st
                 "partition state context/phase");
         state->validate();
         const auto catalog=fields(*state);
-        if(s==0) { h.local_equation_context=state->equation_context(); h.fields=catalog; schema=n::pack(catalog); }
-        else require(h.local_equation_context==state->equation_context() && n::pack(catalog)==schema,"shard field schema changed between samples");
+        if(s==0) { h.local_equation_context=state->equation_context(); h.fields=catalog; schema=n::pack(catalog,budget); }
+        else require(h.local_equation_context==state->equation_context() && n::pack(catalog,budget)==schema,"shard field schema changed between samples");
         for(std::size_t f=0;f<catalog.size();++f) {
             catalog[f].validate();
             const auto *e=state->entries()[f];
@@ -275,7 +280,7 @@ inline void write_shard(const Path &dir,PartitionFile kind,std::uint32_t rank,st
         }
     }
     publish_shard(path,[&](auto &out) {
-        prefix(out,magic(kind)); n::record(out,1,n::pack(h));
+        prefix(out,magic(kind)); n::record(out,1,n::pack(h,budget));
         for(const auto &r:source) n::write(out,r.field->block(r.first,r.count));
     });
 }
@@ -307,11 +312,12 @@ struct DistributedManifest {
     bool contains(PartitionFile kind) const { return (static_cast<unsigned>(files)&static_cast<unsigned>(kind))!=0; }
     // Validates rank membership, immutable indices and the entire global ownership set.
     // Deep verification additionally reads each value row and checks the whole-file digest.
-    auto indices(const Path &directory,bool deep=false,const OwnedSourceMap *expected_sorted=nullptr) const {
+    auto indices(const Path &directory,bool deep=false,const OwnedSourceMap *expected_sorted=nullptr,
+                 std::uint64_t budget=partition_metadata_budget) const {
         using namespace partition_detail;
         epoch.validate();
         require(part_count && files>=PartitionFiles::Results && files<=PartitionFiles::Both &&
-                axis_identity==crc64(n::pack(epoch.samples)),"manifest count, selection or axis digest");
+                axis_identity==crc64(n::pack(epoch.samples,budget)),"manifest count, selection or axis digest");
         const auto kinds=files==PartitionFiles::Both?2u:1u;
         require(parts.size()==std::uint64_t(part_count)*kinds,"missing manifest part");
         std::map<std::pair<PartitionFile,std::uint32_t>,ShardIndex> out;
@@ -324,13 +330,13 @@ struct DistributedManifest {
             require((p.kind==PartitionFile::Results || p.kind==PartitionFile::Checkpoint) && contains(p.kind) &&
                     p.rank<part_count && p.relative_path==filename(p.rank,p.kind),"manifest part path, kind or rank");
             const auto path=directory/p.relative_path;
-            auto idx=index(path,p.kind);
+            auto idx=index(path,p.kind,budget);
             const auto &h=idx.header;
             require(h.rank==p.rank && h.parts==part_count && h.epoch==epoch && idx.bytes==p.bytes &&
                     idx.index_crc==p.index_crc64,"shard generation, size or metadata digest mismatch");
             auto [ctx,first_rank]=local_contexts.emplace(p.rank,h.local_equation_context);
             require(h.local_equation_context && (first_rank || ctx->second==h.local_equation_context),"rank-local DOF context mismatch");
-            auto schema=n::pack(h.fields);
+            auto schema=n::pack(h.fields,budget);
             auto [si,new_schema]=schemas.emplace(p.kind,schema);
             require(new_schema || si->second==schema,"inconsistent shard field schema");
             auto [oi,new_owner]=owners.emplace(p.rank,h.owned.sorted());
@@ -357,43 +363,43 @@ struct DistributedManifest {
         for(auto &[rank,owned]:owners) maps.push_back(std::move(owned));
         const auto global=unite(maps);
         require(global.node_labels.size()==node_count && global.element_labels.size()==element_count &&
-                crc64(n::pack(global))==source_identity && (!expected_sorted || global==*expected_sorted),"global ownership mismatch");
+                crc64(n::pack(global,budget))==source_identity && (!expected_sorted || global==*expected_sorted),"global ownership mismatch");
         return out;
     }
     static DistributedManifest publish(const Path &path,std::uint32_t count,const OwnedSourceMap &expected,
-                                       const PartitionEpoch &epoch,PartitionFiles files=PartitionFiles::Both) {
+                                       const PartitionEpoch &epoch,PartitionFiles files=PartitionFiles::Both,std::uint64_t budget=partition_metadata_budget) {
         using namespace partition_detail;
         require(count && files>=PartitionFiles::Results && files<=PartitionFiles::Both,"invalid manifest partition count or kind");
         const auto global=expected.sorted(); epoch.validate();
         DistributedManifest m{count,files,epoch,global.node_labels.size(),global.element_labels.size(),
-                              crc64(n::pack(global)),crc64(n::pack(epoch.samples)),{}};
+                              crc64(n::pack(global,budget)),crc64(n::pack(epoch.samples,budget)),{}};
         for(std::uint32_t rank=0;rank<count;++rank)
             for(auto k:{PartitionFile::Results,PartitionFile::Checkpoint}) if(m.contains(k)) {
                 const auto name=filename(rank,k); const auto part=path.parent_path()/name;
-                auto idx=index(part,k);
+                auto idx=index(part,k,budget);
                 m.parts.push_back({rank,k,name,idx.bytes,checked_digest(part,idx),idx.index_crc});
             }
-        m.indices(path.parent_path(),false,&global);
-        n::atomic_stream(path,[&](auto &out){prefix(out,manifest_magic);n::record(out,1,n::pack(m));});
+        m.indices(path.parent_path(),false,&global,budget);
+        n::atomic_stream(path,[&](auto &out){prefix(out,manifest_magic);n::record(out,1,n::pack(m,budget));});
         return m;
     }
-    static DistributedManifest open(const Path &path,bool deep=true) {
+    static DistributedManifest open(const Path &path,bool deep=true,std::uint64_t budget=partition_metadata_budget) {
         using namespace partition_detail;
-        auto m=read(path);
-        m.indices(path.parent_path(),deep);
+        auto m=read(path,budget);
+        m.indices(path.parent_path(),deep,nullptr,budget);
         return m;
     }
-    static DistributedManifest read(const Path &path) {
+    static DistributedManifest read(const Path &path,std::uint64_t budget=partition_metadata_budget) {
         using namespace partition_detail;
         std::ifstream in(path,std::ios::binary); prefix(in,manifest_magic);
-        auto m=n::unpack<DistributedManifest>(n::record(in,1)); n::end(in); return m;
+        auto m=n::unpack<DistributedManifest>(n::record(in,1,budget),budget); n::end(in); return m;
     }
 };
 class PartitionedResultWriter {
   public:
     static void write(const std::filesystem::path &dir,std::uint32_t rank,std::uint32_t parts,
-                      const PartitionEpoch &epoch,const OwnedSourceMap &owned,std::span<const RegisteredState* const> frames) {
-        partition_detail::write_shard(dir,PartitionFile::Results,rank,parts,epoch,owned,frames);
+                      const PartitionEpoch &epoch,const OwnedSourceMap &owned,std::span<const RegisteredState* const> frames,std::uint64_t budget=partition_metadata_budget) {
+        partition_detail::write_shard(dir,PartitionFile::Results,rank,parts,epoch,owned,frames,budget);
     }
 };
 } // namespace sdb

@@ -9,24 +9,26 @@ struct PartitionRestoreStats {
 class PartitionedCheckpoint {
   public:
     static void write(const std::filesystem::path &dir,std::uint32_t rank,std::uint32_t parts,
-                      const PartitionEpoch &epoch,const OwnedSourceMap &owned,const RegisteredState &state) {
+                      const PartitionEpoch &epoch,const OwnedSourceMap &owned,const RegisteredState &state,
+                      std::uint64_t budget=partition_metadata_budget) {
         const RegisteredState *frame=&state;
-        partition_detail::write_shard(dir,PartitionFile::Checkpoint,rank,parts,epoch,owned,{&frame,1});
+        partition_detail::write_shard(dir,PartitionFile::Checkpoint,rank,parts,epoch,owned,{&frame,1},budget);
     }
     static PartitionRestoreStats restore(const std::filesystem::path &path,std::span<const OwnedSourceMap> targets,
-                                         std::size_t rank,RegisteredState &state,const PartitionEpoch &expected) {
+                                         std::size_t rank,RegisteredState &state,const PartitionEpoch &expected,
+                                         std::uint64_t budget=partition_metadata_budget) {
         using namespace partition_detail;
         require(rank<targets.size() && !state.in_trial() && state.frozen(),"invalid target partition/phase");
-        auto m=DistributedManifest::read(path);
+        auto m=DistributedManifest::read(path,budget);
         require(m.contains(PartitionFile::Checkpoint) && m.epoch==expected && state.model_context()==expected.model &&
                 state.equation_context()!=0,"checkpoint cursor/model/DOF mismatch");
         const auto all=unite(targets);
         require(all.node_labels.size()==m.node_count && all.element_labels.size()==m.element_count &&
-                crc64(n::pack(all))==m.source_identity,"target partition is missing or substitutes global entities");
-        auto shards=m.indices(path.parent_path(),false,&all);
+                crc64(n::pack(all,budget))==m.source_identity,"target partition is missing or substitutes global entities");
+        auto shards=m.indices(path.parent_path(),false,&all,budget);
         const auto &local=targets[rank];
         const auto sorted=local.sorted();
-        const auto schema=n::pack(fields(state));
+        const auto schema=n::pack(fields(state),budget);
         using Key=std::pair<std::uint64_t,Address>;
         struct Destination { Key key; std::size_t offset=0,count=0; bool filled=false; };
         std::vector<Destination> wanted;
@@ -45,7 +47,7 @@ class PartitionedCheckpoint {
         PartitionRestoreStats stats{m.epoch.samples.back()};
         for(const auto &[part,idx]:shards) if(part.first==PartitionFile::Checkpoint) {
             const auto &h=idx.header;
-            require(n::pack(h.fields)==schema,"checkpoint target history/field schema mismatch");
+            require(n::pack(h.fields,budget)==schema,"checkpoint target history/field schema mismatch");
             std::ifstream in(path.parent_path()/filename(part.second,part.first),std::ios::binary);
             n::Bytes bytes; std::uint64_t next=UINT64_MAX;
             for(std::size_t i=0;i<h.rows.size();++i) {

@@ -172,6 +172,12 @@ static void target_faults(const Path &dir) {
     target.remap("phase",missing);
     rejects([&]{PartitionedCheckpoint::restore(file,layout,0,target,epoch());});
     check(first()==7 && wrong.get<Exact>("node_tag").read()(0)==7,"failed restore mutated target");
+    static_assert(partition_metadata_budget>lifecycle::native::default_limit);
+    auto probe=file.parent_path()/"part_0.sdbrst";
+    rejects([&]{partition_detail::index(probe,PartitionFile::Checkpoint,128);});
+    rejects([&]{DistributedManifest::open(file,true,128);});
+    rejects([&]{PartitionedResultReader tiny(file,128);});
+    check(!partition_detail::index(probe,PartitionFile::Checkpoint,4*1024*1024).header.rows.empty(),"configured shard budget");
     auto manifest=DistributedManifest::read(file);
     manifest.parts.front().crc64^=1;
     rejects([&]{manifest.indices(file.parent_path(),true);});
