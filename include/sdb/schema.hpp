@@ -18,25 +18,46 @@ enum class RestartPolicy : std::uint8_t { Required, Reconstruct, Omit };
 enum class MissingPolicy : std::uint8_t { Forbidden, ValidityMask };
 enum class StorageKind : std::uint8_t { Dense, Ragged, Sparse };
 
-// Logical axis contract, separate from wire version and PhysicalTime staggering.
-// Version 1 is the existing physical-time axis. Frequency/modal/complex axes
-// require a future version and corresponding reader; unknown kinds never alias
-// time merely because their coordinate is representable as a double.
-enum class SampleAxisKind : std::uint8_t { Time = 0 };
+// Version 1 retains its original three wire members. Version 2 adds explicit
+// complex channels so a legacy time reader can reject spectral payloads.
+enum class SampleAxisKind : std::uint8_t { Time, FrequencyHz, ModeNumber, BucklingEigenvalue, LoadFactor };
+enum class ComplexChannels : std::uint8_t { None, RealImag, MagnitudePhase };
 struct SampleAxisDescriptor {
     std::uint32_t version = 1;
     SampleAxisKind kind = SampleAxisKind::Time;
     std::string units = "UNSPECIFIED";
+    ComplexChannels channels = ComplexChannels::None;
     void validate() const {
-        if (version != 1 || kind != SampleAxisKind::Time || units.empty())
-            throw std::invalid_argument("unsupported sample axis/version/units");
+        if (units.empty() || (version != 1 && version != 2) || kind > SampleAxisKind::LoadFactor ||
+            (version == 1 && (kind != SampleAxisKind::Time || channels != ComplexChannels::None)) ||
+            (version == 2 && channels != ComplexChannels::RealImag && channels != ComplexChannels::MagnitudePhase))
+            throw std::invalid_argument("unsupported sample axis/version/channels/units");
     }
-    void validate_coordinate(double coordinate) const {
+    void validate_coordinate(double x) const {
         validate();
-        if (!std::isfinite(coordinate) || coordinate < 0)
-            throw std::invalid_argument("invalid physical time coordinate");
+        if (!std::isfinite(x) || ((kind == SampleAxisKind::Time || kind == SampleAxisKind::FrequencyHz) && x < 0) ||
+            (kind == SampleAxisKind::ModeNumber && (x < 1 || x > 9007199254740991.0 || std::floor(x) != x)))
+            throw std::invalid_argument("invalid sample axis coordinate");
     }
-    template<class F> void visit(F f) { f(version, kind, units); }
+    template<class F> void visit(F f) {
+        f(version, kind, units);
+        if (version == 2) f(channels);
+    }
+};
+struct SpectralSampleMetadata {
+    double coordinate = 0, eigenvalue = 0, natural_frequency_hz = 0, generalized_mass = 0, damping_ratio = 0;
+    std::vector<double> participation_factors;
+    template<class F> void visit(F f) {
+        f(coordinate, eigenvalue, natural_frequency_hz, generalized_mass, damping_ratio, participation_factors);
+    }
+    void validate(const SampleAxisDescriptor &axis) const {
+        axis.validate_coordinate(coordinate);
+        if (!std::isfinite(eigenvalue) || !std::isfinite(natural_frequency_hz) || natural_frequency_hz < 0 ||
+            !std::isfinite(generalized_mass) || generalized_mass < 0 || !std::isfinite(damping_ratio))
+            throw std::invalid_argument("invalid spectral sample metadata");
+        for (double value : participation_factors)
+            if (!std::isfinite(value)) throw std::invalid_argument("nonfinite participation factor");
+    }
 };
 
 template <class T> constexpr ScalarType scalar_type() {

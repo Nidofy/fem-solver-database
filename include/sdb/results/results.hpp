@@ -148,7 +148,7 @@ template<class T> MaterialResultBases material_result_bases(const CompiledModel<
 template<class T> void validate_result_sample_axis(const CompiledModel<T> &model) {
     const auto &axis=model.definition.extensions.sample_axis;
     axis.validate();
-    if(axis.units!="UNSPECIFIED")
+    if(axis.version!=1 || axis.units!="UNSPECIFIED")
         throw std::invalid_argument("result codec cannot encode custom sample-axis units; model extension only");
 }
 struct ResultModel {
