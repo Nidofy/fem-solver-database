@@ -11,6 +11,12 @@ template<class F> void rejects(F fn) {
     throw std::runtime_error("expected bundle rejection");
 }
 using Records = std::vector<std::pair<std::uint32_t,n::Bytes>>;
+static consumer::v1::Batch topology_batch(const DofSpace &d,std::uint64_t element,std::string formulation,
+                                           consumer::v1::TopologyContract topology) {
+    auto b=fx::data(d,element,std::move(formulation),topology.nodes);
+    b.topology=std::move(topology);
+    return fx::batch(d,std::move(b));
+}
 static Records read_records(const std::filesystem::path &file) {
     std::ifstream in(file,std::ios::binary); std::array<std::uint8_t,12> prefix; n::read(in,prefix);
     Records records;
@@ -34,9 +40,12 @@ static RegisteredState make_state(const BatchCatalog &catalog) {
 int main(int argc,char **argv) { try {
     if (argc!=3) throw std::invalid_argument("write/read and scratch directory required");
     auto d=fx::space();
-    auto tet=fx::batch(d,fx::data(d));
-    auto hex=fx::batch(d,fx::data(d,1,"C3D8R",8));
-    auto shell=fx::batch(d,fx::data(d,2,"S4R",4));
+    auto tet=topology_batch(d,0,"C3D4",{"TET4",1,4,{0,3,6,9,12},{0,2,1, 0,1,3, 1,2,3, 2,0,3},
+        {{0,1},{1,2},{2,0},{0,3},{1,3},{2,3}}});
+    auto hex=topology_batch(d,1,"C3D8R",{"HEX8",1,8,{0,4,8,12,16,20,24},
+        {0,3,2,1, 4,5,6,7, 0,1,5,4, 1,2,6,5, 2,3,7,6, 3,0,4,7},
+        {{0,1},{1,2},{2,3},{3,0},{4,5},{5,6},{6,7},{7,4},{0,4},{1,5},{2,6},{3,7}}});
+    auto shell=topology_batch(d,2,"S4R",{"QUAD4",1,4,{0,4},{0,1,2,3},{{0,1},{1,2},{2,3},{3,0}}});
     BatchCatalog catalog({tet,hex,shell});
     auto s=make_state(catalog);
     const std::filesystem::path dir=argv[2], good=dir/"multi.sdb", bad=dir/"bad.sdb";
@@ -46,6 +55,8 @@ int main(int argc,char **argv) { try {
               info.catalog[0].nodes(0).size()==4 && info.catalog[1].nodes(0).size()==8 &&
               info.catalog[2].data().formulation=="S4R" && info.fields.at(0).descriptor.name=="stress", "fresh metadata");
         check(&info.catalog[0].dofs()==&info.catalog[2].dofs(),"common DOF storage");
+        for (std::size_t i=0; i<catalog.size(); ++i)
+            check(n::pack(info.catalog[i].data().topology)==n::pack(catalog[i].data().topology),"all local faces and edges");
         auto restored=MultiBatchBundle::restore(good,catalog,s);
         check(restored.step==8 && restored.time==0.5 && s.get<Field<double>>("stress").read()(1)==42.5,"fresh process state");
         return 0;
@@ -78,14 +89,14 @@ int main(int argc,char **argv) { try {
         rejects([&]{ MultiBatchBundle::restore(bad,catalog,target); });
         check(target.get<Field<double>>("stress").read()(1)==1.5,"failed restore changed target");
     };
-    for (int fault=0; fault<5; ++fault) {
+    for (int fault=0; fault<6; ++fault) {
         auto records=original;
         if (fault==0) std::swap(records.at(2),records.at(3)); // child order
         if (fault==1) records.erase(records.begin()+3);        // child count
         if (fault==2) records.at(0).second.at(20)^=1;         // aggregate identity
-        if (fault==3 || fault==4) {
+        if (fault>=3) {
             auto &body=records.at(fault==3 ? 6 : 2).second;
-            const std::string name=fault==3 ? "stress" : "C3D4";
+            const std::string name=fault==3 ? "stress" : (fault==4 ? "C3D4" : "TET4");
             auto i=std::search(body.begin(),body.end(),name.begin(),name.end());
             check(i!=body.end(),"mutation anchor"); *i^=1;
         }
