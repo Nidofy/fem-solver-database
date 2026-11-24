@@ -573,7 +573,7 @@ class File {
                     block.second.insert(block.second.end(), field.values.begin() + i * w,
                                         field.values.begin() + (i + 1) * w);
                 }
-                submit({block.first.front(),block.first.back(),static_cast<std::uint32_t>(count),{}},
+                submit({block.first.front(),block.first.back(),static_cast<std::uint32_t>(count),{},{},{}},
                        native::pack(block,32768));
             }
             drain();
