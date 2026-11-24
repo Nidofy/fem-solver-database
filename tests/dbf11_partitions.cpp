@@ -188,6 +188,20 @@ static void target_faults(const Path &dir) {
     auto stats=PartitionedCheckpoint::restore(file,empty_map,1,empty,epoch());
     check(stats.payload_shards==1 && stats.selected_rows==2 && stats.payload_bytes==16 && empty.get<Exact>("SNEXT_CURSOR").read()(0)==3,"empty rank read payload");
 }
+static void legacy_v1(const Path &dir) {
+    auto file=dir/"run.sdbmanifest"; auto m=DistributedManifest::open(file);
+    for(const auto &part:m.parts) {
+        auto idx=partition_detail::index(dir/part.relative_path,part.kind);
+        check(idx.header.local_equation_context==13,"v1 equation context");
+    }
+    PartitionedResultReader reader(file); auto rows=reader.query_samples("legacy",105,0,1);
+    check(rows.size()==1 && std::get<std::vector<double>>(rows.front().values).front()==-7.5,"v1 result value");
+    OwnedSourceMap map{{105,101},{}}; RegisteredState target; target.bind_context(7,42,17);
+    FieldDescriptor d; d.name="legacy"; d.association=Association::Node; d.location=FieldLocation::Entity;
+    target.add<Scalar>(d,2,"test",1,{0},0); target.freeze();
+    PartitionedCheckpoint::restore(file,{&map,1},0,target,{7,13,"legacy",{{1,0,0.5}}});
+    auto v=target.get<Scalar>("legacy").read(); check(v(0)==-7.5 && v(1)==1.25,"v1 reordered restore");
+}
 static void restart_policies(const Path &dir) {
     auto make=[](const OwnedSourceMap &owned,unsigned rank) {
         RegisteredState s; s.bind_context(37,100+rank,1);
@@ -257,6 +271,7 @@ int main(int argc,char **argv) { try {
     check(partition_detail::crc64(kat)==UINT64_C(0x6c40df5f0b497347),"CRC64 ECMA-182");
     if(op=="write" && argc>=5) write(path,std::stoul(argv[3]),std::stoul(argv[4]),argc>=6?argv[5]:"");
     else if(op=="publish" && argc==4) DistributedManifest::publish(path/"run.sdbmanifest",std::stoul(argv[3]),partition(1)[0],epoch());
+    else if(op=="legacy") legacy_v1(path);
     else if(op=="restart_policies") restart_policies(path);
     else if(op=="payload_faults") payload_faults(path);
     else if(op=="results_only") {

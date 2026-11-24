@@ -15,6 +15,7 @@ foreach(contract IN ITEMS dbf10_thermal dbf10_history dbf10_legacy_wire dbf11_pa
     target_compile_options(sdb_${contract} PRIVATE -Wa,-mbig-obj)
   endif()
 endforeach()
+add_test(NAME dbf11_v1_shards COMMAND sdb_dbf11_partitions legacy ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/dbf11/v1)
 add_test(NAME dbf10_legacy_wire COMMAND sdb_dbf10_legacy_wire read
   ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/dbf10/model-v1-v10-index${SDB_INDEX_BITS}.bin)
 foreach(op IN ITEMS write read)
