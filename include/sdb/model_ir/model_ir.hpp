@@ -45,11 +45,11 @@ struct ElementDescriptor {
 inline ElementDescriptor descriptor(const std::string &type, const Source &s) {
     ElementDescriptor d;
     d.token = type;
-    if (type == "C3D4")
+    if (type == "C3D4" || type == "DC3D4")
         return d;
-    if (type == "C3D8" || type == "C3D8R" || type == "DC3D8") {
+    if (type == "C3D8" || type == "C3D8R" || type == "DC3D8" || type == "DC3D8R") {
         d.shape = Topology::Hex8;
-        d.points = type == "C3D8R" ? 1 : 8;
+        d.points = (type == "C3D8R" || type == "DC3D8R") ? 1 : 8;
     } else if (type == "S4R") {
         d.shape = Topology::Quad4;
         d.formulation = Formulation::Shell;
@@ -61,7 +61,7 @@ inline ElementDescriptor descriptor(const std::string &type, const Source &s) {
         d.section_points = 0; // Section integration is not derived for the unsupported beam kernel.
     } else
         fail(s, "unsupported element type: " + type);
-    if (type == "C3D8R" || type == "S4R")
+    if (type == "C3D8R" || type == "DC3D8R" || type == "S4R")
         d.integration = Integration::Reduced;
     return d;
 }

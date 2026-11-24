@@ -45,7 +45,7 @@ def faults(root):
         run("publish", folder, 1)
         run("verify", folder)
     count = 0
-    for fault in ("missing", "truncated", "row", "axis", "schema", "duplicate", "missing_key"):
+    for fault in ("missing", "truncated", "row", "axis", "schema", "duplicate", "missing_key", "global"):
         with tempfile.TemporaryDirectory(dir=scratch) as temp:
             part = Path(temp) / "2"
             shutil.copytree(root / "2", part)
@@ -79,7 +79,7 @@ def faults(root):
                 run("write", part, 2, 1, mode)
                 message = {"axis": "generation", "schema": "field schema",
                            "duplicate": "duplicate owned global label",
-                           "missing_key": "global ownership mismatch"}[fault]
+                           "global": "divergent replicated global payload", "missing_key": "global ownership mismatch"}[fault]
             run("publish", part, 2, reject=message)
             assert (part / "run.sdbmanifest").read_bytes() == before
             count += 1

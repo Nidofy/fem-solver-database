@@ -189,6 +189,10 @@ struct IRActivation {
 // Schema 11 tail. Tables are named, Cartesian, and use their declared units.
 enum class ThermalValueSource : std::uint8_t { Constant, Table, Amplitude };
 struct IRThermalValue {
+    IRThermalValue()=default;
+    IRThermalValue(double value):constant(value) {}
+    IRThermalValue(ThermalValueSource kind,double value,std::string ref)
+        :source(kind),constant(value),reference(std::move(ref)) {}
     ThermalValueSource source=ThermalValueSource::Constant;
     double constant=0;
     std::string reference;
@@ -211,7 +215,9 @@ struct IRRadiationCondition {
     std::string name;
     StepId step;
     IRThermalRegion region;
-    double emissivity=0,ambient_temperature=0,absolute_zero=0,stefan_boltzmann=0;
+    double emissivity=0;
+    IRThermalValue ambient_temperature;
+    double absolute_zero=0,stefan_boltzmann=0;
     template<class F> void visit(F f) { f(name,step,region,emissivity,ambient_temperature,absolute_zero,stefan_boltzmann); }
 };
 enum class HeatFluxKind : std::uint8_t { SurfaceFlux, BodyGeneration };
@@ -220,7 +226,7 @@ struct IRDistributedHeatFlux {
     StepId step;
     IRThermalRegion region;
     HeatFluxKind kind=HeatFluxKind::SurfaceFlux;
-    double rate=0;
+    IRThermalValue rate;
     template<class F> void visit(F f) { f(name,step,region,kind,rate); }
 };
 struct IRThermalContactProperty {
@@ -243,7 +249,7 @@ struct IRCoupledStep {
     template<class F> void visit(F f) { f(step,scheme,thermal_tolerance,mechanical_tolerance,beta_tq); }
 };
 struct IRThermalFoundation {
-    std::uint32_t tag=0x314d4854,version=1; // THM1
+    std::uint32_t tag=0x314d4854,version=2; // THM1
     std::vector<MaterialTable> tables;
     std::vector<IRFilmCondition> films;
     std::vector<IRRadiationCondition> radiation;
@@ -251,7 +257,7 @@ struct IRThermalFoundation {
     std::vector<IRThermalContactProperty> contacts;
     std::vector<IRThermalMaterial> materials;
     std::vector<IRCoupledStep> coupled_steps;
-    template<class F> void visit(F f) { f(tag,version); if(tag!=0x314d4854 || version!=1) throw std::invalid_argument("thermal extension tag/version"); f(tables,films,radiation,fluxes,contacts,materials,coupled_steps); }
+    template<class F> void visit(F f) { f(tag,version); if(tag!=0x314d4854 || version!=2) throw std::invalid_argument("thermal extension tag/version"); f(tables,films,radiation,fluxes,contacts,materials,coupled_steps); }
     bool empty() const { return tables.empty() && films.empty() && radiation.empty() && fluxes.empty() && contacts.empty() && materials.empty() && coupled_steps.empty(); }
 };
 struct ModelFoundation {

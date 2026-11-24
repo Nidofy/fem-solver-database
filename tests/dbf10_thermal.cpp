@@ -25,6 +25,8 @@ static IRThermalFoundation fixture(const std::string &surface) {
              {"curve",step,face,{ThermalValueSource::Amplitude,0,"TENV"},{ThermalValueSource::Constant,3,{}}}};
     t.radiation={{"radiation",step,face,0.75,25,-273.15,5.670374419e-8}};
     t.fluxes={{"body",step,body,HeatFluxKind::BodyGeneration,127},{"surface",step,face,HeatFluxKind::SurfaceFlux,-2}};
+    t.radiation.push_back({"transient",step,face,0.6,{ThermalValueSource::Table,0,"sink"},0,5.67e-8});
+    t.fluxes.back().rate={ThermalValueSource::Amplitude,0,"TENV"};
     t.contacts={{"gap","gap",true,0.4,-273.15,5.67e-8,0.9,0.35}};
     t.materials={{"STEEL","k","cp","H",true,300,340,42}};
     t.coupled_steps={{step,CouplingScheme::PicardStaggered,1e-5,2e-6,0.8}};
@@ -45,7 +47,7 @@ int main(int argc,char **argv) { try {
     check(canonical_semantic_hash(altered)!=model.semantic_identity(),"thermal identity omitted contact property");
     auto direct=ir.foundation; direct.thermal.contacts[0].f_slave=0.36;
     check(semantic_hash(direct)!=semantic_hash(ir.foundation),"standalone foundation omitted thermal section");
-    check(!model.report.executable_cpu && descriptor("DC3D8",{}).points==8,"thermal storage admission");
+    check(!model.report.executable_cpu && descriptor("DC3D8",{}).points==8 && descriptor("DC3D4",{}).shape==Topology::Tet4 && descriptor("DC3D8R",{}).integration==Integration::Reduced && descriptor("DC3D8R",{}).points==1,"thermal storage admission");
     if(std::string(argv[1])=="read") {
         auto saved=ModelStore::load<double>(argv[3]);
         check(native::pack(saved.definition.foundation.thermal)==native::pack(temp) &&

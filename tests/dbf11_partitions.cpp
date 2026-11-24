@@ -29,8 +29,12 @@ static std::vector<OwnedSourceMap> partition(std::size_t n,bool target=false) {
 static PartitionEpoch epoch() { return {37,41,"coupled.plugin/v3",{{1,0,0},{1,1,0.125},{2,0,0.25}}}; }
 static std::uint64_t exact(GlobalLabel key,unsigned sample) { return (UINT64_C(1)<<60)+17*(key-node_base)+sample; }
 static double value(const ResultAddress &a,unsigned sample) { return 32.0*(a.entity-element_base)+a.integration_point+0.25*a.layer+0.03125*a.section_point+sample; }
-static RegisteredState state(const OwnedSourceMap &owned,unsigned sample,bool fill=true,bool wrong_schema=false) {
-    RegisteredState s; s.bind_context(37,41,123);
+static RegisteredState state(const OwnedSourceMap &owned,unsigned sample,bool fill=true,bool wrong_schema=false,std::uint64_t context=700) {
+    RegisteredState s; s.bind_context(37,context,123);
+    FieldDescriptor global; global.name="SNEXT_CURSOR"; global.association=Association::Global;
+    global.location=FieldLocation::Entity; global.scalar=ScalarType::UInt64;
+    s.add<Exact>(global,1,"cursor/v1",1,{0},0);
+    global.name="LEDGER"; global.scalar=ScalarType::Float64; s.add<Scalar>(global,1,"ledger/v1",1,{0},0);
     FieldDescriptor node; node.name="node_tag"; node.scalar=ScalarType::UInt64;
     node.association=Association::Node; node.location=FieldLocation::Entity;
     s.add<Exact>(node,owned.node_labels.size(),"node/v1",1,{7},0);
@@ -52,6 +56,8 @@ static RegisteredState state(const OwnedSourceMap &owned,unsigned sample,bool fi
     s.add<Scalar>(layer,shell.addresses.size(),"layer/v1",1,{6},0,shell);
     s.freeze();
     if(fill) {
+        s.get<Exact>("SNEXT_CURSOR").write()(0)=sample+1;
+        s.get<Scalar>("LEDGER").write()(0)=1024.25+sample;
         auto nodes=s.get<Exact>("node_tag").write();
         for(std::size_t i=0;i<owned.node_labels.size();++i) nodes(i)=exact(owned.node_labels[i],sample);
         auto ph=s.get<Scalar>("phase").write(); auto hist=s.get<Tensor>("tensor_history").write();
@@ -75,13 +81,19 @@ static void write(const Path &dir,unsigned n,unsigned rank,const std::string &fa
     auto clock=epoch(); if(fault=="step") ++clock.samples.back().step;
     std::array<RegisteredState,3> frames;
     std::vector<const RegisteredState*> ptrs;
-    for(unsigned i=0;i<frames.size();++i) { frames[i]=state(owned,i,true,fault=="schema"); ptrs.push_back(&frames[i]); }
+    for(unsigned i=0;i<frames.size();++i) { frames[i]=state(owned,i,true,fault=="schema",100+n*10+rank); if(fault=="global") frames[i].get<Scalar>("LEDGER").write()(0)+=1; ptrs.push_back(&frames[i]); }
     PartitionedResultWriter::write(dir,rank,n,clock,owned,ptrs);
     PartitionedCheckpoint::write(dir,rank,n,clock,owned,frames.back());
 }
 static void queries(const Path &dir) {
     std::vector<PartitionedResultReader> readers;
     for(auto n:{1,2,4}) readers.emplace_back(dir/std::to_string(n)/"run.sdbmanifest");
+    for(auto &reader:readers) {
+        auto ledger=reader.query_samples("LEDGER",0,0,3);
+        auto cursor=reader.query_samples("SNEXT_CURSOR",0,0,3);
+        check(ledger.size()==3 && cursor.size()==3 && std::get<std::vector<double>>(ledger[2].values)[0]==1026.25 &&
+              std::get<std::vector<std::uint64_t>>(cursor[2].values)[0]==3,"replicated global query");
+    }
     auto global=partition(1)[0]; std::uint64_t compared=0;
     for(const auto &field:{"node_tag","phase","tensor_history","section_temperature"}) {
         const bool node=std::string_view(field)=="node_tag";
@@ -123,7 +135,7 @@ static void restore(const Path &file,unsigned dests,bool one_rank=false,unsigned
     std::uint64_t rows=0,payload=0,visited=0;
     for(unsigned r=0;r<dests;++r) {
         if(one_rank && r!=rank) continue;
-        auto dest=state(layout[r],0,false),oracle=state(layout[r],2);
+        auto dest=state(layout[r],0,false,false,1000+dests*10+r),oracle=state(layout[r],2);
         auto stats=PartitionedCheckpoint::restore(file,layout,r,dest,epoch());
         check(stats.cursor==epoch().samples.back() && stats.selected_rows<stats.source_rows,"restore selection/cursor");
         std::uint64_t bytes=0;
@@ -168,13 +180,13 @@ static void target_faults(const Path &dir) {
     auto empty_map=partition(1); empty_map.emplace_back();
     auto empty=state(empty_map.back(),0,false);
     auto stats=PartitionedCheckpoint::restore(file,empty_map,1,empty,epoch());
-    check(stats.selected_rows==0 && stats.payload_bytes==0,"empty rank read payload");
+    check(stats.selected_rows==2 && stats.payload_bytes==16 && empty.get<Exact>("SNEXT_CURSOR").read()(0)==3,"empty rank read payload");
 }
 int main(int argc,char **argv) { try {
     if(argc<3) return 2;
     if(const char *scale=std::getenv("SDB_DBF11_FIXTURE_SCALE")) {
         auto requested=std::stoul(scale);
-        if(requested==0 || requested>128) return 2;
+        if(requested==0 || requested>256) return 2;
         fixture_scale=static_cast<unsigned>(requested);
     }
     std::string op=argv[1]; Path path=argv[2];
@@ -185,6 +197,32 @@ int main(int argc,char **argv) { try {
     else if(op=="verify") (void)DistributedManifest::open(path/"run.sdbmanifest");
     else if(op=="query") queries(path);
     else if(op=="restore") { restore(path/"4"/"run.sdbmanifest",2); restore(path/"2"/"run.sdbmanifest",3); }
+    else if(op=="bench") {
+        fixture_scale=160;
+        auto sources=partition(4),targets=partition(2,true);
+        std::filesystem::create_directories(path);
+        for(unsigned rank=0;rank<4;++rank) {
+            auto shard=state(sources[rank],2,true,false,100+rank);
+            PartitionedCheckpoint::write(path,rank,4,epoch(),sources[rank],shard);
+        }
+        auto manifest=path/"bench.sdbmanifest";
+        DistributedManifest::publish(manifest,4,partition(1)[0],epoch(),PartitionFiles::Checkpoint);
+        std::uint64_t rows=0,payload=0; double elapsed=0;
+        for(unsigned rank=0;rank<2;++rank) {
+            auto dest=state(targets[rank],0,false,false,200+rank),oracle=state(targets[rank],2);
+            auto start=Clock::now();
+            auto stats=PartitionedCheckpoint::restore(manifest,targets,rank,dest,epoch());
+            elapsed+=std::chrono::duration<double,std::milli>(Clock::now()-start).count();
+            rows+=stats.selected_rows; payload+=stats.payload_bytes;
+            for(std::size_t i=0;i<dest.entries().size();++i) {
+                auto *f=dest.entries()[i];
+                check(f->block(0,f->scalar_count())==oracle.entries()[i]->block(0,f->scalar_count()),"large restore oracle");
+            }
+        }
+        check(rows>=100000,"undersized flat benchmark");
+        std::cout<<"4->2 rows="<<rows<<" payload="<<payload<<" index_order_bytes_per_source_row="<<sizeof(std::size_t)
+                 <<" restore_ms="<<elapsed<<"\n";
+    }
     else if(op=="target_faults") target_faults(path);
     else if(op=="rank" && argc==5) restore(path/"run.sdbmanifest",std::stoul(argv[3]),true,std::stoul(argv[4]));
     else return 2;

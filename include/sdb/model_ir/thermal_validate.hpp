@@ -7,7 +7,7 @@ inline void validate_thermal_contract(const ModelIR &ir,const IRThermalFoundatio
     auto finite=[](double v) { return std::isfinite(v); };
     auto fraction=[&](double v) { return finite(v) && v>=0 && v<=1; };
     auto step=[&](StepId id) { require(id.valid() && id.value()<ir.steps.size(),"unknown thermal step"); };
-    require(t.tag==0x314d4854 && t.version==1,"thermal extension tag/version");
+    require(t.tag==0x314d4854 && t.version==2,"thermal extension tag/version");
     std::map<std::string,const MaterialTable*> tables;
     for(const auto &v:t.tables) {
         require(!v.name.empty() && tables.emplace(v.name,&v).second && !v.units.empty() &&
@@ -56,13 +56,24 @@ inline void validate_thermal_contract(const ModelIR &ir,const IRThermalFoundatio
     for(const auto &v:t.films) { condition(v); value(v.sink_temperature,false); value(v.film_coefficient,true); }
     for(const auto &v:t.radiation) {
         condition(v);
-        require(fraction(v.emissivity) && finite(v.absolute_zero) && finite(v.ambient_temperature) &&
-                v.ambient_temperature>=v.absolute_zero && finite(v.stefan_boltzmann) && v.stefan_boltzmann>0,
+        value(v.ambient_temperature,false);
+        const auto &ambient=v.ambient_temperature;
+        auto admissible=[&](double x){return finite(x) && x>=v.absolute_zero;};
+        bool valid_temperature=true;
+        if(ambient.source==ThermalValueSource::Constant) valid_temperature=admissible(ambient.constant);
+        else if(ambient.source==ThermalValueSource::Table)
+            valid_temperature=std::ranges::all_of(tables.at(ambient.reference)->values,admissible);
+        else {
+            auto a=std::ranges::find(ir.amplitudes,ambient.reference,&IRAmplitude::name);
+            valid_temperature=!a->points.empty() && std::ranges::all_of(a->points,[&](const auto &p){return admissible(p.second);});
+        }
+        require(fraction(v.emissivity) && finite(v.absolute_zero) && valid_temperature && finite(v.stefan_boltzmann) && v.stefan_boltzmann>0,
                 "radiation absolute temperature, emissivity or Stefan-Boltzmann constant");
     }
     for(const auto &v:t.fluxes) {
         condition(v);
-        require(finite(v.rate) && v.kind<=HeatFluxKind::BodyGeneration &&
+        value(v.rate,false);
+        require(v.kind<=HeatFluxKind::BodyGeneration &&
                 (v.kind==HeatFluxKind::BodyGeneration)==(v.region.kind==ThermalRegionKind::ElementSet),
                 "heat flux measure/region mismatch");
     }

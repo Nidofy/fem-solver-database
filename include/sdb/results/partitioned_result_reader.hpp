@@ -13,19 +13,20 @@ class PartitionedResultReader {
     std::filesystem::path directory_;
     DistributedManifest manifest_;
     std::map<std::uint32_t,partition_detail::ShardIndex> shards_;
-    using Location=std::pair<std::uint32_t,std::size_t>;
-    std::map<std::pair<std::string,GlobalLabel>,std::vector<Location>> lookup_;
-    std::map<std::string,Association> fields_;
+    using Key=std::pair<std::size_t,GlobalLabel>;
+    struct Location { Key key; std::uint32_t rank; std::size_t row; };
+    std::vector<Location> lookup_;
+    std::map<std::string,std::size_t> fields_;
 
     template<class Select> auto read(const std::string &field,GlobalLabel key,Select selected) const {
         if(!fields_.contains(field)) throw std::out_of_range("unknown partition result field");
         std::vector<PartitionResultRow> out;
-        auto it=lookup_.find({field,key});
-        if(it==lookup_.end()) return out;
-        const auto rank=it->second.front().first;
+        auto matches=std::ranges::equal_range(lookup_,Key{fields_.at(field),key},{},&Location::key);
+        if(matches.empty()) return out;
+        const auto rank=matches.front().rank;
         const auto &idx=shards_.at(rank);
         std::ifstream in(directory_/partition_detail::filename(rank,PartitionFile::Results),std::ios::binary);
-        for(auto [owner,i]:it->second) {
+        for(auto [identity,owner,i]:matches) {
             const auto &r=idx.header.rows[i];
             const auto &sample=manifest_.epoch.samples.at(r.sample);
             if(!selected(r.sample,sample)) continue;
@@ -52,19 +53,18 @@ class PartitionedResultReader {
         auto indices=manifest_.indices(directory_);
         for(auto &[part,idx]:indices) if(part.first==PartitionFile::Results) {
             const auto rank=part.second;
-            for(const auto &f:idx.header.fields) fields_.emplace(f.field.name,f.field.association);
+            for(std::size_t f=0;f<idx.header.fields.size();++f) fields_.emplace(idx.header.fields[f].field.name,f);
             const auto &rows=idx.header.rows;
             for(std::size_t i=0;i<rows.size();++i)
-                lookup_[{idx.header.fields[rows[i].field].field.name,rows[i].address.entity}].emplace_back(rank,i);
+                if(rank==0 || idx.header.fields[rows[i].field].field.association!=Association::Global)
+                    lookup_.push_back({{rows[i].field,rows[i].address.entity},rank,i});
             shards_.emplace(rank,std::move(idx));
         }
-        for(auto &[key,locations]:lookup_) {
-            const auto &rows=shards_.at(locations.front().first).header.rows;
-            std::ranges::sort(locations,[&](const Location &a,const Location &b) {
-                const auto &x=rows[a.second], &y=rows[b.second];
-                return std::tie(x.sample,x.address)<std::tie(y.sample,y.address);
-            });
-        }
+        std::ranges::sort(lookup_,[&](const Location &a,const Location &b) {
+            if(a.key!=b.key) return a.key<b.key;
+            const auto &x=shards_.at(a.rank).header.rows[a.row], &y=shards_.at(b.rank).header.rows[b.row];
+            return std::tie(x.sample,x.address)<std::tie(y.sample,y.address);
+        });
     }
     const PartitionEpoch &epoch() const noexcept { return manifest_.epoch; }
     // Half-open sample range; closed physical time range. Rows are in sample/address order.

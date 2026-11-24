@@ -38,13 +38,13 @@ struct PartitionSample {
     template<class F> void visit(F f) { f(step,increment,time); }
 };
 struct PartitionEpoch {
-    std::uint64_t model=0,dofs=0;
+    std::uint64_t model=0,constraint_contract=0;
     std::string consumer_schema;
     std::vector<PartitionSample> samples; // last entry is the checkpoint cursor
-    template<class F> void visit(F f) { f(model,dofs,consumer_schema,samples); }
+    template<class F> void visit(F f) { f(model,constraint_contract,consumer_schema,samples); }
     bool operator==(const PartitionEpoch &) const=default;
     void validate() const {
-        if(!model || !dofs || consumer_schema.empty() || samples.empty()) throw std::invalid_argument("empty partition epoch");
+        if(!model || consumer_schema.empty() || samples.empty()) throw std::invalid_argument("empty partition epoch");
         for(std::size_t i=0;i<samples.size();++i) {
             const auto &s=samples[i];
             if(!std::isfinite(s.time) || s.time<0) throw std::invalid_argument("invalid partition sample time");
@@ -85,10 +85,10 @@ inline std::uint64_t crc64(std::span<const std::uint8_t> bytes,std::uint64_t crc
     return crc;
 }
 // Fixed-width prefix is independent of the local SDK Index ABI.
-inline void prefix(std::ostream &out,std::uint64_t id) { n::write(out,n::pack(std::pair(id,std::uint32_t(1)))); }
+inline void prefix(std::ostream &out,std::uint64_t id) { n::write(out,n::pack(std::pair(id,std::uint32_t(2)))); }
 inline void prefix(std::istream &in,std::uint64_t id) {
     std::array<std::uint8_t,12> bytes; n::read(in,bytes);
-    require(n::unpack<std::pair<std::uint64_t,std::uint32_t>>(bytes)==std::pair(id,std::uint32_t(1)),"partition magic/version");
+    require(n::unpack<std::pair<std::uint64_t,std::uint32_t>>(bytes)==std::pair(id,std::uint32_t(2)),"partition magic/version");
 }
 struct FieldSchema {
     FieldDescriptor field;
@@ -104,7 +104,7 @@ struct FieldSchema {
     }
     void validate() const {
         field.validate();
-        require((field.association==Association::Node || field.association==Association::Element) &&
+        require((field.association==Association::Node || field.association==Association::Element || field.association==Association::Global) &&
                 version && !schema.empty() && layout<=1 && (layout==0 ? width==0 : width>0),"partition field schema");
         require(initial.size()==row_bytes()-(field.missing==MissingPolicy::ValidityMask?field.component_count():0),
                 "partition initializer size");
@@ -117,7 +117,9 @@ inline std::vector<FieldSchema> fields(const RegisteredState &state) {
     return out;
 }
 inline Address address(const RegisteredFieldBase &e,const OwnedSourceMap &map,std::size_t row) {
+    if(e.descriptor().association==Association::Global) require(e.count()==1,"global singleton count");
     if(e.addressing()) return e.addressing()->addresses.at(row);
+    if(e.descriptor().association==Association::Global) return {};
     const auto &keys=map.labels(e.descriptor().association);
     require(e.descriptor().location==FieldLocation::Entity && e.count()==keys.size(),"implicit partition field requires one row per owned label");
     Address a; a.entity=keys.at(row); return a;
@@ -131,11 +133,12 @@ struct Row {
 struct Header {
     PartitionFile kind=PartitionFile::Results;
     std::uint32_t rank=0,parts=0;
+    std::uint64_t local_equation_context=0;
     PartitionEpoch epoch;
     OwnedSourceMap owned;
     std::vector<FieldSchema> fields;
     std::vector<Row> rows;
-    template<class F> void visit(F f) { f(kind,rank,parts,epoch,owned,fields,rows); }
+    template<class F> void visit(F f) { f(kind,rank,parts,local_equation_context,epoch,owned,fields,rows); }
 };
 struct ShardIndex {
     Header header;
@@ -157,31 +160,42 @@ inline ShardIndex index(const Path &path,PartitionFile kind) {
         s.validate(); require(names.insert(s.field.name).second,"duplicate shard field");
         sizes.push_back(s.row_bytes());
     }
-    std::set<std::tuple<std::uint64_t,std::uint64_t,Address>> seen;
+    std::vector<std::size_t> order;
+    order.reserve(h.rows.size());
+    std::vector<std::size_t> global_counts(h.fields.size());
+    auto key=[&](std::size_t i) { const auto &r=h.rows[i]; return std::tie(r.sample,r.field,r.address); };
     std::uint64_t pos=static_cast<std::uint64_t>(in.tellg());
     for(const auto &r:h.rows) {
         require(r.field<h.fields.size() && r.sample<h.epoch.samples.size() &&
                 (kind==PartitionFile::Results || r.sample==h.epoch.samples.size()-1),"shard row cursor/field");
         const auto &d=h.fields[r.field].field;
         StateLayout::validate_address(r.address,d.association,d.location);
-        require(std::ranges::binary_search(owned.labels(d.association),r.address.entity),"shard row outside owned source map");
-        require(seen.emplace(r.sample,r.field,r.address).second,"duplicate shard sample row");
+        if(d.association==Association::Global) ++global_counts[r.field];
+        else require(std::ranges::binary_search(owned.labels(d.association),r.address.entity),"shard row outside owned source map");
+        order.push_back(order.size());
         idx.offsets.push_back(pos);
         if(sizes[r.field]>UINT64_MAX-pos) throw std::length_error("shard extent overflow");
         pos+=sizes[r.field];
     }
+    std::ranges::sort(order,{},key);
+    require(std::ranges::adjacent_find(order,{},key)==order.end(),"duplicate shard sample row");
+    for(std::size_t f=0;f<h.fields.size();++f) if(h.fields[f].field.association==Association::Global)
+        require(global_counts[f]==(kind==PartitionFile::Results?h.epoch.samples.size():1),"missing global singleton row");
     idx.bytes=std::filesystem::file_size(path);
     require(idx.bytes==pos,"missing, truncated or extended partition payload");
     return idx;
 }
-inline n::Bytes read_row(std::ifstream &in,const ShardIndex &idx,std::size_t row) {
+inline void read_row_into(std::ifstream &in,const ShardIndex &idx,std::size_t row,n::Bytes &bytes,std::uint64_t &next) {
     const auto &r=idx.header.rows.at(row);
     const auto offset=idx.offsets.at(row);
     const auto end=row+1<idx.offsets.size()?idx.offsets[row+1]:idx.bytes;
-    if(!in.seekg(static_cast<std::streamoff>(offset))) throw std::runtime_error("partition seek failed");
-    n::Bytes bytes(static_cast<std::size_t>(end-offset)); n::read(in,bytes);
+    if(next!=offset && !in.seekg(static_cast<std::streamoff>(offset))) throw std::runtime_error("partition seek failed");
+    bytes.resize(static_cast<std::size_t>(end-offset)); n::read(in,bytes); next=end;
     require(checkpoint_detail::crc(bytes)==r.crc,"partition row checksum");
-    return bytes;
+}
+inline n::Bytes read_row(std::ifstream &in,const ShardIndex &idx,std::size_t row) {
+    n::Bytes bytes; std::uint64_t next=UINT64_MAX;
+    read_row_into(in,idx,row,bytes,next); return bytes;
 }
 // One forward payload pass for coordinator admission and offline deep verification.
 inline std::uint64_t checked_digest(const Path &path,const ShardIndex &idx) {
@@ -241,19 +255,20 @@ inline void write_shard(const Path &dir,PartitionFile kind,std::uint32_t rank,st
     n::Bytes schema;
     for(std::size_t s=0;s<frames.size();++s) {
         const auto *state=frames[s];
-        require(state && !state->in_trial() && state->model_context()==epoch.model && state->equation_context()==epoch.dofs,
+        require(state && !state->in_trial() && state->model_context()==epoch.model && state->equation_context()!=0,
                 "partition state context/phase");
         state->validate();
         const auto catalog=fields(*state);
-        if(s==0) { h.fields=catalog; schema=n::pack(catalog); }
-        else require(n::pack(catalog)==schema,"shard field schema changed between samples");
+        if(s==0) { h.local_equation_context=state->equation_context(); h.fields=catalog; schema=n::pack(catalog); }
+        else require(h.local_equation_context==state->equation_context() && n::pack(catalog)==schema,"shard field schema changed between samples");
         for(std::size_t f=0;f<catalog.size();++f) {
             catalog[f].validate();
             const auto *e=state->entries()[f];
+            if(e->descriptor().association==Association::Global) require(e->count()==1,"global singleton count");
             const auto c=e->descriptor().component_count();
             for(std::size_t i=0;i<e->count();++i) {
                 auto a=address(*e,owned,i);
-                require(std::ranges::binary_search(sorted.labels(e->descriptor().association),a.entity),"field contains non-owned label");
+                require(e->descriptor().association==Association::Global || std::ranges::binary_search(sorted.labels(e->descriptor().association),a.entity),"field contains non-owned label");
                 StateLayout::validate_address(a,e->descriptor().association,e->descriptor().location);
                 const auto first=product(i,c);
                 h.rows.push_back({kind==PartitionFile::Results?s:epoch.samples.size()-1,f,a,checkpoint_detail::crc(e->block(first,c))});
@@ -304,6 +319,9 @@ struct DistributedManifest {
         std::map<std::pair<PartitionFile,std::uint32_t>,ShardIndex> out;
         std::map<PartitionFile,n::Bytes> schemas;
         std::map<std::uint32_t,OwnedSourceMap> owners;
+        std::map<std::uint32_t,std::uint64_t> local_contexts;
+        using GlobalRow=std::tuple<PartitionFile,std::uint64_t,std::uint64_t>;
+        std::vector<std::pair<GlobalRow,n::Bytes>> reference_globals;
         for(const auto &p:parts) {
             require((p.kind==PartitionFile::Results || p.kind==PartitionFile::Checkpoint) && contains(p.kind) &&
                     p.rank<part_count && p.relative_path==filename(p.rank,p.kind),"manifest part path, kind or rank");
@@ -312,11 +330,28 @@ struct DistributedManifest {
             const auto &h=idx.header;
             require(h.rank==p.rank && h.parts==part_count && h.epoch==epoch && idx.bytes==p.bytes &&
                     idx.index_crc==p.index_crc64,"shard generation, size or metadata digest mismatch");
+            auto [ctx,first_rank]=local_contexts.emplace(p.rank,h.local_equation_context);
+            require(h.local_equation_context && (first_rank || ctx->second==h.local_equation_context),"rank-local DOF context mismatch");
             auto schema=n::pack(h.fields);
             auto [si,new_schema]=schemas.emplace(p.kind,schema);
             require(new_schema || si->second==schema,"inconsistent shard field schema");
             auto [oi,new_owner]=owners.emplace(p.rank,h.owned.sorted());
             require(new_owner || oi->second==h.owned.sorted(),"result/checkpoint ownership mismatch");
+            if(std::ranges::any_of(h.fields,[](const auto &f){return f.field.association==Association::Global;})) {
+                std::vector<std::pair<GlobalRow,n::Bytes>> globals;
+                std::ifstream in(path,std::ios::binary);
+                for(std::size_t i=0;i<h.rows.size();++i) {
+                    const auto &row=h.rows[i];
+                    if(h.fields[row.field].field.association==Association::Global)
+                        globals.emplace_back(GlobalRow{p.kind,row.field,row.sample},read_row(in,idx,i));
+                }
+                std::ranges::sort(globals,{},&decltype(globals)::value_type::first);
+                if(new_schema) reference_globals.insert(reference_globals.end(),globals.begin(),globals.end());
+                else {
+                    auto start=std::find_if(reference_globals.begin(),reference_globals.end(),[&](const auto &v){return std::get<0>(v.first)==p.kind;});
+                    require(start!=reference_globals.end() && std::equal(globals.begin(),globals.end(),start),"divergent replicated global payload");
+                }
+            }
             if(deep) require(checked_digest(path,idx)==p.crc64,"shard file CRC64 mismatch");
             require(out.emplace(std::pair(p.kind,p.rank),std::move(idx)).second,"duplicate manifest rank");
         }

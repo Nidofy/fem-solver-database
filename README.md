@@ -1,6 +1,6 @@
 # Solver Database V2
 
-SDK **2.6.0 candidate (DBF10/DBF11)** adds thermal and coupled ModelIR schema 11,
+SDK **2.6.0 (DBF10/DBF11)** adds thermal and coupled ModelIR schema 11,
 integration-point and layered plugin history, and partitioned result/checkpoint files.
 Independent writers publish through a verified manifest. Readers can restore selected
 global labels into a different partition count. See the [SDK contracts](docs/development/db_foundation/DBF10_11_CONTRACTS.md).
