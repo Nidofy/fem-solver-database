@@ -13,7 +13,7 @@ template<class F> static void rejects(F f) {
 static std::vector<char> bytes(const Path &p) {
     std::ifstream in(p,std::ios::binary); return {std::istreambuf_iterator<char>(in),{}};
 }
-static void persistence(const Path &dir) {
+static void persistence(const Path &dir,bool partition_fixture) {
     Pool p(98,2); std::vector<SlotHandle> h;
     for(unsigned i=0;i<80;++i) {h.push_back(p.allocate(i)); p.set(h.back(),2,i+0.25);}
     p.erase(h[3]); p.erase(h[70]); p.set_valid(h[64],false);
@@ -45,8 +45,9 @@ static void persistence(const Path &dir) {
     rejects([&]{p.restore(damaged);}); check(p.find(10999)==a,"damaged restore mutated pool");
     p.begin_trial(); p.set(a,0,27); p.commit(); check(p.get(a)==27,"trial commit");
     // A sidecar binds the exact bytes of the parent. Test both real parent formats.
-    for(const auto &parent:{dir.parent_path()/"dbf9-multi-scratch"/"multi.sdb",
-                            dir.parent_path()/"dbf11-parts"}) {
+    std::vector<Path> parents{dir.parent_path()/"dbf9-multi-scratch"/"multi.sdb"};
+    if(partition_fixture) parents.push_back(dir.parent_path()/"dbf11-parts");
+    for(const auto &parent:parents) {
         auto path=parent;
         if(std::filesystem::is_directory(path)) {
             std::ifstream pointer(path/"current"); std::string name; pointer>>name;
@@ -113,9 +114,9 @@ static void migration() {
     std::cout<<"return_migration_ms="<<return_ms<<" ranks=4 live_keys="<<keys<<" migrated="<<keys/2<<" packet_bytes="<<moved<<" migration_and_fault_checks_ms="<<ms<<"\n";
 }
 int main(int argc,char **argv) { try {
-    if(argc!=2) return 2;
+    if(argc!=3) return 2;
     Path dir=argv[1]; std::filesystem::create_directories(dir);
-    auto initial=host_memory.live.load(); persistence(dir); migration();
+    auto initial=host_memory.live.load(); persistence(dir,std::string_view(argv[2])=="partition"); migration();
     check(initial==host_memory.live.load(),"aligned page storage leaked");
     return 0;
 } catch(const std::exception &e) {std::cerr<<e.what()<<"\n"; return 1;} }
