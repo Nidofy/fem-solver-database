@@ -1,5 +1,10 @@
 # Solver Database V2
 
+SDK **2.6.0 candidate (DBF10/DBF11)** adds thermal and coupled ModelIR schema 11,
+integration-point and layered plugin history, and partitioned result/checkpoint files.
+Independent writers publish through a verified manifest. Readers can restore selected
+global labels into a different partition count. See the [SDK contracts](docs/development/db_foundation/DBF10_11_CONTRACTS.md).
+
 SDK **2.5.0 (DBF9)** adds flat DOF lookup and ordered multi-batch job bundles.
 Bind a frozen registry to `BatchCatalog::identity()` for `MultiBatchBundle::save/inspect/restore`.
 For trusted host steps pass `CommitValidation::FastShapeOnly` to both COW begin and commit.
