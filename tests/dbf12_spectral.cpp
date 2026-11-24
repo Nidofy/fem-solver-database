@@ -87,7 +87,35 @@ static void wide_frf(const Path &dir) {
     std::cout<<"wide_dofs="<<width<<" chunks_per_sample="<<(1+(width-1)/per_block)
              <<" FRF_headers_per_sample=1 samples="<<points<<"\n";
 }
+static void directory_faults(const Path &dir) {
+    namespace sd=spectral_detail;
+    auto good=dir/"modes.raw", bad=dir/"invalid-directory.spectral";
+    const auto length=std::filesystem::file_size(good);
+    std::ifstream in(good,std::ios::binary); sd::seek(in,length-sd::footer_size);
+    auto footer=sd::read_fixed<sd::footer_size>(in); auto tail=sd::checked(footer);
+    (void)tail.integer<std::uint64_t>(); auto table=tail.integer<std::uint64_t>();
+    auto count=tail.integer<std::uint64_t>();
+    for(unsigned fault=0;fault<6;++fault) {
+        auto sample=fault==4?0u:fault==5?count-1:1u;
+        auto pos=table+sample*sd::entry_size;
+        sd::seek(in,pos); auto bytes=sd::read_fixed<sd::entry_size>(in); auto r=sd::checked(bytes);
+        auto ordinal=r.integer<std::uint64_t>(),start=r.integer<std::uint64_t>(),size=r.integer<std::uint64_t>();
+        auto x=r.scalar<double>();
+        if(fault==0) x=1;        // duplicate first coordinate
+        if(fault==1) { ++start; --size; } // internal gap
+        if(fault==2) { --start; ++size; } // overlap
+        if(fault==3) size=0;
+        if(fault==4) { ++start; --size; } // leading gap
+        if(fault==5) --size;    // unindexed tail
+        std::filesystem::copy_file(good,bad,std::filesystem::copy_options::overwrite_existing);
+        lifecycle::native::Writer w; w.integer(ordinal); w.integer(start); w.integer(size); w.scalar(x);
+        { std::fstream file(bad,std::ios::binary|std::ios::in|std::ios::out);
+          file.seekp(static_cast<std::streamoff>(pos)); sd::write_checked(file,w); }
+        rejects([&]{StreamingSpectralReader invalid(bad);});
+    }
+}
 static void faults(const Path &dir) {
+    directory_faults(dir);
     wide_frf(dir);
     auto original=dir/"modes.raw", path=dir/"damaged.spc";
     std::filesystem::copy_file(original,path,std::filesystem::copy_options::overwrite_existing);

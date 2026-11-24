@@ -191,16 +191,28 @@ class StreamingSpectralReader {
     std::ifstream legacy_offsets_;
     std::uint64_t chunks() const { return 1+(desc_.dofs-1)/desc_.chunk_dofs; }
     struct Entry { std::uint64_t start,end; double coordinate; };
-    Entry entry(std::uint64_t sample) {
+    Entry directory_record(std::uint64_t sample) {
         using namespace spectral_detail;
-        if(sample>=count_) throw std::out_of_range("spectral sample");
-        seek(in_,dir_+entry_size*sample);
         auto bytes=read_fixed<entry_size>(in_); auto r=checked(bytes);
         require(r.integer<std::uint64_t>()==sample,"spectral directory ordinal");
         auto offset=r.integer<std::uint64_t>(),length=r.integer<std::uint64_t>(); auto x=r.scalar<double>();
         desc_.axis.validate_coordinate(x);
         require(offset<=dir_-start_ && length<=dir_-start_-offset,"spectral directory extent");
         return {start_+offset,start_+offset+length,x};
+    }
+    Entry entry(std::uint64_t sample) {
+        if(sample>=count_) throw std::out_of_range("spectral sample");
+        spectral_detail::seek(in_,dir_+spectral_detail::entry_size*sample); return directory_record(sample);
+    }
+    void validate_directory() {
+        using namespace spectral_detail;
+        seek(in_,dir_); auto next=start_; double previous=0;
+        for(std::uint64_t s=0;s<count_;++s) {
+            const auto e=directory_record(s);
+            require(e.start==next && e.end>e.start && (!s || e.coordinate>previous),"spectral directory order/coverage");
+            next=e.end; previous=e.coordinate;
+        }
+        require(next==dir_,"spectral directory does not cover sample region");
     }
     std::uint64_t chunk_data_end(const Entry &e) const {
         if(!indexed_) return e.end;
@@ -305,6 +317,7 @@ class StreamingSpectralReader {
         require(dir_>=start_ && dir_<=length-footer_size,"spectral directory position");
         auto space=length-footer_size-dir_;
         require(space%entry_size==0 && count_==space/entry_size,"spectral directory length");
+        validate_directory();
         if(!indexed_ && count_ && desc_.axis.kind==SampleAxisKind::FrequencyHz) index_legacy_frequencies();
     }
     const SpectralArchiveDescriptor &descriptor() const { return desc_; }
