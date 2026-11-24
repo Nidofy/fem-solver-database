@@ -44,8 +44,9 @@ def faults(root):
             assert sorted(job.result().returncode for job in jobs) == [0, 1]
         run("publish", folder, 1)
         run("verify", folder)
-    with tempfile.TemporaryDirectory(dir=scratch) as temp:
-        run("payload_faults", temp)
+    for contract in ("restart_policies", "payload_faults"):
+        with tempfile.TemporaryDirectory(dir=scratch) as temp:
+            run(contract, temp)
     for suffix, operation in (("sdbres", "rank"), ("sdbrst", "results_only")):
         with tempfile.TemporaryDirectory(dir=scratch) as temp:
             part = Path(temp) / "2"

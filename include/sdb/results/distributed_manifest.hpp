@@ -183,7 +183,9 @@ inline ShardIndex index(const Path &path,PartitionFile kind,std::uint64_t budget
     std::ranges::sort(order,{},key);
     require(std::ranges::adjacent_find(order,{},key)==order.end(),"duplicate shard sample row");
     for(std::size_t f=0;f<h.fields.size();++f) if(h.fields[f].field.association==Association::Global)
-        require(global_counts[f]==(kind==PartitionFile::Results?h.epoch.samples.size():1),"missing global singleton row");
+        require(global_counts[f]==(kind==PartitionFile::Results?h.epoch.samples.size():1) ||
+                (kind==PartitionFile::Checkpoint && h.fields[f].field.restart!=RestartPolicy::Required && !global_counts[f]),
+                "missing global singleton row");
     idx.bytes=std::filesystem::file_size(path);
     require(idx.bytes==pos,"missing, truncated or extended partition payload");
     return idx;
@@ -267,6 +269,7 @@ inline void write_shard(const Path &dir,PartitionFile kind,std::uint32_t rank,st
         for(std::size_t f=0;f<catalog.size();++f) {
             catalog[f].validate();
             const auto *e=state->entries()[f];
+            if(kind==PartitionFile::Checkpoint && e->descriptor().restart!=RestartPolicy::Required) continue;
             if(e->descriptor().association==Association::Global) require(e->count()==1,"global singleton count");
             const auto c=e->descriptor().component_count();
             for(std::size_t i=0;i<e->count();++i) {
@@ -326,7 +329,7 @@ struct DistributedManifest {
         std::map<std::uint32_t,OwnedSourceMap> owners;
         std::map<std::uint32_t,std::uint64_t> local_contexts;
         using GlobalRow=std::tuple<PartitionFile,std::uint64_t,std::uint64_t>;
-        std::vector<std::pair<GlobalRow,n::Bytes>> reference_globals;
+        std::map<PartitionFile,std::vector<std::pair<GlobalRow,n::Bytes>>> reference_globals;
         std::vector<unsigned> membership(part_count);
         for(const auto &p:parts) {
             require((p.kind==PartitionFile::Results || p.kind==PartitionFile::Checkpoint) && contains(p.kind) &&
@@ -356,11 +359,8 @@ struct DistributedManifest {
                         globals.emplace_back(GlobalRow{p.kind,row.field,row.sample},read_row(in,idx,i));
                 }
                 std::ranges::sort(globals,{},&decltype(globals)::value_type::first);
-                if(new_schema) reference_globals.insert(reference_globals.end(),globals.begin(),globals.end());
-                else {
-                    auto start=std::find_if(reference_globals.begin(),reference_globals.end(),[&](const auto &v){return std::get<0>(v.first)==p.kind;});
-                    require(start!=reference_globals.end() && std::equal(globals.begin(),globals.end(),start),"divergent replicated global payload");
-                }
+                if(new_schema) reference_globals.emplace(p.kind,std::move(globals));
+                else require(globals==reference_globals.at(p.kind),"divergent replicated global payload");
             }
             if(deep) require(checked_digest(path,idx)==p.crc64,"shard file CRC64 mismatch");
             require(out.emplace(std::pair(p.kind,p.rank),std::move(idx)).second,"duplicate manifest rank");

@@ -34,6 +34,7 @@ class PartitionedCheckpoint {
         std::vector<Destination> wanted;
         for(std::size_t f=0;f<state.entries().size();++f) {
             const auto *e=state.entries()[f]; const auto &d=e->descriptor();
+            if(d.restart!=RestartPolicy::Required) continue;
             const auto width=d.component_count();
             for(std::size_t i=0;i<e->count();++i) {
                 auto a=address(*e,local,i);
@@ -59,7 +60,9 @@ class PartitionedCheckpoint {
             for(std::size_t i=0;i<h.rows.size();++i) {
                 const auto &r=h.rows[i];
                 ++stats.source_rows;
-                auto association=h.fields[r.field].field.association;
+                const auto &field=h.fields[r.field].field;
+                if(field.restart!=RestartPolicy::Required) continue; // legacy v2 could include these rows
+                auto association=field.association;
                 if(association==Association::Global) { if(part.second!=0) continue; }
                 else if(!std::ranges::binary_search(sorted.labels(association),r.address.entity)) continue;
                 Key key{r.field,r.address};

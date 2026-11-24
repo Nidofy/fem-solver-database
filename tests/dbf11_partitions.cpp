@@ -188,6 +188,37 @@ static void target_faults(const Path &dir) {
     auto stats=PartitionedCheckpoint::restore(file,empty_map,1,empty,epoch());
     check(stats.payload_shards==1 && stats.selected_rows==2 && stats.payload_bytes==16 && empty.get<Exact>("SNEXT_CURSOR").read()(0)==3,"empty rank read payload");
 }
+static void restart_policies(const Path &dir) {
+    auto make=[](const OwnedSourceMap &owned,unsigned rank) {
+        RegisteredState s; s.bind_context(37,100+rank,1);
+        for(auto policy:{RestartPolicy::Required,RestartPolicy::Omit,RestartPolicy::Reconstruct}) {
+            FieldDescriptor d; d.name=std::to_string(static_cast<unsigned>(policy)); d.restart=policy; d.location=FieldLocation::Entity;
+            d.association=policy==RestartPolicy::Omit?Association::Global:Association::Node;
+            auto count=d.association==Association::Global?1:owned.node_labels.size();
+            s.add<Scalar>(d,count,"restart-policy",1,{2.0},0);
+        }
+        s.freeze();
+        for(const auto *e:s.entries()) {
+            auto values=s.get<Scalar>(e->descriptor().name).write();
+            for(std::size_t i=0;i<e->count();++i) values(i)=9;
+        }
+        return s;
+    };
+    auto sources=partition(2);
+    for(unsigned r=0;r<2;++r) {
+        auto s=make(sources[r],r); PartitionedCheckpoint::write(dir,r,2,epoch(),sources[r],s);
+        auto idx=partition_detail::index(dir/partition_detail::filename(r,PartitionFile::Checkpoint),PartitionFile::Checkpoint);
+        check(idx.header.rows.size()==sources[r].node_labels.size(),"optional checkpoint rows written");
+    }
+    auto path=dir/"run.sdbmanifest"; auto targets=partition(1);
+    DistributedManifest::publish(path,2,targets[0],epoch(),PartitionFiles::Checkpoint);
+    auto dest=make(targets[0],9); PartitionedCheckpoint::restore(path,targets,0,dest,epoch());
+    for(const auto *e:dest.entries()) {
+        auto values=dest.get<Scalar>(e->descriptor().name).read();
+        for(std::size_t i=0;i<e->count();++i)
+            check(values(i)==(e->descriptor().restart==RestartPolicy::Required?9:2),"optional restart initializer");
+    }
+}
 // Rewrite a private one-rank fixture and regenerate every integrity checksum so
 // semantic validation is reached through the public manifest and query APIs.
 static void payload_faults(const Path &dir) {
@@ -226,6 +257,7 @@ int main(int argc,char **argv) { try {
     check(partition_detail::crc64(kat)==UINT64_C(0x6c40df5f0b497347),"CRC64 ECMA-182");
     if(op=="write" && argc>=5) write(path,std::stoul(argv[3]),std::stoul(argv[4]),argc>=6?argv[5]:"");
     else if(op=="publish" && argc==4) DistributedManifest::publish(path/"run.sdbmanifest",std::stoul(argv[3]),partition(1)[0],epoch());
+    else if(op=="restart_policies") restart_policies(path);
     else if(op=="payload_faults") payload_faults(path);
     else if(op=="results_only") {
         PartitionedResultReader reader(path/"run.sdbmanifest");
