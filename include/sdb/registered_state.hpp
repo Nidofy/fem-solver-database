@@ -9,6 +9,8 @@
 #include <variant>
 
 namespace sdb {
+// Full validation is the default at transaction boundaries and mandatory for persistence.
+enum class CommitValidation : std::uint8_t { FullFiniteScan = 0, FastShapeOnly = 1 };
 // Dispatch is per cold field/snapshot; kernels retain ordinary typed Field views.
 using RegisteredValues = std::variant<std::vector<float>, std::vector<double>,
     std::vector<std::int32_t>, std::vector<std::uint32_t>, std::vector<std::int64_t>,
@@ -52,6 +54,8 @@ class RegisteredFieldBase {
     std::uint64_t basis_id_;
     std::optional<Field<std::uint8_t>> validity_;
     std::optional<StateLayout> addressing_;
+    // Built-in registered fields share immutable row metadata across COW generations.
+    std::shared_ptr<const std::optional<StateLayout>> shared_addressing_;
   public:
     RegisteredFieldBase(FieldDescriptor d, std::size_t n, std::string schema,
                         std::uint32_t version, std::uint32_t layout, std::uint32_t width,
@@ -70,7 +74,7 @@ class RegisteredFieldBase {
     std::uint64_t basis_id() const noexcept { return basis_id_; }
     std::uint32_t layout_kind() const noexcept { return layout_; }
     std::uint32_t layout_width() const noexcept { return width_; }
-    const std::optional<StateLayout> &addressing() const noexcept { return addressing_; }
+    const std::optional<StateLayout> &addressing() const noexcept { return shared_addressing_ ? *shared_addressing_ : addressing_; }
     std::size_t scalar_count() const { return product(count_, descriptor_.component_count()); }
     Field<std::uint8_t> &validity_field() {
         if (!validity_) throw std::logic_error("registered field forbids missing values");
@@ -112,7 +116,7 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
     RegisteredField(const RegisteredField &other,SharedTag)
         : RegisteredFieldBase(other.descriptor_,other.count_,other.schema_id_,other.schema_version_,other.layout_,other.width_,other.basis_id_,false),
           field_(other.field_.stage_shared()), initial_(other.initial_) {
-        addressing_=other.addressing_;
+        shared_addressing_=other.shared_addressing_;
         if(other.validity_) validity_.emplace(other.validity_->stage_shared());
     }
   public:
@@ -122,7 +126,7 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
         : RegisteredFieldBase(std::move(d), n, std::move(schema), version,
               registered_detail::Traits<F>::layout::kind, registered_detail::Traits<F>::layout::width, basis),
           field_(n), initial_(std::move(initial)) {
-        addressing_ = std::move(addressing);
+        if(addressing) shared_addressing_=std::make_shared<const std::optional<StateLayout>>(std::move(addressing));
         if (initial_.empty()) initial_.resize(F::components, V{});
         if (initial_.size() != F::components) throw std::invalid_argument("registered initialization shape");
         auto view = field_.write();
@@ -130,7 +134,7 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
         validate();
     }
     std::unique_ptr<RegisteredFieldBase> clone(bool initialized) const override {
-        if (initialized) return std::make_unique<RegisteredField>(descriptor_, count_, schema_id_, schema_version_, initial_, basis_id_, addressing_);
+        if (initialized) return std::make_unique<RegisteredField>(descriptor_, count_, schema_id_, schema_version_, initial_, basis_id_, addressing());
         return std::make_unique<RegisteredField>(*this);
     }
   private:
@@ -152,18 +156,18 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
                    sum(product(rows,validity_?F::components:0),product(initial_.size(),sizeof(V))));
     }
     std::unique_ptr<RegisteredFieldBase> remap(StateLayout next) const override {
-        if(!addressing_) throw std::logic_error("implicit state layout cannot be remapped");
+        if(!addressing()) throw std::logic_error("implicit state layout cannot be remapped");
         next.validate(descriptor_); validate();
         const auto count=next.addresses.size();
         auto out=std::make_unique<RegisteredField>(descriptor_,count,schema_id_,schema_version_,initial_,basis_id_,std::move(next));
-        const auto &old=addressing_->addresses;
+        const auto &old=addressing()->addresses;
         std::vector<std::size_t> order(count_);
         std::iota(order.begin(),order.end(),std::size_t{0});
         auto address=[&](std::size_t row) -> const auto & { return old[row]; };
         if(!std::ranges::is_sorted(old)) std::ranges::sort(order,{},address);
         auto source=field_.read(); auto destination=out->field_.write();
         for(std::size_t i=0;i<count;++i) {
-            const auto &key=out->addressing_->addresses[i];
+            const auto &key=out->addressing()->addresses[i];
             auto it=std::ranges::lower_bound(order,key,{},address);
             if(it==order.end() || old[*it]!=key) continue;
             // Retain exact typed scalars directly; no per-row encode/allocation/decode.
@@ -185,11 +189,11 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
     void validate_shape() const override {
         if (field_.size() != count_ || (validity_ && validity_->size() != scalar_count()))
             throw std::logic_error("registered field shape changed");
-        if(addressing_ && addressing_->addresses.size()!=count_) throw std::logic_error("registered address count changed");
+        if(addressing() && addressing()->addresses.size()!=count_) throw std::logic_error("registered address count changed");
     }
     void validate() const override {
         validate_shape();
-        if(addressing_) addressing_->validate(descriptor_);
+        if(addressing()) addressing()->validate(descriptor_);
         for (auto value : initial_) if constexpr (std::is_floating_point_v<V>)
             if (!std::isfinite(value)) throw std::invalid_argument("registered nonfinite initialization");
         auto view = field_.read();
@@ -273,24 +277,29 @@ class RegisteredState {
     std::uint64_t equation_context() const noexcept { return equation_context_; }
     std::uint64_t consumer_context() const noexcept { return consumer_context_; }
     bool in_trial() const noexcept { return trial_.has_value(); }
-    void begin_trial() {
+    void begin_trial() { begin_trial(CommitValidation::FullFiniteScan); }
+    void begin_trial(CommitValidation mode) {
         if(in_trial()) throw std::logic_error("registered trial already active");
-        validate(); std::vector<std::unique_ptr<RegisteredFieldBase>> copy;
+        validate_transaction(mode); std::vector<std::unique_ptr<RegisteredFieldBase>> copy;
         for(const auto &e:entries_) copy.push_back(e->clone(false));
         trial_.emplace(std::move(copy));
     }
     // Explicit COW phase boundary; caller must have joined every raw consumer.
-    void begin_trial_cow() {
+    void begin_trial_cow() { begin_trial_cow(CommitValidation::FullFiniteScan); }
+    void begin_trial_cow(CommitValidation mode) {
         if(in_trial()) throw std::logic_error("registered trial already active");
-        validate(); std::vector<std::unique_ptr<RegisteredFieldBase>> copy;
+        validate_transaction(mode);
+        std::vector<std::unique_ptr<RegisteredFieldBase>> copy;
+        copy.reserve(entries_.size());
         for(const auto &e:entries_) copy.push_back(e->stage_shared());
         // No throwing operations after invalidation: failed staging leaves all borrows intact.
         for(const auto &e:entries_) e->invalidate_borrows();
         trial_.emplace(std::move(copy));
     }
-    void commit() {
+    void commit() { commit(CommitValidation::FullFiniteScan); }
+    void commit(CommitValidation mode) {
         if(!in_trial()) throw std::logic_error("no registered trial");
-        validate(); trial_.reset();
+        validate_transaction(mode); trial_.reset();
     }
     void rollback() {
         if(!in_trial()) throw std::logic_error("no registered trial");
@@ -340,6 +349,15 @@ class RegisteredState {
         if (!frozen_) throw std::logic_error("registered state layout must be frozen");
         for (const auto &e : entries_) e->validate_shape();
     }
+  private:
+    void validate_transaction(CommitValidation mode) const {
+        switch(mode) {
+        case CommitValidation::FullFiniteScan: validate(); return;
+        case CommitValidation::FastShapeOnly: validate_shape(); return;
+        }
+        throw std::invalid_argument("unknown commit validation");
+    }
+  public:
     void restore_block(std::size_t index, std::span<const std::uint8_t> bytes,
                        std::size_t offset, std::size_t count) {
         entries_.at(index)->restore_block(bytes,offset,count);

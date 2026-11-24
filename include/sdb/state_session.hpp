@@ -91,15 +91,17 @@ class StateSession {
     auto read() const { return Lease<false>(core_); }
     auto write() { return Lease<true>(core_); }
     StateMemoryStats memory() const { auto lease=read(); return core_->stats; }
-    void begin_trial(TrialPolicy policy=TrialPolicy::DeepCopy) {
+    void begin_trial(TrialPolicy policy=TrialPolicy::DeepCopy) { begin_trial(policy,CommitValidation::FullFiniteScan); }
+    void begin_trial(TrialPolicy policy, CommitValidation mode) {
         auto lease=write(); auto &c=*core_;
         if(policy!=TrialPolicy::DeepCopy && policy!=TrialPolicy::CopyOnWrite) throw std::invalid_argument("trial policy");
         c.admit(c.stats.resident_payload);
-        if(policy==TrialPolicy::CopyOnWrite) c.state.begin_trial_cow(); else c.state.begin_trial();
+        if(policy==TrialPolicy::CopyOnWrite) c.state.begin_trial_cow(mode); else c.state.begin_trial(mode);
         c.stats.trial_payload=c.stats.resident_payload;
         if(policy==TrialPolicy::DeepCopy) c.stats.copied_payload=state_counter_add(c.stats.copied_payload,c.stats.resident_payload);
     }
-    void commit() { auto lease=write(); core_->state.commit(); core_->stats.trial_payload=0; }
+    void commit() { commit(CommitValidation::FullFiniteScan); }
+    void commit(CommitValidation mode) { auto lease=write(); core_->state.commit(mode); core_->stats.trial_payload=0; }
     void rollback() {
         auto lease=write(); core_->state.rollback(); core_->stats.resident_payload=core_->stats.trial_payload; core_->stats.trial_payload=0;
     }
