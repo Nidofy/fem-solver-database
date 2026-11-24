@@ -46,7 +46,14 @@ enum class Dof : std::uint8_t { X, Y, Z, RX, RY, RZ };
 class SemanticHasher {
     std::uint64_t h = 14695981039346656037ull;
     void integer(std::uint64_t v) {
-        for (unsigned k = 0; k < 8; ++k) { h ^= (v >> (8 * k)) & 255; h *= 1099511628211ull; }
+        // The canonical encoding always has eight LE bytes. Each trailing zero
+        // multiplies by the FNV prime without mixing any bits into the hash.
+        constexpr std::uint64_t prime = 1099511628211ull;
+        constexpr auto prime4 = prime * prime * prime * prime;
+        if (v <= UINT8_MAX) { h = (h ^ v) * (prime4 * prime4); return; }
+        for (unsigned k = 0; k < 4; ++k) { h = (h ^ (v & 255)) * prime; v >>= 8; }
+        if (!v) { h *= prime4; return; }
+        for (unsigned k = 0; k < 4; ++k) { h = (h ^ (v & 255)) * prime; v >>= 8; }
     }
   public:
     template<class X> void append(const X& x) {

@@ -104,30 +104,32 @@ class Batch {
            !std::is_sorted(data.sample_offsets.begin(),data.sample_offsets.end()) ||
            !std::is_sorted(data.dof_offsets.begin(),data.dof_offsets.end()) || data.materials.size()!=q || data.sections.size()!=q)
             throw std::invalid_argument("consumer batch identity/layout");
-        std::set<std::uint64_t> elements;
-        std::set<lifecycle::ResultAddress> samples;
+        std::vector<std::uint64_t> node_scratch, slot_scratch;
+        flat_detail::unique_sorted<std::uint64_t>(data.elements,slot_scratch,"consumer element identity");
+        std::vector<lifecycle::ResultAddress> sample_scratch;
         for(std::size_t e=0;e<n;++e) {
-            if(data.elements[e]>=dofs_->data().elements || !elements.insert(data.elements[e]).second)
-                throw std::invalid_argument("consumer element identity");
-            std::set<std::uint64_t> nodes,slots;
-            for(std::size_t j=0;j<data.topology.nodes;++j) {
-                auto node=data.connectivity[e*data.topology.nodes+j];
-                if(node>=dofs_->data().nodes || !nodes.insert(node).second) throw std::invalid_argument("consumer connectivity");
-            }
-            for(auto j=data.dof_offsets[e];j<data.dof_offsets[e+1];++j) {
-                auto slot=data.dof_slots[j];
-                if(slot>=dofs_->slots() || !slots.insert(slot).second) throw std::invalid_argument("consumer DOF slot");
+            if(data.elements[e]>=dofs_->data().elements) throw std::invalid_argument("consumer element identity");
+            auto nodes=flat_detail::unique_sorted<std::uint64_t>(
+                std::span(data.connectivity).subspan(e*data.topology.nodes,data.topology.nodes),
+                node_scratch,"consumer connectivity");
+            if(nodes.back()>=dofs_->data().nodes) throw std::invalid_argument("consumer connectivity");
+            auto slots=std::span(data.dof_slots).subspan(data.dof_offsets[e],data.dof_offsets[e+1]-data.dof_offsets[e]);
+            flat_detail::unique_sorted<std::uint64_t>(slots,slot_scratch,"consumer DOF slot");
+            for(auto slot:slots) {
+                if(slot>=dofs_->slots()) throw std::invalid_argument("consumer DOF slot");
                 const auto &k=dofs_->data().bindings[slot].key;
-                if((k.owner==DofOwner::Node && !nodes.contains(k.entity)) || (k.owner==DofOwner::Element && k.entity!=data.elements[e]))
+                if((k.owner==DofOwner::Node && !std::binary_search(nodes.begin(),nodes.end(),k.entity)) ||
+                   (k.owner==DofOwner::Element && k.entity!=data.elements[e]))
                     throw std::invalid_argument("consumer DOF belongs to another element");
             }
+            // Unique element IDs and the one-based ownership check make per-element uniqueness sufficient.
+            auto samples=std::span(data.samples).subspan(data.sample_offsets[e],data.sample_offsets[e+1]-data.sample_offsets[e]);
+            flat_detail::unique_sorted<lifecycle::ResultAddress>(samples,sample_scratch,"consumer sample/material identity");
             for(auto j=data.sample_offsets[e];j<data.sample_offsets[e+1];++j) {
-                const auto &a=data.samples[j];
-                if(a.entity!=data.elements[e]+1 || !a.integration_point || data.materials[j]>=materials_.size() ||
-                   data.sections[j]>=sections_.size() || !samples.insert(a).second)
-                    throw std::invalid_argument("consumer sample/material identity");
-                FieldDescriptor d; d.name="batch sample";
-                StateLayout layout; layout.domain=1; layout.addresses={a}; layout.validate(d);
+                const auto &sample=data.samples[j];
+                if(sample.entity!=data.elements[e]+1 || !sample.integration_point || data.materials[j]>=materials_.size() ||
+                   data.sections[j]>=sections_.size()) throw std::invalid_argument("consumer sample/material identity");
+                StateLayout::validate_address(sample,Association::Element,FieldLocation::IntegrationPoint);
             }
         }
         data_=std::make_shared<const BatchData>(std::move(data));

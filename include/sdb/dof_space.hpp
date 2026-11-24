@@ -1,7 +1,8 @@
 #pragma once
 #include "io/native.hpp"
 #include <numeric>
-#include <set>
+#include "flat_index.hpp"
+#include <string_view>
 
 namespace sdb {
 // Independent of MeshDB's legacy 3/6 mechanical slots. IDs are semantic, not pointers.
@@ -50,39 +51,55 @@ struct DofSpaceData {
 class DofSpace {
     DofSpaceData data_;
     std::vector<std::size_t> canonical_to_solver_;
-    std::map<DofKey,std::size_t> slots_;
+    std::vector<std::pair<DofKey,std::size_t>> slots_;
     std::uint64_t identity_ = 0;
     void validate() {
         if(data_.schema!=1 || !data_.model || !data_.revision) throw std::invalid_argument("DOF identity/schema");
-        std::map<std::uint32_t,const DofVariable*> variables;
-        std::set<std::string> names;
+        std::vector<std::pair<std::uint32_t,std::uint32_t>> variables;
+        std::vector<std::string_view> names;
+        variables.reserve(data_.variables.size());
+        names.reserve(data_.variables.size());
         for(const auto &v:data_.variables) {
             if(!v.components || v.name.empty() || v.units.empty() || v.basis.empty() ||
-               !enum_at_most(v.quantity,DofQuantity::User) || !variables.emplace(v.id,&v).second || !names.insert(v.name).second)
+               !enum_at_most(v.quantity,DofQuantity::User))
                 throw std::invalid_argument("DOF variable contract");
+            variables.emplace_back(v.id,v.components);
+            names.emplace_back(v.name);
             if(((v.quantity==DofQuantity::Translation || v.quantity==DofQuantity::Rotation) && v.components>3) ||
                ((v.quantity==DofQuantity::Temperature || v.quantity==DofQuantity::Pressure) && v.components!=1))
                 throw std::invalid_argument("DOF quantity/component contract");
         }
+        std::ranges::sort(variables);
+        std::ranges::sort(names);
+        if(std::ranges::adjacent_find(variables,{},&decltype(variables)::value_type::first)!=variables.end() ||
+           std::ranges::adjacent_find(names)!=names.end())
+            throw std::invalid_argument("DOF variable contract");
         const auto n=data_.external_equations.size();
         if(data_.solver_to_canonical.size()!=n) throw std::invalid_argument("DOF permutation size");
-        std::set<std::uint64_t> labels;
+        {
+            std::vector<std::uint64_t> scratch;
+            flat_detail::unique_sorted<std::uint64_t>(data_.external_equations,scratch,"DOF permutation/label duplicate");
+        }
         canonical_to_solver_.assign(n,n);
         for(std::size_t i=0;i<n;++i) {
             const auto c=data_.solver_to_canonical[i];
-            if(c>=n || canonical_to_solver_[c]!=n || !labels.insert(data_.external_equations[i]).second)
+            if(c>=n || canonical_to_solver_[c]!=n)
                 throw std::invalid_argument("DOF permutation/label duplicate");
             canonical_to_solver_[c]=i;
         }
         std::vector<bool> used(n,false);
+        slots_.reserve(data_.bindings.size());
+        bool ordered=true;
         for(std::size_t i=0;i<data_.bindings.size();++i) {
             const auto &b=data_.bindings[i]; const auto &k=b.key;
-            auto v=variables.find(k.variable);
+            auto v=std::ranges::lower_bound(variables,k.variable,{},&decltype(variables)::value_type::first);
             if(!enum_at_most(k.owner,DofOwner::Global) || !enum_at_most(b.status,DofStatus::Eliminated) ||
-               v==variables.end() || k.component>=v->second->components || !std::isfinite(b.value) ||
-               !slots_.emplace(k,i).second || (k.owner==DofOwner::Node && (k.entity>=data_.nodes || k.local)) ||
+               v==variables.end() || v->first!=k.variable || k.component>=v->second || !std::isfinite(b.value) ||
+               (k.owner==DofOwner::Node && (k.entity>=data_.nodes || k.local)) ||
                (k.owner==DofOwner::Element && k.entity>=data_.elements) || (k.owner==DofOwner::Global && k.entity))
                 throw std::invalid_argument("DOF binding/key");
+            if(i && !(slots_.back().first<k)) ordered=false;
+            slots_.emplace_back(k,i);
             if(b.status==DofStatus::Free) {
                 if(b.equation>=n || used[b.equation] || b.value!=0 || !b.terms.empty())
                     throw std::invalid_argument("DOF free equation");
@@ -100,6 +117,11 @@ class DofSpace {
                 previous=t.slot; first=false;
             }
         }
+        if(!ordered) {
+            std::ranges::sort(slots_,{},&decltype(slots_)::value_type::first);
+            if(std::ranges::adjacent_find(slots_,{},&decltype(slots_)::value_type::first)!=slots_.end())
+                throw std::invalid_argument("DOF binding/key");
+        }
         if(std::find(used.begin(),used.end(),false)!=used.end()) throw std::invalid_argument("unowned DOF equation");
         identity_=semantic_hash(data_);
     }
@@ -109,7 +131,11 @@ class DofSpace {
     std::uint64_t identity() const noexcept { return identity_; }
     std::size_t equations() const noexcept { return canonical_to_solver_.size(); }
     std::size_t slots() const noexcept { return data_.bindings.size(); }
-    std::size_t slot(const DofKey &key) const { return slots_.at(key); }
+    std::size_t slot(const DofKey &key) const {
+        auto it=std::ranges::lower_bound(slots_,key,{},&decltype(slots_)::value_type::first);
+        if(it==slots_.end() || it->first!=key) throw std::out_of_range("unknown DOF key");
+        return it->second;
+    }
     std::size_t solver_equation(std::size_t slot) const {
         const auto &b=data_.bindings.at(slot);
         if(b.status!=DofStatus::Free) throw std::invalid_argument("DOF is not free");

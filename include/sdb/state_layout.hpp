@@ -1,5 +1,6 @@
 #pragma once
 #include "results/typed.hpp"
+#include "flat_index.hpp"
 
 namespace sdb {
 // Reuse result identities so persistent state and output address the same samples.
@@ -25,50 +26,51 @@ struct StateLayout {
             for(std::size_t i=0;i<n;++i) if(indices[i]>=domain || (i && indices[i]<=indices[i-1]))
                 throw std::invalid_argument("sparse state index");
         }
-        std::set<lifecycle::ResultAddress> seen;
-        for(const auto &a:addresses) {
-            if(!seen.insert(a).second) throw std::invalid_argument("duplicate state sample identity");
-            lifecycle::ResultAddress allowed;
-            allowed.entity=a.entity;
-            if(!a.entity && d.association!=Association::Global && d.association!=Association::Contact)
-                throw std::invalid_argument("state entity is one-based");
-            switch(d.association) {
-            case Association::Node: break;
-            case Association::Global:
-                if(a.entity!=0) throw std::invalid_argument("global state entity");
-                break;
-            case Association::Element:
-                if(d.location==FieldLocation::ElementNode) {
-                    if(!a.element_node) throw std::invalid_argument("state local node");
-                    allowed.element_node=a.element_node;
-                } else if(d.location==FieldLocation::IntegrationPoint || d.location==FieldLocation::SectionPoint) {
-                    if(!a.integration_point || bool(a.layer)!=bool(a.section_point) ||
-                       (d.location==FieldLocation::SectionPoint && !a.section_point))
-                        throw std::invalid_argument("state sample point");
-                    allowed.integration_point=a.integration_point; allowed.layer=a.layer; allowed.section_point=a.section_point;
-                }
-                break;
-            case Association::Face:
-                if(!a.face || (a.side!=1 && a.side!=-1)) throw std::invalid_argument("state face identity");
-                allowed.face=a.face; allowed.side=a.side;
-                break;
-            case Association::Contact: {
-                auto endpoint=[](const lifecycle::ResultEndpoint &e) {
-                    return e.kind<=2 && e.entity &&
-                        (e.kind==0 ? e.local==0 && e.side==0 :
-                         e.kind==1 ? e.local>0 && e.side==0 : e.local>0 && (e.side==1 || e.side==-1));
-                };
-                if(a.entity || a.domain!=1 || !a.contact_point || !a.contact_generation || !a.interaction ||
-                   !endpoint(a.endpoint_a) || !endpoint(a.endpoint_b) || a.endpoint_a==a.endpoint_b)
-                    throw std::invalid_argument("state contact identity/generation");
-                allowed.contact_generation=a.contact_generation; allowed.interaction=a.interaction;
-                allowed.endpoint_a=a.endpoint_a; allowed.endpoint_b=a.endpoint_b;
-                allowed.contact_point=a.contact_point; allowed.domain=a.domain;
-                break;
+        std::vector<lifecycle::ResultAddress> scratch;
+        flat_detail::unique_sorted<lifecycle::ResultAddress>(addresses,scratch,"duplicate state sample identity");
+        for(const auto &a:addresses) validate_address(a,d.association,d.location);
+    }
+    static void validate_address(const lifecycle::ResultAddress &a, Association association, FieldLocation location) {
+        lifecycle::ResultAddress allowed;
+        allowed.entity=a.entity;
+        if(!a.entity && association!=Association::Global && association!=Association::Contact)
+            throw std::invalid_argument("state entity is one-based");
+        switch(association) {
+        case Association::Node: break;
+        case Association::Global:
+            if(a.entity!=0) throw std::invalid_argument("global state entity");
+            break;
+        case Association::Element:
+            if(location==FieldLocation::ElementNode) {
+                if(!a.element_node) throw std::invalid_argument("state local node");
+                allowed.element_node=a.element_node;
+            } else if(location==FieldLocation::IntegrationPoint || location==FieldLocation::SectionPoint) {
+                if(!a.integration_point || bool(a.layer)!=bool(a.section_point) ||
+                   (location==FieldLocation::SectionPoint && !a.section_point))
+                    throw std::invalid_argument("state sample point");
+                allowed.integration_point=a.integration_point; allowed.layer=a.layer; allowed.section_point=a.section_point;
             }
-            }
-            if(a!=allowed) throw std::invalid_argument("inactive state address lanes must be zero");
+            break;
+        case Association::Face:
+            if(!a.face || (a.side!=1 && a.side!=-1)) throw std::invalid_argument("state face identity");
+            allowed.face=a.face; allowed.side=a.side;
+            break;
+        case Association::Contact: {
+            auto endpoint=[](const lifecycle::ResultEndpoint &e) {
+                return e.kind<=2 && e.entity &&
+                    (e.kind==0 ? e.local==0 && e.side==0 :
+                     e.kind==1 ? e.local>0 && e.side==0 : e.local>0 && (e.side==1 || e.side==-1));
+            };
+            if(a.entity || a.domain!=1 || !a.contact_point || !a.contact_generation || !a.interaction ||
+               !endpoint(a.endpoint_a) || !endpoint(a.endpoint_b) || a.endpoint_a==a.endpoint_b)
+                throw std::invalid_argument("state contact identity/generation");
+            allowed.contact_generation=a.contact_generation; allowed.interaction=a.interaction;
+            allowed.endpoint_a=a.endpoint_a; allowed.endpoint_b=a.endpoint_b;
+            allowed.contact_point=a.contact_point; allowed.domain=a.domain;
+            break;
         }
+        }
+        if(a!=allowed) throw std::invalid_argument("inactive state address lanes must be zero");
     }
 };
 } // namespace sdb

@@ -1,0 +1,5 @@
+add_executable(sdb_dbf9_flat_tests tests/dbf9_scale_and_flat_tests.cpp)
+target_link_libraries(sdb_dbf9_flat_tests PRIVATE solver_database_v2 process_memory)
+add_test(NAME dbf9_flat_contracts COMMAND sdb_dbf9_flat_tests ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/dbf9/dof-v1.bin)
+add_executable(sdb_dbf9_dof_batch_scale benchmarks/dbf9_dof_batch_scale.cpp)
+target_link_libraries(sdb_dbf9_dof_batch_scale PRIVATE solver_database_v2 process_memory)

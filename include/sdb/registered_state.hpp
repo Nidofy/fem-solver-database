@@ -4,6 +4,7 @@
 #include <bit>
 #include <array>
 #include <span>
+#include <numeric>
 #include <typeindex>
 #include <variant>
 
@@ -155,15 +156,20 @@ template<class F> class RegisteredField final : public RegisteredFieldBase {
         next.validate(descriptor_); validate();
         const auto count=next.addresses.size();
         auto out=std::make_unique<RegisteredField>(descriptor_,count,schema_id_,schema_version_,initial_,basis_id_,std::move(next));
-        std::map<lifecycle::ResultAddress,std::size_t> old;
-        for(std::size_t i=0;i<count_;++i) old.emplace(addressing_->addresses[i],i);
+        const auto &old=addressing_->addresses;
+        std::vector<std::size_t> order(count_);
+        std::iota(order.begin(),order.end(),std::size_t{0});
+        auto address=[&](std::size_t row) -> const auto & { return old[row]; };
+        if(!std::ranges::is_sorted(old)) std::ranges::sort(order,{},address);
         auto source=field_.read(); auto destination=out->field_.write();
         for(std::size_t i=0;i<count;++i) {
-            auto it=old.find(out->addressing_->addresses[i]); if(it==old.end()) continue;
+            const auto &key=out->addressing_->addresses[i];
+            auto it=std::ranges::lower_bound(order,key,{},address);
+            if(it==order.end() || old[*it]!=key) continue;
             // Retain exact typed scalars directly; no per-row encode/allocation/decode.
             for(std::size_t c=0;c<F::components;++c) {
-                destination(i,c)=source(it->second,c);
-                if(validity_) out->validity_->write()(i*F::components+c)=validity_->read()(it->second*F::components+c);
+                destination(i,c)=source(*it,c);
+                if(validity_) out->validity_->write()(i*F::components+c)=validity_->read()(*it*F::components+c);
             }
         }
         out->validate(); return out;
