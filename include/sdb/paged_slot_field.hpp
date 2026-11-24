@@ -65,6 +65,16 @@ inline std::pair<std::uint64_t,std::uint64_t> parent_identity(const std::filesys
     if(!in.eof() || in.bad()) throw std::runtime_error("slot sidecar parent read failed");
     return {size,crc};
 }
+struct SlotMetadata {
+    std::uint64_t key=0;
+    std::uint32_t generation=1, next=end;
+    bool live=false,valid=false;
+};
+template<class T,std::size_t C,class Layout,std::size_t FixedPageCount>
+struct alignas(64) SlotPage {
+    alignas(64) std::array<SlotMetadata,FixedPageCount> meta{};
+    AlignedVector<T> values=AlignedVector<T>(Layout::size(FixedPageCount,C));
+};
 } // namespace slot_detail
 
 // Handles belong to one pool and its current transaction. A rolled-back trial
@@ -79,15 +89,8 @@ class PagedSlotField {
     using Writer=checkpoint_detail::Writer;
     using Reader=checkpoint_detail::Reader;
     using Bytes=checkpoint_detail::Bytes;
-    struct Meta {
-        std::uint64_t key=0;
-        std::uint32_t generation=1, next=end;
-        bool live=false,valid=false;
-    };
-    struct alignas(64) Page {
-        alignas(64) std::array<Meta,FixedPageCount> meta{};
-        AlignedVector<T> values=AlignedVector<T>(Layout::size(FixedPageCount,C));
-    };
+    using Meta=slot_detail::SlotMetadata;
+    using Page=slot_detail::SlotPage<T,C,Layout,FixedPageCount>;
     struct Store {
         std::shared_ptr<slot_detail::KeyIndex> index=std::make_shared<slot_detail::KeyIndex>();
         std::vector<std::shared_ptr<Page>> pages;
@@ -97,6 +100,14 @@ class PagedSlotField {
     std::uint32_t version_;
     Store state_;
     std::optional<Store> saved_;
+    static const Store &committed(const PagedSlotField &other) {
+        if(other.in_trial()) throw std::logic_error("cannot copy an active slot trial");
+        return other.state_;
+    }
+    void swap(PagedSlotField &other) noexcept {
+        std::swap(schema_,other.schema_); std::swap(version_,other.version_);
+        std::swap(state_,other.state_); saved_.swap(other.saved_);
+    }
     const Page &page(std::uint32_t i) const { return *state_.pages[i/FixedPageCount]; }
     Page &edit(std::uint32_t i) {
         auto &p=state_.pages[i/FixedPageCount];
@@ -206,6 +217,20 @@ class PagedSlotField {
   public:
     PagedSlotField(std::uint64_t schema_id,std::uint32_t version):schema_(schema_id),version_(version) {
         if(!schema_id || !version) throw std::invalid_argument("invalid slot schema identity");
+    }
+    PagedSlotField(const PagedSlotField &other)
+        :schema_(other.schema_),version_(other.version_),state_(committed(other)) {}
+    PagedSlotField &operator=(const PagedSlotField &other) {
+        if(in_trial()) throw std::logic_error("cannot replace an active slot trial by copy");
+        if(this!=&other) { PagedSlotField copy(other); swap(copy); }
+        return *this;
+    }
+    PagedSlotField(PagedSlotField &&other):PagedSlotField(other.schema_,other.version_) {
+        swap(other);
+    }
+    PagedSlotField &operator=(PagedSlotField &&other) {
+        if(this!=&other) { PagedSlotField moved(std::move(other)); swap(moved); }
+        return *this;
     }
     std::size_t size() const { return state_.index->size(); }
     bool in_trial() const { return saved_.has_value(); }

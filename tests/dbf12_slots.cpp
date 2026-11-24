@@ -14,6 +14,24 @@ static std::vector<char> bytes(const Path &p) {
     std::ifstream in(p,std::ios::binary); return {std::istreambuf_iterator<char>(in),{}};
 }
 static void persistence(const Path &dir,bool partition_fixture) {
+    using Page=slot_detail::SlotPage<double,3,AoSoA<4>,16>;
+    static_assert(alignof(Page)>=64);
+    auto page=std::make_shared<Page>();
+    check(reinterpret_cast<std::uintptr_t>(page->values.data())%64==0 &&
+          reinterpret_cast<std::uintptr_t>(page->meta.data())%64==0,"actual page alignment");
+    Pool source(98,2); auto original=source.allocate(1); source.set(original,0,9);
+    Pool copy(source); copy.set(original,0,2); copy.erase(original);
+    check(source.get(original)==9,"committed copy failed COW");
+    source.begin_trial(); source.set(original,0,7);
+    rejects([&]{Pool invalid(source);}); rejects([&]{copy=source;}); rejects([&]{source=copy;});
+    Pool moved(std::move(source));
+    auto empty=[&](Pool &from) {
+        check(!from.in_trial() && from.size()==0 && !from.find(1),"moved-from pool invariant");
+        auto path=dir/"moved-from.slots"; from.save(path); from.restore(path);
+        check(from.allocate(1)==SlotHandle{0,1},"moved-from reuse");
+    };
+    empty(source); check(moved.in_trial() && moved.get(original)==7,"move lost active trial");
+    copy=std::move(moved); empty(moved); copy.rollback(); check(copy.get(original)==9,"move assignment rollback");
     Pool p(98,2); std::vector<SlotHandle> h;
     for(unsigned i=0;i<80;++i) {h.push_back(p.allocate(i)); p.set(h.back(),2,i+0.25);}
     p.erase(h[3]); p.erase(h[70]); p.set_valid(h[64],false);
@@ -59,6 +77,37 @@ static void persistence(const Path &dir,bool partition_fixture) {
         check(reader.get(a)==27,"parent binding round trip");
         rejects([&]{reader.restore_sidecar(side,first);}); check(reader.get(a)==27,"parent mismatch atomicity");
     }
+}
+static void exhausted(const Path &dir) {
+    namespace n=lifecycle::native;
+    // Schema, header counts, then one valid committed live row at the last generation.
+    n::Writer w; w.integer<std::uint64_t>(98); w.integer<std::uint32_t>(2);
+    w.integer<std::uint32_t>(static_cast<unsigned>(ScalarType::Float64)); w.integer<std::uint32_t>(3);
+    w.integer<std::uint32_t>(1); w.integer(UINT32_MAX); w.integer(UINT32_MAX); w.integer<std::uint8_t>(1);
+    w.integer<std::uint64_t>(42); w.integer<std::uint8_t>(1); for(int i=0;i<3;++i) w.scalar(double(i));
+    auto path=dir/"last-generation.slots";
+    n::atomic_stream(path,[&](auto &out) { n::write(out,n::pack(UINT64_C(0x31544f4c53424453))); n::record(out,2,w.bytes); });
+    Pool p(98,2); p.restore(path); SlotHandle last{0,UINT32_MAX}; check(p.get(last,2)==2,"last generation");
+    p.erase(last); p.save(path); p.restore(path);
+    check(p.allocate(42)==SlotHandle{1,1},"exhausted slot reentered free list"); rejects([&]{p.get(last);});
+}
+static void duplicate_packet() {
+    Pool sender(98,2),receiver(98,2);
+    sender.allocate(1); sender.allocate(2);
+    auto packet=sender.export_migration_packets([](auto){return true;});
+    auto b=std::span(reinterpret_cast<std::uint8_t *>(packet.data()),packet.size());
+    constexpr std::size_t header=36,row=65;
+    check(b.size()==header+2*row+4,"packet layout");
+    std::copy_n(b.begin()+header,8,b.begin()+header+row);
+    auto sign=[&](std::size_t first,std::size_t end){
+        auto crc=checkpoint_detail::crc(b.subspan(first,end-first));
+        for(unsigned j=0;j<4;++j) b[end+j]=static_cast<std::uint8_t>(crc>>(8*j));
+    };
+    sign(header+row,header+2*row-4); sign(0,b.size()-4);
+    auto keep=receiver.allocate(99); receiver.begin_trial();
+    rejects([&]{receiver.import_migration_packets(packet);});
+    check(receiver.size()==1 && receiver.domain_key(keep)==99 && receiver.allocate(1)==SlotHandle{1,1},"duplicate packet partial import");
+    receiver.rollback();
 }
 static void migration() {
     constexpr unsigned keys=4096;
@@ -116,7 +165,7 @@ static void migration() {
 int main(int argc,char **argv) { try {
     if(argc!=3) return 2;
     Path dir=argv[1]; std::filesystem::create_directories(dir);
-    auto initial=host_memory.live.load(); persistence(dir,std::string_view(argv[2])=="partition"); migration();
+    auto initial=host_memory.live.load(); persistence(dir,std::string_view(argv[2])=="partition"); exhausted(dir); duplicate_packet(); migration();
     check(initial==host_memory.live.load(),"aligned page storage leaked");
     return 0;
 } catch(const std::exception &e) {std::cerr<<e.what()<<"\n"; return 1;} }
