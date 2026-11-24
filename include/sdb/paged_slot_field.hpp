@@ -100,11 +100,11 @@ class PagedSlotField {
     const Page &page(std::uint32_t i) const { return *state_.pages[i/FixedPageCount]; }
     Page &edit(std::uint32_t i) {
         auto &p=state_.pages[i/FixedPageCount];
-        if(!p.unique()) p=std::make_shared<Page>(*p);
+        if(p.use_count()!=1) p=std::make_shared<Page>(*p);
         return *p;
     }
     void edit_index() {
-        if(!state_.index.unique()) state_.index=std::make_shared<slot_detail::KeyIndex>(*state_.index);
+        if(state_.index.use_count()!=1) state_.index=std::make_shared<slot_detail::KeyIndex>(*state_.index);
     }
     const Meta &meta(std::uint32_t slot) const { return page(slot).meta[slot%FixedPageCount]; }
     const Meta &checked(SlotHandle h) const {

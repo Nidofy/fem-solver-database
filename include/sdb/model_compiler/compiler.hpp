@@ -721,7 +721,7 @@ class ModelCompiler {
                 fail(step.source, "invalid/duplicate step");
             actions(step.boundaries, boundaries, analysis.steps.size());
             actions(step.loads, loads, analysis.steps.size());
-            AnalysisStep compiled{step.name, step.period, step.increment, step.direct, {}, {}, step.source};
+            AnalysisStep compiled{step.name, step.period, step.increment, step.direct, {}, {}, step.source, {}};
             for (auto &[k, a] : boundaries) {
                 if (a.value != 0 || !a.amplitude.empty())
                     fail(step.source, "only homogeneous constant boundary supported");

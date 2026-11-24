@@ -22,7 +22,7 @@ struct ResultAddress {
     std::uint32_t integration_point = 0, layer = 0, section_point = 0, element_node = 0, face = 0;
     std::int32_t side = 0;
     std::uint64_t contact_generation = 0, interaction = 0;
-    ResultEndpoint endpoint_a, endpoint_b;
+    ResultEndpoint endpoint_a{}, endpoint_b{};
     std::uint32_t contact_point = 0, domain = 0;
     auto operator<=>(const ResultAddress &) const = default;
     template<class F> void visit(F f) {

@@ -194,7 +194,7 @@ class File {
                 throw std::runtime_error("indexed ancestor offset invalid");
         }
         if (f.count) {
-            ResultFrame frame{f.info, {}};
+            ResultFrame frame{f.info, {}, std::nullopt};
             if (typed_) frame.binding = ResultBinding{model.mesh, model.definition, model.configuration,
                 f.info.step, f.info.increment, f.info.time};
             validate_frame(frame, model, std::nullopt);
@@ -551,8 +551,7 @@ class File {
                         count = std::max<std::size_t>(1, count / 2);
                     }
                     Block b{block.addresses.front().entity, block.addresses.back().entity,
-                        static_cast<std::uint32_t>(count), {}};
-                    b.first_address = block.addresses.front(); b.last_address = block.addresses.back();
+                        static_cast<std::uint32_t>(count), {}, block.addresses.front(), block.addresses.back()};
                     submit(b,native::pack(block,limit_));
                     start += count;
                 }
