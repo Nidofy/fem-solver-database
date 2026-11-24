@@ -86,9 +86,11 @@ inline std::uint64_t crc64(std::span<const std::uint8_t> bytes,std::uint64_t crc
 }
 // Fixed-width prefix is independent of the local SDK Index ABI.
 inline void prefix(std::ostream &out,std::uint64_t id) { n::write(out,n::pack(std::pair(id,std::uint32_t(2)))); }
-inline void prefix(std::istream &in,std::uint64_t id) {
+inline std::uint32_t prefix(std::istream &in,std::uint64_t id) {
     std::array<std::uint8_t,12> bytes; n::read(in,bytes);
-    require(n::unpack<std::pair<std::uint64_t,std::uint32_t>>(bytes)==std::pair(id,std::uint32_t(2)),"partition magic/version");
+    const auto [magic,version]=n::unpack<std::pair<std::uint64_t,std::uint32_t>>(bytes);
+    require(magic==id && (version==1 || version==2),"partition magic/version");
+    return version;
 }
 struct FieldSchema {
     FieldDescriptor field;
@@ -140,17 +142,25 @@ struct Header {
     std::vector<Row> rows;
     template<class F> void visit(F f) { f(kind,rank,parts,local_equation_context,epoch,owned,fields,rows); }
 };
+// In the candidate v1 wire format every source rank was bound to epoch.dofs.
+struct LegacyHeader : Header {
+    template<class F> void visit(F f) { f(kind,rank,parts,epoch,owned,fields,rows); }
+};
 struct ShardIndex {
     Header header;
     std::vector<std::uint64_t> offsets;
     std::uint64_t bytes=0,index_crc=0;
 };
 inline ShardIndex index(const Path &path,PartitionFile kind) {
-    std::ifstream in(path,std::ios::binary); prefix(in,magic(kind));
+    std::ifstream in(path,std::ios::binary); const auto version=prefix(in,magic(kind));
     auto payload=n::record(in,1);
     ShardIndex idx;
     idx.index_crc=crc64(payload);
-    auto &h=idx.header; h=n::unpack<Header>(payload);
+    auto &h=idx.header;
+    if(version==1) {
+        h=n::unpack<LegacyHeader>(payload);
+        h.local_equation_context=h.epoch.constraint_contract;
+    } else h=n::unpack<Header>(payload);
     require(h.kind==kind && h.parts && h.rank<h.parts,"partition rank/type");
     h.epoch.validate();
     const auto owned=h.owned.sorted();
