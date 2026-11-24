@@ -188,6 +188,27 @@ static void target_faults(const Path &dir) {
     auto stats=PartitionedCheckpoint::restore(file,empty_map,1,empty,epoch());
     check(stats.payload_shards==1 && stats.selected_rows==2 && stats.payload_bytes==16 && empty.get<Exact>("SNEXT_CURSOR").read()(0)==3,"empty rank read payload");
 }
+// Opt-in scale regression. Regular CTest also checks the same admission
+// boundaries with a small budget; this mode writes an actual >256 MiB header.
+static void large_header(const Path &dir) {
+    constexpr std::size_t rows=2400000;
+    std::filesystem::create_directories(dir);
+    OwnedSourceMap map; map.node_labels.resize(rows);
+    for(std::size_t i=0;i<rows;++i) map.node_labels[i]=i+1;
+    PartitionEpoch clock{7,13,"budget/v1",{{1,0,0.0}}};
+    RegisteredState state; state.bind_context(7,13,17);
+    FieldDescriptor d; d.name="marker"; d.association=Association::Node; d.location=FieldLocation::Entity;
+    d.scalar=ScalarType::UInt8; state.add<Field<std::uint8_t>>(d,rows,"marker",1,{42},0); state.freeze();
+    const auto path=dir/"part_0.sdbrst";
+    PartitionedCheckpoint::write(dir,0,1,clock,map,state,partition_metadata_budget);
+    std::ifstream in(path,std::ios::binary); partition_detail::prefix(in,partition_detail::checkpoint_magic);
+    auto h=native::header(in,partition_metadata_budget);
+    check(h.size>native::default_limit,"scale regression did not cross legacy header limit");
+    rejects([&]{partition_detail::index(path,PartitionFile::Checkpoint,native::default_limit);});
+    auto idx=partition_detail::index(path,PartitionFile::Checkpoint,partition_metadata_budget);
+    check(idx.header.rows.size()==rows && partition_detail::read_row(in,idx,rows-1)==native::Bytes{42},"large header read");
+    std::cout<<"indexed_rows="<<rows<<" header_bytes="<<h.size<<" configured_budget="<<partition_metadata_budget<<"\n";
+}
 static void legacy_v1(const Path &dir) {
     auto file=dir/"run.sdbmanifest"; auto m=DistributedManifest::open(file);
     for(const auto &part:m.parts) {
@@ -220,7 +241,10 @@ static void restart_policies(const Path &dir) {
     };
     auto sources=partition(2);
     for(unsigned r=0;r<2;++r) {
-        auto s=make(sources[r],r); PartitionedCheckpoint::write(dir,r,2,epoch(),sources[r],s);
+        auto s=make(sources[r],r);
+        rejects([&]{PartitionedCheckpoint::write(dir,r,2,epoch(),sources[r],s,64);});
+        check(!std::filesystem::exists(dir/partition_detail::filename(r,PartitionFile::Checkpoint)),"failed metadata admission published a shard");
+        PartitionedCheckpoint::write(dir,r,2,epoch(),sources[r],s);
         auto idx=partition_detail::index(dir/partition_detail::filename(r,PartitionFile::Checkpoint),PartitionFile::Checkpoint);
         check(idx.header.rows.size()==sources[r].node_labels.size(),"optional checkpoint rows written");
     }
@@ -271,6 +295,7 @@ int main(int argc,char **argv) { try {
     check(partition_detail::crc64(kat)==UINT64_C(0x6c40df5f0b497347),"CRC64 ECMA-182");
     if(op=="write" && argc>=5) write(path,std::stoul(argv[3]),std::stoul(argv[4]),argc>=6?argv[5]:"");
     else if(op=="publish" && argc==4) DistributedManifest::publish(path/"run.sdbmanifest",std::stoul(argv[3]),partition(1)[0],epoch());
+    else if(op=="large_header") large_header(path);
     else if(op=="legacy") legacy_v1(path);
     else if(op=="restart_policies") restart_policies(path);
     else if(op=="payload_faults") payload_faults(path);
