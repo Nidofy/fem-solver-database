@@ -4,6 +4,7 @@
 #include <functional>
 #include <string_view>
 
+namespace sdb { class MultiBatchBundle; }
 namespace sdb::consumer::v1 {
 inline constexpr std::uint32_t contract_version=1;
 // Opaque formulation names are interpreted by the consumer, never dispatched by the database.
@@ -49,6 +50,7 @@ class MaterialCatalog {
         definitions_=std::make_shared<const std::vector<lifecycle::MaterialDefinition>>(std::move(f.material_definitions));
     }
     const auto &operator[](std::size_t i) const { return definitions_->at(i); }
+    const auto &definitions() const noexcept { return *definitions_; }
     std::size_t size() const noexcept { return definitions_->size(); }
     std::uint64_t identity() const { return semantic_hash(*definitions_); }
 };
@@ -74,6 +76,7 @@ class SectionCatalog {
         definitions_=std::make_shared<const std::vector<SectionDefinition>>(std::move(definitions));
     }
     const auto &operator[](std::size_t i) const { return definitions_->at(i); }
+    const auto &definitions() const noexcept { return *definitions_; }
     std::size_t size() const noexcept { return definitions_->size(); }
     std::uint64_t identity() const { return semantic_hash(*definitions_); }
 };
@@ -92,9 +95,11 @@ class Batch {
     MaterialCatalog materials_;
     SectionCatalog sections_;
     std::uint64_t identity_=0;
-  public:
-    Batch(BatchData data, DofSpace dofs, MaterialCatalog materials,SectionCatalog sections)
-        :dofs_(std::make_shared<const DofSpace>(std::move(dofs))),materials_(std::move(materials)),sections_(std::move(sections)) {
+    friend class ::sdb::MultiBatchBundle;
+    friend class BatchCatalog;
+    struct SharedSpace {};
+    Batch(SharedSpace, BatchData data, std::shared_ptr<const DofSpace> dofs, MaterialCatalog materials, SectionCatalog sections)
+        :dofs_(std::move(dofs)),materials_(std::move(materials)),sections_(std::move(sections)) {
         data.topology.validate(); const auto n=data.elements.size(), q=data.samples.size();
         if(data.version!=contract_version || data.formulation.empty() || !data.formulation_version ||
            data.model!=dofs_->data().model || data.equation_space!=dofs_->identity() ||
@@ -135,6 +140,10 @@ class Batch {
         data_=std::make_shared<const BatchData>(std::move(data));
         identity_=semantic_hash(std::array<std::uint64_t,4>{semantic_hash(*data_),dofs_->identity(),materials_.identity(),sections_.identity()});
     }
+  public:
+    Batch(BatchData data, DofSpace dofs, MaterialCatalog materials, SectionCatalog sections)
+        : Batch(SharedSpace{},std::move(data),std::make_shared<const DofSpace>(std::move(dofs)),
+                std::move(materials),std::move(sections)) {}
     const BatchData &data() const noexcept { return *data_; }
     const DofSpace &dofs() const noexcept { return *dofs_; }
     const MaterialCatalog &materials() const noexcept { return materials_; }
