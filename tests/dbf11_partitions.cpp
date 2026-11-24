@@ -209,19 +209,30 @@ static void large_header(const Path &dir) {
     check(idx.header.rows.size()==rows && partition_detail::read_row(in,idx,rows-1)==native::Bytes{42},"large header read");
     std::cout<<"indexed_rows="<<rows<<" header_bytes="<<h.size<<" configured_budget="<<partition_metadata_budget<<"\n";
 }
-static void legacy_v1(const Path &dir) {
+static void legacy_shards(const Path &dir,bool released_v2) {
     auto file=dir/"run.sdbmanifest"; auto m=DistributedManifest::open(file);
     for(const auto &part:m.parts) {
         auto idx=partition_detail::index(dir/part.relative_path,part.kind);
-        check(idx.header.local_equation_context==13,"v1 equation context");
+        check(idx.header.local_equation_context==(released_v2?19u:13u),"historical shard equation context");
     }
     PartitionedResultReader reader(file); auto rows=reader.query_samples("legacy",105,0,1);
     check(rows.size()==1 && std::get<std::vector<double>>(rows.front().values).front()==-7.5,"v1 result value");
     OwnedSourceMap map{{105,101},{}}; RegisteredState target; target.bind_context(7,42,17);
     FieldDescriptor d; d.name="legacy"; d.association=Association::Node; d.location=FieldLocation::Entity;
-    target.add<Scalar>(d,2,"test",1,{0},0); target.freeze();
+    target.add<Scalar>(d,2,"test",1,{0},0);
+    if(released_v2) {
+        d.name="cached"; d.restart=RestartPolicy::Reconstruct; target.add<Scalar>(d,2,"cache",1,{3},0);
+        d.name="ignored"; d.association=Association::Global; d.restart=RestartPolicy::Omit;
+        target.add<Scalar>(d,1,"omit",1,{4},0);
+    }
+    target.freeze();
     PartitionedCheckpoint::restore(file,{&map,1},0,target,{7,13,"legacy",{{1,0,0.5}}});
-    auto v=target.get<Scalar>("legacy").read(); check(v(0)==-7.5 && v(1)==1.25,"v1 reordered restore");
+    auto v=target.get<Scalar>("legacy").read(); check(v(0)==-7.5 && v(1)==1.25,"historical reordered restore");
+    if(released_v2) {
+        check(target.get<Scalar>("cached").read()(1)==3 && target.get<Scalar>("ignored").read()(0)==4,"old optional values restored");
+        auto result=reader.query_samples("ignored",0,0,1);
+        check(std::get<std::vector<double>>(result.at(0).values).at(0)==123,"restart policy removed result value");
+    }
 }
 static void restart_policies(const Path &dir) {
     auto make=[](const OwnedSourceMap &owned,unsigned rank) {
@@ -296,7 +307,7 @@ int main(int argc,char **argv) { try {
     if(op=="write" && argc>=5) write(path,std::stoul(argv[3]),std::stoul(argv[4]),argc>=6?argv[5]:"");
     else if(op=="publish" && argc==4) DistributedManifest::publish(path/"run.sdbmanifest",std::stoul(argv[3]),partition(1)[0],epoch());
     else if(op=="large_header") large_header(path);
-    else if(op=="legacy") legacy_v1(path);
+    else if(op=="legacy" || op=="released_v2") legacy_shards(path,op=="released_v2");
     else if(op=="restart_policies") restart_policies(path);
     else if(op=="payload_faults") payload_faults(path);
     else if(op=="results_only") {

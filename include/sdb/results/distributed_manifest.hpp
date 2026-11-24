@@ -355,7 +355,9 @@ struct DistributedManifest {
                 std::ifstream in(path,std::ios::binary);
                 for(std::size_t i=0;i<h.rows.size();++i) {
                     const auto &row=h.rows[i];
-                    if(h.fields[row.field].field.association==Association::Global)
+                    const auto &field=h.fields[row.field].field;
+                    if(field.association==Association::Global &&
+                       (p.kind==PartitionFile::Results || field.restart==RestartPolicy::Required))
                         globals.emplace_back(GlobalRow{p.kind,row.field,row.sample},read_row(in,idx,i));
                 }
                 std::ranges::sort(globals,{},&decltype(globals)::value_type::first);
