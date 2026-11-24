@@ -79,9 +79,10 @@ static void wide_frf(const Path &dir) {
     }
     StreamingSpectralReader reader(path);
     for(unsigned dof:{0u,32770u,width-1}) {
-        auto before=reader.chunk_headers_read(); unsigned s=0;
+        auto before=reader.chunk_headers_read(),seeks=reader.seek_count(),alloc=process_memory::stats().allocations; unsigned s=0;
         reader.frequency_response(dof,[&](auto &,auto v){check(v==expected(s++,dof),"wide FRF data");});
         check(s==points && reader.chunk_headers_read()-before==points,"FRF scanned unrelated headers");
+        check(reader.seek_count()-seeks<=4*points && process_memory::stats().allocations-alloc<64*points,"FRF lookup complexity");
     }
     check(reader.slice(3).values.size()==width,"full indexed slice");
     std::cout<<"wide_dofs="<<width<<" chunks_per_sample="<<(1+(width-1)/per_block)
@@ -95,13 +96,13 @@ static void directory_faults(const Path &dir) {
     auto footer=sd::read_fixed<sd::footer_size>(in); auto tail=sd::checked(footer);
     (void)tail.integer<std::uint64_t>(); auto table=tail.integer<std::uint64_t>();
     auto count=tail.integer<std::uint64_t>();
-    for(unsigned fault=0;fault<6;++fault) {
-        auto sample=fault==4?0u:fault==5?count-1:1u;
+    for(unsigned fault=0;fault<7;++fault) {
+        auto sample=fault==4?0u:fault==5?count-1:fault==6?2u:1u;
         auto pos=table+sample*sd::entry_size;
         sd::seek(in,pos); auto bytes=sd::read_fixed<sd::entry_size>(in); auto r=sd::checked(bytes);
         auto ordinal=r.integer<std::uint64_t>(),start=r.integer<std::uint64_t>(),size=r.integer<std::uint64_t>();
         auto x=r.scalar<double>();
-        if(fault==0) x=1;        // duplicate first coordinate
+        if(fault==0 || fault==6) x=1;        // duplicate first coordinate
         if(fault==1) { ++start; --size; } // internal gap
         if(fault==2) { --start; ++size; } // overlap
         if(fault==3) size=0;
@@ -138,6 +139,17 @@ static void faults(const Path &dir) {
 int main(int argc,char **argv) { try {
     if(argc!=3) return 2;
     Path dir=argv[2]; std::string op=argv[1];
+    if(op=="legacy") {
+        StreamingSpectralReader reader(dir);
+        for(unsigned dof:{0u,12u,16u}) {
+            unsigned s=0; auto before=reader.chunk_headers_read(),seeks=reader.seek_count();
+            reader.frequency_response(dof,[&](auto &m,auto v) {
+                check(m.coordinate==s*0.125 && v==SpectralValue{double(2*s+dof),double(s)-dof},"v2 legacy FRF"); ++s;
+            });
+            check(s==3 && reader.chunk_headers_read()-before==s && reader.seek_count()-seeks<=4*s,"v2 FRF lookup");
+        }
+        check(reader.slice(2).values[16]==SpectralValue{20,-14},"v2 legacy slice"); return 0;
+    }
     std::filesystem::create_directories(dir);
     bool zstd=compression::available(compression::Codec::Zstd);
     if(op=="write") {

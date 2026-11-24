@@ -185,7 +185,8 @@ class StreamingSpectralReader {
     std::ifstream in_;
     SpectralArchiveDescriptor desc_;
     std::uint64_t start_=0, dir_=0, count_=0;
-    std::size_t decoded_=0,max_raw_=0,headers_=0;
+    std::size_t decoded_=0,max_raw_=0,headers_=0,seeks_=0;
+    void seek_to(std::istream &stream,std::uint64_t pos) { ++seeks_; spectral_detail::seek(stream,pos); }
     bool indexed_=false;
     std::unique_ptr<spectral_detail::Scratch> legacy_scratch_;
     std::ifstream legacy_offsets_;
@@ -202,11 +203,11 @@ class StreamingSpectralReader {
     }
     Entry entry(std::uint64_t sample) {
         if(sample>=count_) throw std::out_of_range("spectral sample");
-        spectral_detail::seek(in_,dir_+spectral_detail::entry_size*sample); return directory_record(sample);
+        seek_to(in_,dir_+spectral_detail::entry_size*sample); return directory_record(sample);
     }
     void validate_directory() {
         using namespace spectral_detail;
-        seek(in_,dir_); auto next=start_; double previous=0;
+        seek_to(in_,dir_); auto next=start_; double previous=0;
         for(std::uint64_t s=0;s<count_;++s) {
             const auto e=directory_record(s);
             require(e.start==next && e.end>e.start && (!s || e.coordinate>previous),"spectral directory order/coverage");
@@ -243,11 +244,11 @@ class StreamingSpectralReader {
         auto path=legacy_scratch_->dir/"index"; std::ofstream out(path,std::ios::binary);
         require(bool(out),"legacy spectral scratch open");
         for(std::uint64_t s=0;s<count_;++s) {
-            auto e=entry(s); seek(in_,e.start); (void)n::record(in_,1,metadata_limit);
+            auto e=entry(s); seek_to(in_,e.start); (void)n::record(in_,1,metadata_limit);
             for(std::uint64_t i=0;i<desc_.dofs;) {
                 auto start=position(in_); auto num=std::min<std::uint64_t>(desc_.chunk_dofs,desc_.dofs-i);
                 auto b=block_header(num,e.end); auto stop=position(in_)+b.stored;
-                n::write(out,n::pack(std::pair(start,stop))); seek(in_,stop); i+=num;
+                n::write(out,n::pack(std::pair(start,stop))); seek_to(in_,stop); i+=num;
             }
             require(position(in_)==e.end,"legacy spectral slice extent");
         }
@@ -256,7 +257,7 @@ class StreamingSpectralReader {
     }
     template<class Emit> SpectralSampleMetadata read(std::uint64_t sample,std::optional<std::uint64_t> dof,Emit emit) {
         using namespace spectral_detail;
-        auto e=entry(sample); seek(in_,e.start);
+        auto e=entry(sample); seek_to(in_,e.start);
         auto meta=n::unpack<SpectralSampleMetadata>(n::record(in_,1,metadata_limit),metadata_limit);
         meta.validate(desc_.axis); require(meta.coordinate==e.coordinate,"spectral coordinate mismatch");
         auto first_block=position(in_), data_end=chunk_data_end(e),limit=data_end;
@@ -266,17 +267,17 @@ class StreamingSpectralReader {
             auto ordinal=*dof/desc_.chunk_dofs; i=ordinal*desc_.chunk_dofs;
             std::uint64_t start;
             if(indexed_) {
-                seek(in_,data_end+ordinal*chunk_entry_size);
+                seek_to(in_,data_end+ordinal*chunk_entry_size);
                 start=offset_entry(e,ordinal,data_end);
                 if(ordinal+1<chunks()) limit=offset_entry(e,ordinal+1,data_end);
             } else {
                 // The constructor emitted exactly one 16-byte extent per verified chunk.
-                seek(legacy_offsets_,16*(sample*chunks()+ordinal));
+                seek_to(legacy_offsets_,16*(sample*chunks()+ordinal));
                 auto extent=n::unpack<std::pair<std::uint64_t,std::uint64_t>>(read_fixed<16>(legacy_offsets_));
                 start=extent.first; limit=extent.second;
             }
             require(first_block<=start && start<limit && limit<=data_end,"spectral indexed bounds");
-            seek(in_,start);
+            seek_to(in_,start);
         }
         std::vector<std::uint64_t> offsets;
         while(i<desc_.dofs) {
@@ -311,7 +312,7 @@ class StreamingSpectralReader {
         desc_=n::unpack<SpectralArchiveDescriptor>(n::record(in_,0,metadata_limit),metadata_limit); desc_.validate();
         start_=position(in_); in_.seekg(0,std::ios::end);
         auto length=position(in_); require(length>=start_+footer_size,"spectral archive truncated");
-        seek(in_,length-footer_size); auto bytes=read_fixed<footer_size>(in_); auto r=checked(bytes);
+        seek_to(in_,length-footer_size); auto bytes=read_fixed<footer_size>(in_); auto r=checked(bytes);
         require(r.integer<std::uint64_t>()==footer,"spectral footer magic");
         dir_=r.integer<std::uint64_t>(); count_=r.integer<std::uint64_t>();
         require(dir_>=start_ && dir_<=length-footer_size,"spectral directory position");
@@ -322,6 +323,7 @@ class StreamingSpectralReader {
     }
     const SpectralArchiveDescriptor &descriptor() const { return desc_; }
     std::uint64_t samples() const { return count_; }
+    std::size_t seek_count() const { return seeks_; }
     std::size_t chunk_headers_read() const { return headers_; }
     std::size_t decoded_chunks() const { return decoded_; }
     std::size_t largest_decoded_chunk() const { return max_raw_; }
