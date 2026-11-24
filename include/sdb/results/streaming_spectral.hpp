@@ -242,6 +242,17 @@ class StreamingSpectralReader {
         // Grow only as verified chunks arrive, even for untrusted declared DOF counts.
         out.metadata=read(sample,{},[&](auto v){out.values.push_back(v);}); return out;
     }
+    SpectralSlice slice_at(double coordinate) {
+        desc_.axis.validate_coordinate(coordinate);
+        std::uint64_t first=0,last=count_;
+        while(first<last) {
+            auto middle=first+(last-first)/2;
+            if(entry(middle).coordinate<coordinate) first=middle+1;
+            else last=middle;
+        }
+        if(first==count_ || entry(first).coordinate!=coordinate) throw std::out_of_range("spectral coordinate absent");
+        return slice(first);
+    }
     template<class Emit> void frequency_response(std::uint64_t dof,Emit emit) {
         if(desc_.axis.kind!=SampleAxisKind::FrequencyHz || dof>=desc_.dofs) throw std::invalid_argument("FRF axis or DOF");
         for(std::uint64_t s=0;s<count_;++s) {

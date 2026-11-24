@@ -44,6 +44,9 @@ static void read(const Path &p,bool modal) {
         check(lifecycle::native::pack(slice.metadata)==lifecycle::native::pack(meta) && slice.values.size()==ndof,"slice metadata");
         for(unsigned i=0;i<ndof;++i) check(slice.values[i]==expected(s,i),"slice payload");
     }
+    auto requested=metadata(49,modal).coordinate;
+    check(reader.slice_at(requested).values[15]==expected(49,15),"axis lookup");
+    rejects([&]{reader.slice_at(modal?501:requested+0.0625);});
     auto before=reader.decoded_chunks();
     if(!modal) {
         unsigned seen=0;
