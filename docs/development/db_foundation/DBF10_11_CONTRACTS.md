@@ -30,4 +30,4 @@ A checkpoint consumer can restore from the manifest and its checkpoint files alo
 
 ## Verification entry points
 
-Configure the standalone CMake project with `SDB_INDEX_BITS=32` or `64`. Run `ctest -R "^dbf1[01]_" --output-on-failure` for thermal and plugin history round trips, released SDK wire goldens, independent rank writers, result queries, repartitioned restore and fault injection. The freeze packet records the exact compilers, configurations, counts and cross-OS checks. Real CUDA in this release lineage is **BLOCKED_ENV · not locally compiled / not locally verified** on the development host.
+Configure the standalone CMake project with `SDB_INDEX_BITS=32` or `64`. Run `ctest -R "^dbf1[01]_" --output-on-failure` for thermal and plugin history round trips, released SDK wire goldens, independent rank writers, result queries, repartitioned restore and fault injection. The freeze packet records the exact compilers, configurations, counts and cross-OS checks. The original DBF10/11 freeze recorded CUDA as blocked. The DBF12 release contract records subsequent native compiler checks and the remaining device verification.

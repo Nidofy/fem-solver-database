@@ -61,6 +61,12 @@ The reader verifies that directory coordinates are strictly increasing and the s
 
 The built-in byte-run codec emits deterministic count/value pairs and uses raw storage for blocks without savings. `SpectralCodec::Zstd` uses the existing synchronous SDK codec when configured with `SDB_ZSTD=ON`. Each decoded block has a 4 MiB absolute raw ceiling. Codec workspace limits are separate from the returned slice. Byte reproducibility of Zstd archives across installations depends on the encoder; pin the Zstd version when archiving reproducible builds.
 
+## CUDA header and build verification
+
+The default CUDA targets are SM 70, 75, 80 and 90. A configured architecture or CUDAARCHS environment setting takes precedence. MSVC uses UTF-8 for C and C++, and nvcc forwards the host encoding option. Host sanitizer compile flags apply only to C++ sources. The public headers contain ASCII source text.
+
+CUDA 12.6.85 with Windows MSVC 19.44 and CUDA 12.9.86 with WSL GCC 13.3 compiled and linked the backend, candidate and device-transaction tests. The `dbf12_cuda_headers` test runs on the host and verifies const record wire encoding and nested model canonicalization using the CUDA front end. Executing the GPU tests and running compute-sanitizer initcheck require an NVIDIA device and matching driver. The release manifest records those runtime gates as BLOCKED_ENV.
+
 ## Downstream integration
 
 Use the same SDK headers throughout a C++ consumer build. JIG-3 consumers pin the exact sdb-2.7.0 commit and the digest of its complete include tree together. These standalone CPU data formats do not require MPI or CUDA. Windows Index32/64, Linux sanitizer, cross-system artifact hashes and measured allocation peaks are recorded on the DBF12 review branch.
