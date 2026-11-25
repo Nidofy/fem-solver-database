@@ -42,9 +42,8 @@ if(SDB_SANITIZE)
     set(sdb_sanitize_link "LINKER:/INCREMENTAL:NO")
   else()
     set(sdb_sanitize_compile "$<$<COMPILE_LANGUAGE:CXX>:-fsanitize=address,undefined;-fno-omit-frame-pointer>")
-    # NVCC drives the host linker for CUDA executables which also link instrumented C++.
-    set(sdb_nvcc_link "$<LINK_LANG_AND_ID:CUDA,NVIDIA>")
-    set(sdb_sanitize_link "$<IF:${sdb_nvcc_link},-Xcompiler=-fsanitize=address;-Xcompiler=-fsanitize=undefined,-fsanitize=address$<COMMA>undefined>")
+    # CMake invokes the host driver for the final link, including CUDA executables.
+    set(sdb_sanitize_link "$<HOST_LINK:-fsanitize=address;-fsanitize=undefined>")
   endif()
   target_compile_options(solver_database_v2 INTERFACE "${sdb_sanitize_compile}")
   target_compile_options(process_memory PUBLIC "${sdb_sanitize_compile}")
