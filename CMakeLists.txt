@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(SolverDatabaseV2 VERSION 2.7.0 LANGUAGES CXX)
+project(SolverDatabaseV2 VERSION 2.8.0 LANGUAGES CXX)
 if(MSVC)
   add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:/utf-8>"
     "$<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CXX_COMPILER_ID:MSVC>>:-Xcompiler=/utf-8>")
@@ -362,7 +362,8 @@ set_tests_properties(batch_kernel_contracts PROPERTIES ENVIRONMENT "OMP_NUM_THRE
 include(cmake/contact_migration.cmake)
 include(cmake/physics_extensions.cmake)
 include(cmake/result_extensions.cmake)
-install(DIRECTORY include/ DESTINATION include)
+include(cmake/dbf13.cmake)
+install(DIRECTORY include/ DESTINATION include PATTERN "history.cpp" EXCLUDE)
 install(FILES python/sdb_reader.py DESTINATION share/SolverDatabaseV2/python)
 install(TARGETS solver_database_v2 EXPORT SolverDatabaseV2Targets)
 install(TARGETS sdb_lifecycle EXPORT SolverDatabaseV2Targets)
