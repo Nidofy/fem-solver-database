@@ -18,8 +18,9 @@ struct CandidateView {
             }
             auto previous = atomicCAS(count, slot, slot + 1);
             if (previous == slot) {
-                // Copy scalar members only. Aggregate copies can import FaceId padding.
+                // Downloads copy the full object representation, including FaceId tail padding.
                 auto &out = entries[slot];
+                ::memset(static_cast<void *>(&out), 0, sizeof(out));
                 out.a.element = key.a.element;
                 out.a.local = key.a.local;
                 out.a.side = key.a.side;
@@ -47,11 +48,6 @@ class Candidates {
     Candidates(std::shared_ptr<Context> context, std::size_t capacity)
         : context_(std::move(context)), data_(context_, capacity), counters_(context_, 2),
           host_data_(capacity) {
-        // Download copies sizeof(ContactKey), including both faces' tail padding.
-        context_->activate();
-        if (capacity)
-            check(cudaMemsetAsync(data_.data(), 0, capacity * sizeof(ContactKey), context_->stream()),
-                  "initialize candidate storage");
         reset();
     }
     ~Candidates() {
