@@ -1,0 +1,87 @@
+batch: DBF13
+state: DEVELOPMENT_CANDIDATE
+package_version: 2.8.0
+release_baseline: sdb-2.7.0
+SDB_PIN_SHA: fb5b2279ed81502abde19df3f9258cc037e5d19d
+SDB_HEADERS_SHA256: fe089ea7c16008dae6240e0d20544ae4d9e51668f1042588ce6de0591765121b
+implementation_commit: 01d64c35839d75034798df0caafd9e88b6c68f81
+inventory:
+  raw_schema: environ/DBSCHEMA.ASC
+  raw_schema_sha256: 4e23803fb24c17307be90839a6286a49d2335ea749be5b9091c6f889d86f6b4e
+  declared_subfiles: 25
+  declared_fields: 2047
+  dispositions: {stored: 0, reconstructed: 0, consumer_owned: 0, unsupported: 2047}
+  source_declarations_checked: true
+  native_mapping_certified: false
+  populated_native_capture_compared: false
+  ledger_file: field-audit.csv
+  ledger_encoding: UTF-8 with LF lines
+  ledger_sha256: 3892d476aa5d34072d1b2ff302c8bedceda4e5a3e8db75fd98090a15a1b46372
+  reproduction: python python/sdb_coverage.py --schema ../environ/DBSCHEMA.ASC --output field-audit.json
+  generated_json_sha256: 264e784af320d59950b464e366bfaeae334be47cf1fbb61161d348a42ef11f55
+  source_artifact_hashes:
+    inventory: e7a2f9f512fb1420db6b99f5a3d1e960661ee0ee3ca80a6c8382ff576e1498e2
+    mapping: b4c0e1a05b40fa8fa467996e0a4f3f89edc8367a249f59953b5a7f16a8356f99
+    layouts: 295dfa78ab95f852533db532c411903452f1604e822b009962c28caf15b98a28
+    schema: 4e23803fb24c17307be90839a6286a49d2335ea749be5b9091c6f889d86f6b4e
+wsl_full_retry:
+  initial_passed: 102
+  initial_total: 103
+  initial_result: indexed_results_contracts timed out at 300.13 seconds on the mounted Windows drive (9p)
+  initial_log_sha256: f6c4e3bc67b431d821021d0474ee6de197edf79aeb32b01d5e1e461301fa342f
+  initial_log: build-dbf9-wsl-freeze/dbf13-original-9p/dbf13-full.log
+  retry: full suite with only the indexed-scratch test output placed on native WSL ext4
+  frames: 100000
+  ctest_timeout_seconds: 300
+  asan_options: detect_leaks=1:halt_on_error=1
+  ubsan_options: halt_on_error=1
+  passed_indexed_test_seconds: 54.17
+regression:
+  windows_index32:
+    passed: 105
+    total: 105
+    seconds: 51.43
+    log_sha256: c6313942fa4f3dfff6d81247c5c5a9c134416690cd8395bb94ea1ea91b61844c
+    log: build-dbf9-cpu/dbf13-full.log
+  windows_index64:
+    passed: 100
+    total: 100
+    seconds: 55.90
+    log_sha256: 13f49fb3663d2edcf698e7acbc34ce99fd80a1bb13ba669d19949c7dbf4bade9
+    log: build-dbf9-index64/dbf13-full.log
+  wsl_asan_ubsan:
+    passed: 103
+    total: 103
+    seconds: 291.05
+    log_sha256: 89db58526270f8efaeb29752c238b1ca541a28c915c0fab2145e06972e383353
+    log: build-dbf9-wsl-freeze/dbf13-full.log
+  wsl_c_python_abi:
+    passed: 4
+    total: 4
+    seconds: 12.52
+    log_sha256: 7216bc8a3549b49fef2a509ca5b50389a8f736d58f3972d3838da163a7204910
+    log: build-dbf9-wsl-freeze/dbf13-linux-ffi.log
+  windows_msvc:
+    passed: 7
+    total: 7
+    seconds: 3.39
+    log_sha256: 84be47b0b4d5660ed267bf565fc971d82cce617e1e698ef4cef49ecaa857c248
+    log: build-dbf9-cpu/dbf13-msvc.log
+installed_cmake_log_sha256: 6375fa9b434f595615d246e6a43796e938eb87db966f4e299ef7df1d4225639f
+installed_abi_log_sha256: 944905959f60cc0533fb271344dd206244823ce403019f6c73b787e17efe56df
+acceptance:
+  declaration_and_layout_inventory: PASS_NATIVE_CPU
+  installed_c99_and_python_readers: PASS_NATIVE_CPU
+  process_crash_and_shard_truncation_injection: PASS_SIMULATED
+  paired_production_field_equivalence: BLOCKED_ENV
+  nvidia_device_initcheck: BLOCKED_ENV
+notes:
+  - The audit checked names, source lines, 1-based field numbers, draft ABI widths and mapping dispositions for each of the 25 subfiles.
+  - The mapping template classifies every declaration as unsupported. No reviewed mappings or paired native snapshots were available. The strict mapping gate returns failure.
+  - A synthetic f64 source-target pair exercises unit conversion and mismatch detection. Its scope is limited to the audit implementation.
+  - Coordinator process termination after temporary write, before replacement and after replacement was injected with native OS processes on Windows and WSL.
+  - Fresh readers verified the old or new manifest by bytes, 2-to-3 restart after retry, missing and truncated shards on two ranks and independent checkpoint/result consumers.
+  - MSVC used /utf-8 for the C consumer and C++ library. Windows and WSL exercised the versioned C and Python visitors, immediate stop, exact UINT64_MAX and validity-mask delivery. The Windows install also passed a C99-only CMake find_package consumer and an installed Python import.
+  - The C ABI reads legacy f64 entity histories and exact typed u64 entity histories. Each callback receives one sample. An exception or read failure preserves earlier callbacks.
+  - The candidate only changes Track S paths. The released sdb-2.7.0 identity remains the consumer pin for JIG-3.
+release_decision: production field equivalence and LTS qualification await reviewed mappings and paired captures
