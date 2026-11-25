@@ -108,13 +108,26 @@ inline std::vector<FieldSchema> fields(const RegisteredState &state) {
                                                e->layout_kind(),e->layout_width(),e->basis_id(),e->initialization()});
     return out;
 }
+inline void validate_partition_shape(const RegisteredFieldBase &field,const OwnedSourceMap &sorted) {
+    const auto &d=field.descriptor();
+    if(d.association==Association::Global) {
+        require(field.count()==1,"global singleton count");
+        return;
+    }
+    const auto &labels=sorted.labels(d.association);
+    if(const auto &layout=field.addressing()) {
+        require(layout->addresses.size()==field.count(),"explicit partition field address count");
+        for(const auto &a:layout->addresses)
+            require(std::ranges::binary_search(labels,a.entity),"field contains non-owned label");
+    } else {
+        require(d.location==FieldLocation::Entity && field.count()==labels.size(),
+                "implicit partition field requires one row per owned label");
+    }
+}
 inline Address address(const RegisteredFieldBase &e,const OwnedSourceMap &map,std::size_t row) {
-    if(e.descriptor().association==Association::Global) require(e.count()==1,"global singleton count");
     if(e.addressing()) return e.addressing()->addresses.at(row);
     if(e.descriptor().association==Association::Global) return {};
-    const auto &keys=map.labels(e.descriptor().association);
-    require(e.descriptor().location==FieldLocation::Entity && e.count()==keys.size(),"implicit partition field requires one row per owned label");
-    Address a; a.entity=keys.at(row); return a;
+    Address a; a.entity=map.labels(e.descriptor().association).at(row); return a;
 }
 struct Row {
     std::uint64_t sample=0,field=0;
@@ -269,12 +282,11 @@ inline void write_shard(const Path &dir,PartitionFile kind,std::uint32_t rank,st
         for(std::size_t f=0;f<catalog.size();++f) {
             catalog[f].validate();
             const auto *e=state->entries()[f];
+            validate_partition_shape(*e,sorted);
             if(kind==PartitionFile::Checkpoint && e->descriptor().restart!=RestartPolicy::Required) continue;
-            if(e->descriptor().association==Association::Global) require(e->count()==1,"global singleton count");
             const auto c=e->descriptor().component_count();
             for(std::size_t i=0;i<e->count();++i) {
                 auto a=address(*e,owned,i);
-                require(e->descriptor().association==Association::Global || std::ranges::binary_search(sorted.labels(e->descriptor().association),a.entity),"field contains non-owned label");
                 StateLayout::validate_address(a,e->descriptor().association,e->descriptor().location);
                 const auto first=product(i,c);
                 h.rows.push_back({kind==PartitionFile::Results?s:epoch.samples.size()-1,f,a,checkpoint_detail::crc(e->block(first,c))});

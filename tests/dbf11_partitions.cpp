@@ -235,14 +235,29 @@ static void legacy_shards(const Path &dir,bool released_v2) {
     }
 }
 static void restart_policies(const Path &dir) {
-    auto make=[](const OwnedSourceMap &owned,unsigned rank) {
+    enum class Shape { Valid, EmptyGlobal, TwoGlobals, EmptyNodeField, ExtraNodeRow, ForeignNodeLabel };
+    auto make=[](const OwnedSourceMap &owned,unsigned rank,Shape shape=Shape::Valid) {
         RegisteredState s; s.bind_context(37,100+rank,1);
         for(auto policy:{RestartPolicy::Required,RestartPolicy::Omit,RestartPolicy::Reconstruct}) {
             FieldDescriptor d; d.name=std::to_string(static_cast<unsigned>(policy)); d.restart=policy; d.location=FieldLocation::Entity;
             d.association=policy==RestartPolicy::Omit?Association::Global:Association::Node;
-            auto count=d.association==Association::Global?1:owned.node_labels.size();
+            std::size_t count=owned.node_labels.size();
+            if(policy==RestartPolicy::Omit)
+                count=shape==Shape::EmptyGlobal ? 0 : shape==Shape::TwoGlobals ? 2 : 1;
+            if(policy==RestartPolicy::Reconstruct) {
+                if(shape==Shape::EmptyNodeField) count=0;
+                if(shape==Shape::ExtraNodeRow) ++count;
+            }
             s.add<Scalar>(d,count,"restart-policy",1,{2.0},0);
         }
+        FieldDescriptor cached; cached.name="cached_by_label"; cached.association=Association::Node;
+        cached.location=FieldLocation::Entity; cached.restart=RestartPolicy::Omit;
+        StateLayout layout; layout.domain=owned.node_labels.size();
+        for(auto label:owned.node_labels) {
+            ResultAddress a; a.entity=label; layout.addresses.push_back(a);
+        }
+        if(shape==Shape::ForeignNodeLabel) layout.addresses.front().entity=UINT64_MAX;
+        s.add<Scalar>(cached,owned.node_labels.size(),"node-cache",1,{2.0},0,std::move(layout));
         s.freeze();
         for(const auto *e:s.entries()) {
             auto values=s.get<Scalar>(e->descriptor().name).write();
@@ -261,6 +276,18 @@ static void restart_policies(const Path &dir) {
     }
     auto path=dir/"run.sdbmanifest"; auto targets=partition(1);
     DistributedManifest::publish(path,2,targets[0],epoch(),PartitionFiles::Checkpoint);
+    // Each malformed optional field must fail on both the writer and the 2 -> 1 restore.
+    auto bad_dir=dir/"bad-shape"; std::filesystem::create_directories(bad_dir);
+    for(auto shape:{Shape::EmptyGlobal,Shape::TwoGlobals,Shape::EmptyNodeField,Shape::ExtraNodeRow,Shape::ForeignNodeLabel}) {
+        auto bad_source=make(sources[0],0,shape);
+        rejects([&]{PartitionedCheckpoint::write(bad_dir,0,2,epoch(),sources[0],bad_source);});
+        check(!std::filesystem::exists(bad_dir/"part_0.sdbrst"),"invalid shape published checkpoint");
+        auto bad_target=make(targets[0],9,shape);
+        auto required=std::to_string(static_cast<unsigned>(RestartPolicy::Required));
+        bad_target.get<Scalar>(required).write()(0)=-19;
+        rejects([&]{PartitionedCheckpoint::restore(path,targets,0,bad_target,epoch());});
+        check(bad_target.get<Scalar>(required).read()(0)==-19,"invalid shape partially restored target");
+    }
     auto dest=make(targets[0],9); PartitionedCheckpoint::restore(path,targets,0,dest,epoch());
     for(const auto *e:dest.entries()) {
         auto values=dest.get<Scalar>(e->descriptor().name).read();

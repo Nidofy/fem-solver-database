@@ -34,11 +34,11 @@ class PartitionedCheckpoint {
         std::vector<Destination> wanted;
         for(std::size_t f=0;f<state.entries().size();++f) {
             const auto *e=state.entries()[f]; const auto &d=e->descriptor();
+            validate_partition_shape(*e,sorted);
             if(d.restart!=RestartPolicy::Required) continue;
             const auto width=d.component_count();
             for(std::size_t i=0;i<e->count();++i) {
                 auto a=address(*e,local,i);
-                require(d.association==Association::Global || std::ranges::binary_search(sorted.labels(d.association),a.entity),"target state contains non-owned row");
                 wanted.push_back({Key{f,a},product(i,width),width,false});
             }
         }
