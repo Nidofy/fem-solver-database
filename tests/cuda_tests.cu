@@ -1,4 +1,5 @@
 #include "sdb/cuda_contact.hpp"
+#include <cstddef>
 #include <iostream>
 using namespace sdb;
 __global__ void append_candidates(cuda::CandidateView view) {
@@ -20,6 +21,20 @@ int main() {
         auto keys = candidates.download(dropped);
         if (keys.size() != 100 || dropped != 28)
             throw std::runtime_error("CUDA bounded append");
+        // Inspect device bytes before any host-side ContactKey copies can change padding.
+        std::vector<unsigned char> bytes(keys.size() * sizeof(ContactKey));
+        cuda::check(cudaMemcpy(bytes.data(), candidates.view().entries, bytes.size(), cudaMemcpyDeviceToHost),
+                    "read candidate object representations");
+        for (std::size_t i = 0; i < keys.size(); ++i) {
+            const auto &key = keys[i];
+            if (key.a != FaceId{100, 0, 1} || key.b != FaceId{200, 0, -1} ||
+                key.feature_a >= 128 || key.feature_b != 0)
+                throw std::runtime_error("CUDA candidate identity");
+            for (auto face : {offsetof(ContactKey, a), offsetof(ContactKey, b)})
+                for (auto pad = offsetof(FaceId, side) + sizeof(FaceId::side); pad < sizeof(FaceId); ++pad)
+                    if (bytes[i * sizeof(ContactKey) + face + pad] != 0)
+                        throw std::runtime_error("CUDA candidate padding");
+        }
         ContactDB<double> db;
         auto handle = db.touch({{100, 0, 1}, {200, 0, -1}, 0, 0}, 1);
         cuda::Manifolds<double> manifolds(ctx, db);

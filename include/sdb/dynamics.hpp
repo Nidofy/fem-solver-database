@@ -26,8 +26,8 @@ SDB_HD void tet_integrate_stress(std::size_t e, TetViews<T> t, const T* s, View<
 // Tensor order xx,yy,zz,xy,yz,zx. Strain stores tensor shear, not engineering shear.
 template <class T>
 SDB_HD void tet_force(std::size_t e, TetViews<T> t, View<const T, 3> u, View<T, 12> local, View<T, 6> stress,
-                      View<T, 6> strain, std::size_t point = std::numeric_limits<std::size_t>::max()) {
-    if (point == std::numeric_limits<std::size_t>::max())
+                      View<T, 6> strain, std::size_t point = ~std::size_t{0}) {
+    if (point == ~std::size_t{0})
         point = e;
     T du[3][3]{};
     for (unsigned a = 0; a < 4; ++a)

@@ -92,7 +92,8 @@ class PagedSlotField {
     using Meta=slot_detail::SlotMetadata;
     using Page=slot_detail::SlotPage<T,C,Layout,FixedPageCount>;
     struct Store {
-        std::shared_ptr<slot_detail::KeyIndex> index=std::make_shared<slot_detail::KeyIndex>();
+        // An empty store needs no index, including the source of a noexcept move.
+        std::shared_ptr<slot_detail::KeyIndex> index;
         std::vector<std::shared_ptr<Page>> pages;
         std::uint32_t count=0,free=end;
     };
@@ -115,7 +116,8 @@ class PagedSlotField {
         return *p;
     }
     void edit_index() {
-        if(state_.index.use_count()!=1) state_.index=std::make_shared<slot_detail::KeyIndex>(*state_.index);
+        if(!state_.index) state_.index=std::make_shared<slot_detail::KeyIndex>();
+        else if(state_.index.use_count()!=1) state_.index=std::make_shared<slot_detail::KeyIndex>(*state_.index);
     }
     const Meta &meta(std::uint32_t slot) const { return page(slot).meta[slot%FixedPageCount]; }
     const Meta &checked(SlotHandle h) const {
@@ -171,6 +173,7 @@ class PagedSlotField {
         if(count>(bytes.size()-r.pos)/9) throw std::runtime_error("truncated slot metadata");
         PagedSlotField staged(schema_,version_);
         auto &s=staged.state_; s.free=head;
+        if(count) staged.edit_index();
         std::size_t reusable=0;
         for(std::uint32_t i=0;i<count;++i) {
             staged.append_page(i); ++s.count;
@@ -225,14 +228,15 @@ class PagedSlotField {
         if(this!=&other) { PagedSlotField copy(other); swap(copy); }
         return *this;
     }
-    PagedSlotField(PagedSlotField &&other):PagedSlotField(other.schema_,other.version_) {
+    PagedSlotField(PagedSlotField &&other) noexcept :schema_(other.schema_),version_(other.version_) {
         swap(other);
     }
     PagedSlotField &operator=(PagedSlotField &&other) {
+        if(in_trial()) throw std::logic_error("cannot replace an active slot trial by move");
         if(this!=&other) { PagedSlotField moved(std::move(other)); swap(moved); }
         return *this;
     }
-    std::size_t size() const { return state_.index->size(); }
+    std::size_t size() const { return state_.index ? state_.index->size() : 0; }
     bool in_trial() const { return saved_.has_value(); }
     void begin_trial() {
         if(in_trial()) throw std::logic_error("nested slot trial");
@@ -244,6 +248,7 @@ class PagedSlotField {
         state_=std::move(*saved_); saved_.reset();
     }
     std::optional<SlotHandle> find(std::uint64_t key) const {
+        if(!state_.index) return {};
         auto i=state_.index->find(key);
         if(i==end) return {};
         return SlotHandle{i,meta(i).generation};

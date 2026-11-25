@@ -4,6 +4,7 @@
 
 using namespace sdb;
 using Pool=PagedSlotField<double,3,AoSoA<4>,16>;
+static_assert(std::is_nothrow_move_constructible_v<Pool>);
 using Path=std::filesystem::path;
 static void check(bool v,const char *msg) { if(!v) throw std::runtime_error(msg); }
 template<class F> static void rejects(F f) {
@@ -27,10 +28,20 @@ static void persistence(const Path &dir,bool partition_fixture) {
     Pool moved(std::move(source));
     auto empty=[&](Pool &from) {
         check(!from.in_trial() && from.size()==0 && !from.find(1),"moved-from pool invariant");
+        from.begin_trial(); from.allocate(8); from.rollback();
+        check(from.size()==0 && !from.find(8),"moved-from rollback");
         auto path=dir/"moved-from.slots"; from.save(path); from.restore(path);
         check(from.allocate(1)==SlotHandle{0,1},"moved-from reuse");
     };
     empty(source); check(moved.in_trial() && moved.get(original)==7,"move lost active trial");
+    copy.begin_trial(); auto keep=copy.allocate(20); copy.set(keep,0,17);
+    try {
+        copy=std::move(moved);
+        throw std::runtime_error("move into an active destination accepted");
+    } catch(const std::logic_error &) {}
+    check(copy.in_trial() && copy.get(keep)==17 && moved.in_trial() && moved.get(original)==7,
+          "rejected move changed a trial");
+    copy.rollback();
     copy=std::move(moved); empty(moved); copy.rollback(); check(copy.get(original)==9,"move assignment rollback");
     Pool p(98,2); std::vector<SlotHandle> h;
     for(unsigned i=0;i<80;++i) {h.push_back(p.allocate(i)); p.set(h.back(),2,i+0.25);}

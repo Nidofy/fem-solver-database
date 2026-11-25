@@ -140,15 +140,29 @@ int main(int argc,char **argv) { try {
     if(argc!=3) return 2;
     Path dir=argv[2]; std::string op=argv[1];
     if(op=="legacy") {
-        StreamingSpectralReader reader(dir);
-        for(unsigned dof:{0u,12u,16u}) {
-            unsigned s=0; auto before=reader.chunk_headers_read(),seeks=reader.seek_count();
-            reader.frequency_response(dof,[&](auto &m,auto v) {
-                check(m.coordinate==s*0.125 && v==SpectralValue{double(2*s+dof),double(s)-dof},"v2 legacy FRF"); ++s;
-            });
-            check(s==3 && reader.chunk_headers_read()-before==s && reader.seek_count()-seeks<=4*s,"v2 FRF lookup");
+        auto scratch_count=[] {
+            std::size_t count=0;
+            for(const auto &item:std::filesystem::directory_iterator(std::filesystem::temp_directory_path()))
+                if(item.path().filename().string().starts_with("sdb-legacy-frf.spectral.")) ++count;
+            return count;
+        };
+        const auto initial=scratch_count();
+        {
+            StreamingSpectralReader reader(dir);
+            StreamingSpectralReader replacement(dir);
+            check(scratch_count()==initial+2,"legacy readers require independent indices");
+            reader=std::move(replacement);
+            check(scratch_count()==initial+1,"move assignment leaked the old index directory");
+            for(unsigned dof:{0u,12u,16u}) {
+                unsigned s=0; auto before=reader.chunk_headers_read(),seeks=reader.seek_count();
+                reader.frequency_response(dof,[&](auto &m,auto v) {
+                    check(m.coordinate==s*0.125 && v==SpectralValue{double(2*s+dof),double(s)-dof},"v2 legacy FRF"); ++s;
+                });
+                check(s==3 && reader.chunk_headers_read()-before==s && reader.seek_count()-seeks<=4*s,"v2 FRF lookup");
+            }
+            check(reader.slice(2).values[16]==SpectralValue{20,-14},"v2 legacy slice");
         }
-        check(reader.slice(2).values[16]==SpectralValue{20,-14},"v2 legacy slice"); return 0;
+        check(scratch_count()==initial,"reader destruction leaked the index directory"); return 0;
     }
     std::filesystem::create_directories(dir);
     bool zstd=compression::available(compression::Codec::Zstd);

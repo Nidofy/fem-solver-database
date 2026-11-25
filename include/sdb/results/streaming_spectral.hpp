@@ -188,8 +188,12 @@ class StreamingSpectralReader {
     std::size_t decoded_=0,max_raw_=0,headers_=0,seeks_=0;
     void seek_to(std::istream &stream,std::uint64_t pos) { ++seeks_; spectral_detail::seek(stream,pos); }
     bool indexed_=false;
-    std::unique_ptr<spectral_detail::Scratch> legacy_scratch_;
-    std::ifstream legacy_offsets_;
+    // Replacing a reader by move also destroys the stream before removing its directory.
+    struct LegacyIndex {
+        spectral_detail::Scratch legacy_scratch_{std::filesystem::temp_directory_path()/"sdb-legacy-frf"};
+        std::ifstream legacy_offsets_;
+    };
+    std::unique_ptr<LegacyIndex> legacy_index_;
     std::uint64_t chunks() const { return 1+(desc_.dofs-1)/desc_.chunk_dofs; }
     struct Entry { std::uint64_t start,end; double coordinate; };
     Entry directory_record(std::uint64_t sample) {
@@ -240,8 +244,8 @@ class StreamingSpectralReader {
     // disk-backed index once for those frequency archives, without decoding values.
     void index_legacy_frequencies() {
         using namespace spectral_detail;
-        legacy_scratch_=std::make_unique<Scratch>(std::filesystem::temp_directory_path()/"sdb-legacy-frf");
-        auto path=legacy_scratch_->dir/"index"; std::ofstream out(path,std::ios::binary);
+        legacy_index_=std::make_unique<LegacyIndex>();
+        auto path=legacy_index_->legacy_scratch_.dir/"index"; std::ofstream out(path,std::ios::binary);
         require(bool(out),"legacy spectral scratch open");
         for(std::uint64_t s=0;s<count_;++s) {
             auto e=entry(s); seek_to(in_,e.start); (void)n::record(in_,1,metadata_limit);
@@ -252,8 +256,9 @@ class StreamingSpectralReader {
             }
             require(position(in_)==e.end,"legacy spectral slice extent");
         }
-        out.close(); require(bool(out),"legacy spectral scratch close"); legacy_offsets_.open(path,std::ios::binary);
-        require(bool(legacy_offsets_),"legacy spectral scratch read");
+        out.close(); require(bool(out),"legacy spectral scratch close");
+        legacy_index_->legacy_offsets_.open(path,std::ios::binary);
+        require(bool(legacy_index_->legacy_offsets_),"legacy spectral scratch read");
     }
     template<class Emit> SpectralSampleMetadata read(std::uint64_t sample,std::optional<std::uint64_t> dof,Emit emit) {
         using namespace spectral_detail;
@@ -272,8 +277,9 @@ class StreamingSpectralReader {
                 if(ordinal+1<chunks()) limit=offset_entry(e,ordinal+1,data_end);
             } else {
                 // The constructor emitted exactly one 16-byte extent per verified chunk.
-                seek_to(legacy_offsets_,16*(sample*chunks()+ordinal));
-                auto extent=n::unpack<std::pair<std::uint64_t,std::uint64_t>>(read_fixed<16>(legacy_offsets_));
+                auto &offsets=legacy_index_->legacy_offsets_;
+                seek_to(offsets,16*(sample*chunks()+ordinal));
+                auto extent=n::unpack<std::pair<std::uint64_t,std::uint64_t>>(read_fixed<16>(offsets));
                 start=extent.first; limit=extent.second;
             }
             require(first_block<=start && start<limit && limit<=data_end,"spectral indexed bounds");
