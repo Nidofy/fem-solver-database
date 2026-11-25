@@ -23,10 +23,10 @@ template <class X> void encode(Writer &w, const X &value) {
                          }) {
         encode(w, value.first);
         encode(w, value.second);
-    } else if constexpr (requires { value.visit([](const auto & ...) {}); })
+    } else if constexpr (sdb::detail::has_visit<const std::remove_cvref_t<X>>)
         value.visit([&](const auto &...v) { (encode(w, v), ...); });
-    else if constexpr (requires { const_cast<X &>(value).visit([](auto & ...) {}); })
-        const_cast<X &>(value).visit([&](auto &...v) { (encode(w, v), ...); });
+    else if constexpr (sdb::detail::has_visit<std::remove_cvref_t<X>>)
+        const_cast<std::remove_cvref_t<X> &>(value).visit([&](auto &...v) { (encode(w, v), ...); });
     else {
         if constexpr (requires { value.resize(0); })
             w.integer<std::uint64_t>(value.size());
@@ -67,7 +67,7 @@ template <class X> void decode(Reader &r, X &value, std::uint64_t &budget) {
                          }) {
         decode(r, value.first, budget);
         decode(r, value.second, budget);
-    } else if constexpr (requires { value.visit([](auto & ...) {}); })
+    } else if constexpr (sdb::detail::has_visit<std::remove_cvref_t<X>>)
         value.visit([&](auto &...v) { (decode(r, v, budget), ...); });
     else {
         if constexpr (requires { value.resize(0); }) {
@@ -101,10 +101,10 @@ template <class X> std::uint64_t encoded_size(const X &x, std::uint64_t limit) {
                          }) {
         add(encoded_size(x.first, limit - size));
         add(encoded_size(x.second, limit - size));
-    } else if constexpr (requires { x.visit([](const auto & ...) {}); })
+    } else if constexpr (sdb::detail::has_visit<const std::remove_cvref_t<X>>)
         x.visit([&](const auto &...v) { (add(encoded_size(v, limit - size)), ...); });
-    else if constexpr (requires { const_cast<X &>(x).visit([](auto & ...) {}); })
-        const_cast<X &>(x).visit([&](auto &...v) { (add(encoded_size(v, limit - size)), ...); });
+    else if constexpr (sdb::detail::has_visit<std::remove_cvref_t<X>>)
+        const_cast<std::remove_cvref_t<X> &>(x).visit([&](auto &...v) { (add(encoded_size(v, limit - size)), ...); });
     else {
         if constexpr (requires(X v) { v.resize(0); })
             add(8);

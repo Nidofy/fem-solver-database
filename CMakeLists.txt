@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.24)
 project(SolverDatabaseV2 VERSION 2.7.0 LANGUAGES CXX)
+if(MSVC)
+  add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:/utf-8>"
+    "$<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CXX_COMPILER_ID:MSVC>>:-Xcompiler=/utf-8>")
+endif()
 option(SDB_OPENMP "Enable OpenMP CPU execution" ON)
 option(SDB_CUDA "Build native single GPU CUDA backend (CUDA 12+)" OFF)
 option(SDB_SANITIZE "Enable address/undefined sanitizers on supported compilers" OFF)

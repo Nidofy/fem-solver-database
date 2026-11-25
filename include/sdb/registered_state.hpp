@@ -25,8 +25,8 @@ template<class X> void encode(Bytes &out, const X &x) {
         out.insert(out.end(), bytes.begin(), bytes.end());
     } else if constexpr (std::is_same_v<X, std::string>) {
         encode(out, std::uint64_t(x.size())); out.insert(out.end(), x.begin(), x.end());
-    } else if constexpr (requires { const_cast<X&>(x).visit([](auto&...) {}); })
-        const_cast<X&>(x).visit([&](const auto &...v) { (encode(out, v), ...); });
+    } else if constexpr (sdb::detail::has_visit<std::remove_cvref_t<X>>)
+        const_cast<std::remove_cvref_t<X>&>(x).visit([&](const auto &...v) { (encode(out, v), ...); });
     else { encode(out, std::uint64_t(x.size())); for (const auto &v : x) encode(out, v); }
 }
 template<class V> V scalar(std::span<const std::uint8_t> bytes, std::size_t &pos) {

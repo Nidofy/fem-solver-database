@@ -26,7 +26,7 @@ inline ModelIR canonical_definition(ModelIR ir) {
         using X=std::remove_cvref_t<decltype(x)>;
         if constexpr(std::is_same_v<X,Source>) x={};
         else if constexpr(requires { x.first; x.second; }) { self(self,x.first); self(self,x.second); }
-        else if constexpr(requires { x.visit([](auto &...){}); }) x.visit([&](auto &...v){(self(self,v),...);});
+        else if constexpr(sdb::detail::has_visit<X>) x.visit([&](auto &...v){(self(self,v),...);});
         else if constexpr(!std::is_same_v<X,std::string> && requires { x.begin(); x.end(); }) for(auto &v:x) self(self,v);
     };
     strip(strip,ir);

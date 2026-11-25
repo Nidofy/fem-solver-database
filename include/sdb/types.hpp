@@ -4,8 +4,19 @@
 #include <compare>
 #include <bit>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 namespace sdb {
+namespace detail {
+// A named probe avoids generic lambda expressions in nvcc EDG's unevaluated context.
+struct VisitProbe {
+    template<class... Args> constexpr void operator()(Args &&...) const noexcept {}
+};
+template<class T,class=void> inline constexpr bool has_visit=false;
+template<class T> inline constexpr bool has_visit<T,std::void_t<decltype(std::declval<T &>().visit(VisitProbe{}))>> = true;
+} // namespace detail
+
 template <class Tag, class U> class StrongId {
     static_assert(std::is_unsigned_v<U>);
     U value_ = std::numeric_limits<U>::max();
@@ -64,9 +75,9 @@ class SemanticHasher {
             integer(x.size()); for (unsigned char c : x) integer(c);
         } else if constexpr (requires { x.first; x.second; }) {
             append(x.first); append(x.second);
-        } else if constexpr (requires { x.visit([](const auto &...) {}); })
+        } else if constexpr (detail::has_visit<const V>)
             x.visit([&](const auto &...v) { (append(v), ...); });
-        else if constexpr (requires(V &v) { v.visit([](auto &...) {}); })
+        else if constexpr (detail::has_visit<V>)
             const_cast<V &>(x).visit([&](const auto &...v) { (append(v), ...); });
         else { integer(x.size()); for (const auto &v : x) append(v); }
     }

@@ -550,7 +550,7 @@ struct CompiledFoundation {
 } // namespace sdb::lifecycle
 
 namespace sdb {
-// The wire visitor above is frozen for ModelIR schemas 3–10. Standalone
+// The wire visitor above is frozen for ModelIR schemas 3-10. Standalone
 // foundation identities also cover an attached, versioned thermal section.
 template<> inline std::uint64_t semantic_hash(const lifecycle::ModelFoundation &foundation) {
     SemanticHasher hash;

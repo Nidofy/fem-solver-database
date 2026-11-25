@@ -105,15 +105,15 @@ template <class T> class ContactDB {
         free_.reserve(capacity);
     }
     template <class R> void import_surfaces(const MeshDB<R> &model) {
-        std::lock_guard lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         surfaces_ = model.surfaces();
     }
     std::vector<Surface> surfaces() const {
-        std::lock_guard lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         return surfaces_;
     }
     ContactHandle touch(ContactKey key, std::uint64_t step) {
-        std::lock_guard lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         if (auto it = lookup_.find(key); it != lookup_.end()) {
             auto &h = slots_[it->second];
             h.last_seen = step;
@@ -146,14 +146,14 @@ template <class T> class ContactDB {
         return {i, h.generation};
     }
     ContactHistory<T> get(ContactHandle handle) const {
-        std::lock_guard lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         const auto &h = slots_.at(handle.slot);
         if (!h.active || h.generation != handle.generation)
             throw std::logic_error("stale contact handle");
         return h;
     }
     void update(ContactHandle handle, const ContactHistory<T> &value) {
-        std::lock_guard lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         auto &h = slots_.at(handle.slot);
         if (!h.active || h.generation != handle.generation || value.key != h.key ||
             value.generation != h.generation || !value.active)
@@ -161,7 +161,7 @@ template <class T> class ContactDB {
         h = value;
     }
     std::size_t prune(std::uint64_t oldest_step) {
-        std::lock_guard lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         std::size_t removed = 0;
         free_.reserve(slots_.size());
         for (Index i = 0; i < slots_.size(); ++i) {
@@ -179,7 +179,7 @@ template <class T> class ContactDB {
         return removed;
     }
     std::vector<ContactHistory<T>> snapshot() const {
-        std::lock_guard lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         return slots_;
     }
     void restore(std::vector<ContactHistory<T>> values,
@@ -201,7 +201,7 @@ template <class T> class ContactDB {
             } else
                 free.push_back(i);
         }
-        std::lock_guard lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         if (backup_)
             throw std::logic_error("restore during trial");
         for (const auto &h : values) {
@@ -216,19 +216,19 @@ template <class T> class ContactDB {
             surfaces_.swap(*surfaces);
     }
     void begin_trial() {
-        std::lock_guard lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         if (backup_)
             throw std::logic_error("contact trial active");
         backup_ = slots_;
     }
     void commit() {
-        std::lock_guard lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         if (!backup_)
             throw std::logic_error("no contact trial");
         backup_.reset();
     }
     void rollback() {
-        std::lock_guard lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         if (!backup_)
             throw std::logic_error("no contact trial");
         std::map<ContactKey, Index> lookup;
@@ -247,7 +247,7 @@ template <class T> class ContactDB {
         backup_.reset();
     }
     bool in_trial() const {
-        std::lock_guard lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         return backup_.has_value();
     }
 };

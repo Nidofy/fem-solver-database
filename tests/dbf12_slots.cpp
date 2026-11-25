@@ -14,6 +14,15 @@ template<class F> static void rejects(F f) {
 static std::vector<char> bytes(const Path &p) {
     std::ifstream in(p,std::ios::binary); return {std::istreambuf_iterator<char>(in),{}};
 }
+static void visit_detection() {
+    const NodeId node=NodeId::checked(47);
+    static_assert(detail::has_visit<std::remove_cvref_t<decltype((node))>>);
+    static_assert(!detail::has_visit<const NodeId> && !detail::has_visit<std::uint64_t>);
+    const auto bytes=lifecycle::native::pack<const NodeId>(node);
+    check(bytes==lifecycle::native::pack(node.value()) &&
+          lifecycle::native::unpack<NodeId>(bytes)==node && semantic_hash(node)==semantic_hash(node.value()),
+          "const record with a mutable wire visitor");
+}
 static void persistence(const Path &dir,bool partition_fixture) {
     using Page=slot_detail::SlotPage<double,3,AoSoA<4>,16>;
     static_assert(alignof(Page)>=64);
@@ -234,7 +243,7 @@ static void migration() {
 int main(int argc,char **argv) { try {
     if(argc!=3) return 2;
     Path dir=argv[1]; std::filesystem::create_directories(dir);
-    auto initial=host_memory.live.load(); persistence(dir,std::string_view(argv[2])=="partition"); exhausted(dir); duplicate_packet(); batch_history(dir); migration();
+    auto initial=host_memory.live.load(); visit_detection(); persistence(dir,std::string_view(argv[2])=="partition"); exhausted(dir); duplicate_packet(); batch_history(dir); migration();
     check(initial==host_memory.live.load(),"aligned page storage leaked");
     return 0;
 } catch(const std::exception &e) {std::cerr<<e.what()<<"\n"; return 1;} }

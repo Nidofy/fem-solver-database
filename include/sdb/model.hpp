@@ -278,7 +278,7 @@ template <class T> class MeshDB {
                 else if constexpr (std::is_same_v<X, std::string>) {
                     integer(value.size());
                     for (unsigned char c : value) integer(c);
-                } else if constexpr (requires(X &x) { x.visit([](auto &...) {}); }) {
+                } else if constexpr (sdb::detail::has_visit<std::remove_cvref_t<X>>) {
                     // visit is also the canonical native wire traversal; it does not mutate.
                     const_cast<X &>(value).visit([&](const auto &...v) { (self(self, v), ...); });
                 } else {

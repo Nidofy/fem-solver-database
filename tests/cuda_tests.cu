@@ -2,6 +2,8 @@
 #include <cstddef>
 #include <iostream>
 using namespace sdb;
+static_assert(detail::has_visit<std::remove_cvref_t<const NodeId &>>);
+static_assert(!detail::has_visit<std::uint32_t>);
 __global__ void append_candidates(cuda::CandidateView view) {
     auto i = blockIdx.x * blockDim.x + threadIdx.x;
     view.append({{100, 0, 1}, {200, 0, -1}, i, 0});
