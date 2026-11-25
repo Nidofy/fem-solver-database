@@ -6,7 +6,7 @@ Include `<sdb/paged_slot_field.hpp>`. Instantiate `PagedSlotField<T, Components,
 
 `allocate(key)` creates a zero-initialized, invalid row and returns its local slot and generation. `set(handle, component, value)` marks the row valid. `set_valid` can preserve stored components while masking the row. Dictionary lookup accepts the full unsigned 64-bit key range. The open-addressed index and a LIFO free list give amortized constant-time allocation and erase in steady state. Rehashing compacts deleted buckets. Generation zero marks permanent exhaustion after a 32-bit generation would wrap.
 
-Trial entry shares pages and the key index. A value change detaches the touched page. The first change to membership in a shared generation also detaches the flat key index. Rollback restores all page pointers, the high-water slot, free-list head and key index. Committed pools can be copied with COW isolation. Copying an active trial or copy-assigning into one raises a logic error. Moving transfers an active trial and leaves the source as an empty, reusable pool with the same schema. Handles acquired during an abandoned trial are scoped to that trial. Preserve domain keys across rank and transaction boundaries. Serialize calls to a pool on its owning rank.
+Trial entry shares pages and the key index. A value change detaches the touched page. The first change to membership in a shared generation also detaches the flat key index. Rollback restores all page pointers, the high-water slot, free-list head and key index. Committed pools can be copied with COW isolation. Copying an active trial or copy-assigning into one raises a logic error. Move construction is noexcept and leaves the source as an empty, reusable pool with the same schema. An active source trial transfers to the destination. Both assignment operators reject an active destination before changing either pool. Handles acquired during an abandoned trial are scoped to that trial. Preserve domain keys across rank and transaction boundaries. Serialize calls to a pool on its owning rank.
 
 ```cpp
 sdb::PagedSlotField<double, 3, sdb::AoSoA<8>> source(42, 1), receiver(42, 1);
@@ -29,6 +29,12 @@ try {
 Export writes selected keys in ascending order. Each packet row includes its key, schema ID, schema version, scalar type, component count, payload length, validity byte, little-endian component values and CRC32. The envelope also carries a count and CRC32. Import assigns fresh local handles. A malformed final row or a collision with any live key leaves the receiver at its pre-import state. The optional retirement flag requires an active trial. The transport and cross-rank commit decision belong to the caller.
 
 Standalone `save(path)` and `restore(path)` preserve exact local slot numbers, generations, validity, logical components and free-list order. Packing logical components permits a reader to choose a different local page size or layout. `save_sidecar(path, parent)` and `restore_sidecar(path, parent)` bind the same records to the byte size and CRC64 of a published MultiBatchBundle file or partition manifest. Publish an immutable parent first, then distribute the parent and sidecar together. Each file has its own atomic publication boundary.
+
+### Dense contact-history batches (ADR-W4-02)
+
+Gather and upsert take keys in caller order, a dense `View<T, C, Layout>` (const input for upsert) and one validity byte per row. All three row counts must agree. `gather_by_keys` looks up each key once, permits repeated queries, and emits zero components and mask zero for absent or invalid slots. `upsert_by_keys` rejects duplicate keys and nonfinite valid components before changing any slot. Any nonzero input mask makes a row valid. A zero mask preserves an existing slot's generation and stored components, and leaves an absent key absent. A failed upsert preserves the pool, including any existing trial edits.
+
+`prune_if(predicate)` requires a trial and visits live slots in ascending slot order. For each matching (key, validity) it erases the row using the normal generation and free-list rules. The caller can roll the trial back. The three operations use the DBF12 checkpoint, sidecar and migration encodings. They accept SoA and AoSoA host views. A consumer owns staging and any host/device transfers.
 
 ## Complex sample archives
 
@@ -57,4 +63,4 @@ The built-in byte-run codec emits deterministic count/value pairs and uses raw s
 
 ## Downstream integration
 
-Use the same SDK headers throughout a C++ consumer build. Pin JIG-2 to the SDB 2.6 release until the Wave 3 candidate passes its independent review. These standalone CPU data formats do not require MPI or CUDA. Windows Index32/64, Linux sanitizer, cross-system artifact hashes and measured allocation peaks are recorded on the DBF12 review branch.
+Use the same SDK headers throughout a C++ consumer build. JIG-3 consumers pin the exact sdb-2.7.0 commit and the digest of its complete include tree together. These standalone CPU data formats do not require MPI or CUDA. Windows Index32/64, Linux sanitizer, cross-system artifact hashes and measured allocation peaks are recorded on the DBF12 review branch.

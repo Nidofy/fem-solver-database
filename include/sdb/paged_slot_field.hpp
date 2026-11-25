@@ -1,5 +1,6 @@
 #pragma once
 #include "field.hpp"
+#include "flat_index.hpp"
 #include "io/crc64.hpp"
 #include "io/native.hpp"
 
@@ -283,6 +284,64 @@ class PagedSlotField {
         checked(h); if(c>=C) throw std::out_of_range("slot component");
         if constexpr(std::is_floating_point_v<T>) if(!std::isfinite(v)) throw std::invalid_argument("nonfinite slot value");
         auto &p=edit(h.slot); p.values[offset(h.slot,c)]=v; p.meta[h.slot%FixedPageCount].valid=true;
+    }
+    template<class OutLayout>
+    void gather_by_keys(std::span<const std::uint64_t> keys,View<T,C,OutLayout> out_values,
+                        std::span<std::uint8_t> out_valid) const {
+        if(keys.size()!=out_values.count || keys.size()!=out_valid.size() || (!keys.empty() && !out_values.data))
+            throw std::invalid_argument("slot gather output shape");
+        for(std::size_t row=0;row<keys.size();++row) {
+            const auto handle=find(keys[row]);
+            const Page *source=nullptr;
+            if(handle && meta(handle->slot).valid) source=&page(handle->slot);
+            out_valid[row]=source!=nullptr;
+            for(std::size_t c=0;c<C;++c)
+                out_values(row,c)=source ? source->values[offset(handle->slot,c)] : T{};
+        }
+    }
+    template<class InLayout>
+    void upsert_by_keys(std::span<const std::uint64_t> keys,View<const T,C,InLayout> in_values,
+                        std::span<const std::uint8_t> in_valid) {
+        if(keys.size()!=in_values.count || keys.size()!=in_valid.size())
+            throw std::invalid_argument("slot upsert input shape");
+        if(keys.empty()) return;
+        std::vector<std::uint64_t> scratch;
+        flat_detail::unique_sorted(keys,scratch,"duplicate slot key in batch");
+        for(std::size_t row=0;row<keys.size();++row) {
+            if(!in_valid[row]) continue;
+            if(!in_values.data) throw std::invalid_argument("missing slot upsert values");
+            if constexpr(std::is_floating_point_v<T>)
+                for(std::size_t c=0;c<C;++c)
+                    if(!std::isfinite(in_values(row,c))) throw std::invalid_argument("nonfinite slot value");
+        }
+
+        Store before=state_;
+        try {
+            for(std::size_t row=0;row<keys.size();++row) {
+                auto handle=find(keys[row]);
+                if(!in_valid[row]) {
+                    if(handle && meta(handle->slot).valid) set_valid(*handle,false);
+                    continue;
+                }
+                if(!handle) handle=allocate(keys[row]);
+                auto &p=edit(handle->slot);
+                for(std::size_t c=0;c<C;++c) p.values[offset(handle->slot,c)]=in_values(row,c);
+                p.meta[handle->slot%FixedPageCount].valid=true;
+            }
+        } catch(...) { state_=std::move(before); throw; }
+    }
+    template<class Predicate>
+    std::size_t prune_if(Predicate &&should_erase) {
+        if(!in_trial()) throw std::logic_error("slot pruning requires an active trial");
+        std::size_t erased=0;
+        for(std::uint32_t slot=0;slot<state_.count;++slot) {
+            const auto &m=meta(slot);
+            if(m.live && should_erase(m.key,m.valid)) {
+                erase({slot,m.generation});
+                ++erased;
+            }
+        }
+        return erased;
     }
     void save(const std::filesystem::path &p) const { save_file(p,{}); }
     void restore(const std::filesystem::path &p,std::uint64_t budget=lifecycle::native::default_limit) {

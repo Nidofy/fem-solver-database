@@ -120,6 +120,64 @@ static void duplicate_packet() {
     check(receiver.size()==1 && receiver.domain_key(keep)==99 && receiver.allocate(1)==SlotHandle{1,1},"duplicate packet partial import");
     receiver.rollback();
 }
+static void batch_history(const Path &dir) {
+    using History=PagedSlotField<double,6,AoSoA<8>,8>;
+    History pool(97,1),scalar(97,1);
+    std::array<std::uint64_t,4> keys{90,10,70,30}; // slot order differs from key order
+    std::array<std::uint8_t,4> mask{1,1,1,0};
+    Field<double,6> input(keys.size());
+    for(std::size_t i=0;i<keys.size();++i)
+        for(unsigned c=0;c<6;++c) input.write()(i,c)=100*i+c+0.5;
+    input.write()(3,0)=std::numeric_limits<double>::quiet_NaN(); // ignored masked row
+    pool.upsert_by_keys(keys,input.read(),mask);
+    for(std::size_t i=0;i<3;++i) {
+        auto h=scalar.allocate(keys[i]);
+        for(unsigned c=0;c<6;++c) scalar.set(h,c,input.read()(i,c));
+    }
+    auto all=[](auto){return true;};
+    check(pool.export_migration_packets(all)==scalar.export_migration_packets(all),"batch migration wire mismatch");
+    pool.save(dir/"batch.slots"); scalar.save(dir/"scalar.slots");
+    check(bytes(dir/"batch.slots")==bytes(dir/"scalar.slots"),"batch checkpoint wire mismatch");
+
+    auto first=*pool.find(90),third=*pool.find(70);
+    pool.begin_trial();
+    auto old_live=host_memory.live.load();
+    mask={1,0,2,0}; input.write()(0,0)=-1; input.write()(2,5)=8;
+    pool.upsert_by_keys(keys,input.read(),mask);
+    check(host_memory.live.load()-old_live==8*6*sizeof(double),"batch COW page count");
+    const std::array<std::uint64_t,5> query{70,30,90,10,70};
+    Field<double,6,AoSoA<4>> output(query.size()); std::array<std::uint8_t,5> valid{};
+    pool.gather_by_keys(query,output.write(),valid);
+    check(valid==std::array<std::uint8_t,5>{1,0,1,0,1},"gather missing/masked/repeated keys");
+    for(unsigned c=0;c<6;++c)
+        check(output.read()(0,c)==input.read()(2,c) && output.read()(4,c)==input.read()(2,c) &&
+              output.read()(2,c)==input.read()(0,c) && output.read()(1,c)==0 && output.read()(3,c)==0,
+              "gather layouts/components");
+    check(!pool.find(30) && pool.find(10)==scalar.find(10),"masked upsert allocated or invalidated a generation");
+    rejects([&]{pool.gather_by_keys(keys,output.write(),valid);});
+    rejects([&]{pool.gather_by_keys(query,output.write(),mask);});
+    rejects([&]{pool.upsert_by_keys(query,input.read(),mask);});
+    rejects([&]{pool.upsert_by_keys(keys,input.read(),valid);});
+    auto prior=pool.export_migration_packets(all);
+    auto duplicates=keys; duplicates.back()=keys.front();
+    input.write()(0,0)=42;
+    rejects([&]{pool.upsert_by_keys(duplicates,input.read(),mask);});
+    input.write()(2,5)=std::numeric_limits<double>::infinity();
+    rejects([&]{pool.upsert_by_keys(keys,input.read(),mask);});
+    check(pool.export_migration_packets(all)==prior && pool.in_trial(),"rejected batch changed the active trial");
+
+    std::vector<std::uint64_t> visited;
+    auto erased=pool.prune_if([&](auto key,bool live_value) {
+        visited.push_back(key); return live_value;
+    });
+    check(erased==2 && visited==std::vector<std::uint64_t>{90,10,70},"prune order/validity");
+    auto recycled=pool.allocate(99);
+    check(recycled==SlotHandle{third.slot,third.generation+1},"prune free-list order");
+    rejects([&]{pool.get(first);});
+    pool.rollback(); pool.save(dir/"rollback-batch.slots");
+    check(bytes(dir/"rollback-batch.slots")==bytes(dir/"scalar.slots"),"batch rollback wire mismatch");
+    rejects([&]{pool.prune_if([](auto,bool){return true;});});
+}
 static void migration() {
     constexpr unsigned keys=4096;
     std::vector<Pool> ranks; for(unsigned i=0;i<4;++i) ranks.emplace_back(77,3);
@@ -176,7 +234,7 @@ static void migration() {
 int main(int argc,char **argv) { try {
     if(argc!=3) return 2;
     Path dir=argv[1]; std::filesystem::create_directories(dir);
-    auto initial=host_memory.live.load(); persistence(dir,std::string_view(argv[2])=="partition"); exhausted(dir); duplicate_packet(); migration();
+    auto initial=host_memory.live.load(); persistence(dir,std::string_view(argv[2])=="partition"); exhausted(dir); duplicate_packet(); batch_history(dir); migration();
     check(initial==host_memory.live.load(),"aligned page storage leaked");
     return 0;
 } catch(const std::exception &e) {std::cerr<<e.what()<<"\n"; return 1;} }

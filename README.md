@@ -1,6 +1,6 @@
 # Solver Database V2
 
-SDK **2.7.0-candidate (DBF12)** adds generational, paged history fields and streaming
+SDK **2.7.0 (DBF12)** adds generational, paged history fields with batch gather/upsert/prune and streaming
 complex modal and frequency archives. See the [slot, migration and spectral contracts](docs/development/db_foundation/DBF12_CONTRACTS.md).
 
 SDK **2.6.0 (DBF10/DBF11)** adds thermal and coupled ModelIR schema 11,
